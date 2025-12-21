@@ -282,6 +282,55 @@ const InventoryView = ({ theme }) => (
 
 const ConsolidationView = ({ theme }) => {
   const [viewStep, setViewStep] = useState('register');
+  const [expandedGroups, setExpandedGroups] = useState({});
+
+  // Categorías por proveedor
+  const providerCategories = {
+    SOFIA: [104, 105, 106, 107, 108, 109],
+    PIO: [104, 105, 106, 107, 108, 109]  // Rojo, Blanco, Amarillo, Verde, Azul, Negro
+  };
+
+  // Datos consolidados por proveedor, grupo y cliente
+  const consolidatedData = {
+    SOFIA: {
+      'El Alto Norte': [
+        { client: 'Pollería El Rey', orders: {104: 10, 107: 5} }
+      ]
+    },
+    PIO: {
+      'El Alto Sur': [
+        { client: 'Doña Juana', orders: {109: 5, 104: 2} }
+      ]
+    }
+  };
+
+  const toggleGroup = (provider, group) => {
+    const key = `${provider}-${group}`;
+    setExpandedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const calculateGroupTotals = (clients, categories) => {
+    const totals = {};
+    categories.forEach(code => totals[code] = 0);
+    clients.forEach(client => {
+      Object.entries(client.orders).forEach(([code, qty]) => {
+        if (totals[code] !== undefined) totals[code] += qty;
+      });
+    });
+    return totals;
+  };
+
+  const calculateProviderTotals = (groups, categories) => {
+    const totals = {};
+    categories.forEach(code => totals[code] = 0);
+    Object.values(groups).forEach(clients => {
+      const groupTotals = calculateGroupTotals(clients, categories);
+      Object.entries(groupTotals).forEach(([code, qty]) => {
+        totals[code] += qty;
+      });
+    });
+    return totals;
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -324,7 +373,7 @@ const ConsolidationView = ({ theme }) => {
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
                 <select style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}>
                   <option>Avícola Sofía</option>
-                  <option>IMBA</option>
+                  <option>PIO</option>
                   <option>Pío Lindo</option>
                 </select>
               </div>
@@ -402,7 +451,7 @@ const ConsolidationView = ({ theme }) => {
                     <td style={{ padding: '16px 20px' }}><Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} /></td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '16px 20px' }}><span style={{fontSize:'10px', fontWeight:'bold', background:'#e0f2fe', color:'#0369a1', padding:'2px 6px', borderRadius:'4px'}}>IMBA</span></td>
+                    <td style={{ padding: '16px 20px' }}><span style={{fontSize:'10px', fontWeight:'bold', background:'#e0f2fe', color:'#0369a1', padding:'2px 6px', borderRadius:'4px'}}>PIO</span></td>
                     <td style={{ padding: '16px 20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
                         <MapPin size={12} color="#94a3b8" /> El Alto Sur
@@ -422,9 +471,102 @@ const ConsolidationView = ({ theme }) => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Totales Consolidados */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <ConsolidatedBox title="Pedido Maestro: SOFIA" color={theme.primary} />
-            <ConsolidatedBox title="Pedido Maestro: IMBA" color={theme.frozen} />
+            {Object.entries(consolidatedData).map(([provider, groups]) => {
+              const categories = providerCategories[provider];
+              const providerTotals = calculateProviderTotals(groups, categories);
+              return (
+                <ConsolidatedBox 
+                  key={provider} 
+                  title={`Pedido Maestro: ${provider}`} 
+                  color={provider === 'SOFIA' ? theme.primary : theme.frozen} 
+                  totals={providerTotals} 
+                />
+              );
+            })}
+          </div>
+
+          {/* Detalle por Grupo y Cliente */}
+          <Card>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Detalle de Pedidos Consolidados</h3>
+            {Object.entries(consolidatedData).map(([provider, groups]) => {
+              const categories = providerCategories[provider];
+              return (
+                <div key={provider} style={{ marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: provider === 'SOFIA' ? theme.primary : theme.frozen, marginBottom: '12px' }}>
+                    Proveedor: {provider}
+                  </h4>
+                  {Object.entries(groups).map(([group, clients]) => {
+                    const groupTotals = calculateGroupTotals(clients, categories);
+                    const isExpanded = expandedGroups[`${provider}-${group}`];
+                    return (
+                      <div key={group} style={{ marginBottom: '16px', padding: '16px', border: `1px solid #e2e8f0`, borderRadius: '8px', backgroundColor: '#f8fafc' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: theme.textMain, margin: 0 }}>
+                            Grupo: {group}
+                          </h5>
+                          <button 
+                            onClick={() => toggleGroup(provider, group)}
+                            style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: theme.primary, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            {isExpanded ? 'Ocultar Detalle' : 'Ver Detalle'} <ChevronRight size={16} style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                          {Object.entries(groupTotals).map(([code, total]) => (
+                            <div key={code} style={{ textAlign: 'center', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Código {code}</div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: theme.primary }}>{total}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {isExpanded && (
+                          <div style={{ marginTop: '16px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                              <thead>
+                                <tr style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}>
+                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Cliente</th>
+                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Detalle de Pedido</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {clients.map((clientData, index) => (
+                                  <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <td style={{ padding: '8px 12px', fontWeight: '600' }}>{clientData.client}</td>
+                                    <td style={{ padding: '8px 12px' }}>
+                                      {Object.entries(clientData.orders).map(([code, qty]) => (
+                                        <div key={code} style={{ marginBottom: '4px' }}>
+                                          <span style={{ fontWeight: 'bold', color: theme.primary }}>Código {code}:</span> {qty} unidades
+                                        </div>
+                                      ))}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </Card>
+
+          {/* Botón para guardar el consolidado */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+            <button 
+              onClick={() => alert('Consolidado guardado exitosamente')}
+              style={{ 
+                backgroundColor: theme.primary, color: 'white', border: 'none', padding: '16px 32px', 
+                borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(225, 29, 72, 0.2)'
+              }}
+            >
+              <Save size={20} /> Guardar Consolidado
+            </button>
           </div>
         </div>
       )}
@@ -449,26 +591,20 @@ const ProductRow = ({ label }) => (
   </div>
 );
 
-const ConsolidatedBox = ({ title, color }) => (
+const ConsolidatedBox = ({ title, color, totals }) => (
   <Card style={{ borderTop: `4px solid ${color}`, padding: 0 }}>
     <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: color }}>{title}</h3>
       <button style={{ backgroundColor: color, color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR PDF</button>
     </div>
     <div style={{ padding: '20px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-        <div style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>104</div>
-          <div style={{ fontSize: '18px', fontWeight: '900' }}>45 <small style={{fontSize:'10px'}}>Cj</small></div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>107</div>
-          <div style={{ fontSize: '18px', fontWeight: '900' }}>12 <small style={{fontSize:'10px'}}>Cj</small></div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>109</div>
-          <div style={{ fontSize: '18px', fontWeight: '900' }}>32 <small style={{fontSize:'10px'}}>Unid</small></div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '12px' }}>
+        {Object.entries(totals).map(([code, qty]) => (
+          <div key={code} style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
+            <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>{code}</div>
+            <div style={{ fontSize: '18px', fontWeight: '900' }}>{qty} <small style={{fontSize:'10px'}}>Unid</small></div>
+          </div>
+        ))}
       </div>
     </div>
   </Card>
