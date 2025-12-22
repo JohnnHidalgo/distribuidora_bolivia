@@ -19,7 +19,8 @@ import {
   Layers,
   Save,
   Trash2,
-  MapPin
+  MapPin,
+  Box
 } from 'lucide-react';
 
 const App = () => {
@@ -209,7 +210,7 @@ const DashboardView = ({ theme }) => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
       <Card>
         <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Pedidos por Categoría (Hoy)</h3>
-        {['104', '105', '106', '107', '108', '109'].map((cat, i) => (
+        {['104', '105', '106', '107', '108', '109', '110'].map((cat, i) => (
           <div key={cat} style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyBetween: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
               <span>Código {cat}</span>
@@ -262,6 +263,7 @@ const InventoryView = ({ theme }) => (
           { id: '107', color: '#22c55e', cong: 45, desc: 0 },
           { id: '108', color: '#3b82f6', cong: 92, desc: 110 },
           { id: '109', color: '#000000', cong: 15, desc: 8 },
+          { id: '110', color: '#8b5cf6', cong: 0, desc: 0 },
         ].map(row => (
           <tr key={row.id} style={{ borderTop: '1px solid #f1f5f9' }}>
             <td style={{ padding: '16px 24px', fontWeight: 'bold' }}>Código {row.id}</td>
@@ -286,8 +288,8 @@ const ConsolidationView = ({ theme }) => {
 
   // Categorías por proveedor
   const providerCategories = {
-    SOFIA: [104, 105, 106, 107, 108, 109],
-    PIO: [104, 105, 106, 107, 108, 109]  // Rojo, Blanco, Amarillo, Verde, Azul, Negro
+    SOFIA: [104, 105, 106, 107, 108, 109, 110],
+    PIO: [104, 105, 106, 107, 108, 109, 110]  // Rojo, Blanco, Amarillo, Verde, Azul, Negro, Menudencia
   };
 
   // Datos consolidados por proveedor, grupo y cliente
@@ -617,6 +619,8 @@ const AssignmentView = ({ theme }) => {
   const [dateTo, setDateTo] = useState('');
   const [distributionMode, setDistributionMode] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [receiveMode, setReceiveMode] = useState(false);
+  const [selectedReceiveAssignment, setSelectedReceiveAssignment] = useState(null);
 
   const [history, setHistory] = useState([
     { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5},107:{boxes:5,units:2}}, status: 'COMPLETO' },
@@ -634,8 +638,18 @@ const AssignmentView = ({ theme }) => {
 
   // Categorías por proveedor
   const providerCategories = {
-    SOFIA: [104, 105, 106, 107, 108, 109],
-    PIO: [104, 105, 106, 107, 108, 109]  // IMBA/PIO
+    SOFIA: [104, 105, 106, 107, 108, 109, 110],
+    PIO: [104, 105, 106, 107, 108, 109, 110]  // IMBA/PIO
+  };
+
+  const codeNames = {
+    104: 'Rojo',
+    105: 'Blanco',
+    106: 'Amarillo',
+    107: 'Verde',
+    108: 'Azul',
+    109: 'Negro',
+    110: 'Menudencia'
   };
 
   const handleDistribute = (assignment) => {
@@ -647,6 +661,20 @@ const AssignmentView = ({ theme }) => {
     setDistributionMode(false);
     setSelectedAssignment(null);
   };
+
+  const handleReceive = (assignment) => {
+    setSelectedReceiveAssignment(assignment);
+    setReceiveMode(true);
+  };
+
+  const handleBackToHistoryFromReceive = () => {
+    setReceiveMode(false);
+    setSelectedReceiveAssignment(null);
+  };
+
+  if (receiveMode && selectedReceiveAssignment) {
+    return <ReceiveView theme={theme} assignment={selectedReceiveAssignment} onBack={handleBackToHistoryFromReceive} />;
+  }
 
   if (distributionMode && selectedAssignment) {
     return <DistributionView theme={theme} assignment={selectedAssignment} onBack={handleBackToHistory} />;
@@ -734,6 +762,7 @@ const AssignmentView = ({ theme }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', backgroundColor: entry.status === 'COMPLETO' ? '#dcfce7' : '#fee2e2', color: entry.status === 'COMPLETO' ? '#166534' : '#991b1b' }}>{entry.status}</span>
                       <button onClick={() => handleDistribute(entry)} style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer' }}>Repartir</button>
+                      <button onClick={() => handleReceive(entry)} style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}>Recibir</button>
                     </div>
                   </td>
                 </tr>
@@ -788,17 +817,39 @@ const DistributionView = ({ theme, assignment, onBack }) => {
         <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {Object.entries(assignment.details).map(([code, detail]) => (
-              <div key={code} style={{ padding: '8px 12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Código {code}</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{detail.boxes} Cajas · {detail.units} Unidades</div>
-              </div>
-            ))}
+            {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+              const detail = assignment.details[code] || { boxes: 0, units: 0 };
+              return (
+                <div key={code} style={{ 
+                  padding: '16px', 
+                  backgroundColor: 'white', 
+                  borderRadius: '12px', 
+                  border: '1px solid #e2e8f0', 
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  minWidth: '140px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#0ea5e9' }}>
+                      <Package size={14} />
+                      <span>{detail.boxes} Cajas</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#f97316' }}>
+                      <Box size={14} />
+                      <span>{detail.units} Unidades</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Distribuir entre Clientes</h4>
-        {Object.entries(assignment.details).map(([code, detail]) => (
+        {[104, 105, 106, 107, 108, 109, 110].map((code) => (
           <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>Código {code}</h5>
@@ -826,6 +877,163 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
           <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             <Save size={16} /> Guardar Distribución
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const ReceiveView = ({ theme, assignment, onBack }) => {
+  const [batches, setBatches] = useState({});
+
+  const addBatch = (code) => {
+    setBatches(prev => ({
+      ...prev,
+      [code]: [...(prev[code] || []), { weight: 0, boxes: 20 }]
+    }));
+  };
+
+  const updateBatchBoxes = (code, index, boxes) => {
+    setBatches(prev => ({
+      ...prev,
+      [code]: prev[code].map((batch, i) => i === index ? { ...batch, boxes: parseInt(boxes) || 0 } : batch)
+    }));
+  };
+
+  const updateBatchWeight = (code, index, weight) => {
+    setBatches(prev => ({
+      ...prev,
+      [code]: prev[code].map((batch, i) => i === index ? { ...batch, weight: parseFloat(weight) || 0 } : batch)
+    }));
+  };
+
+  const removeBatch = (code, index) => {
+    setBatches(prev => ({
+      ...prev,
+      [code]: prev[code].filter((_, i) => i !== index)
+    }));
+  };
+
+  const getTotalWeight = (code) => {
+    return (batches[code] || []).reduce((sum, batch) => sum + batch.weight, 0);
+  };
+
+  const getTotalBoxes = (code) => {
+    return (batches[code] || []).reduce((sum, batch) => sum + batch.boxes, 0);
+  };
+
+  const getOverallTotalWeight = () => {
+    return [104, 105, 106, 107, 108, 109, 'Menudencia'].reduce((sum, code) => sum + getTotalWeight(code), 0);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <button onClick={onBack} style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>← Volver al Historial</button>
+
+      <Card>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+        </div>
+
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+              const detail = assignment.details[code] || { boxes: 0, units: 0 };
+              return (
+                <div key={code} style={{ 
+                  padding: '16px', 
+                  backgroundColor: 'white', 
+                  borderRadius: '12px', 
+                  border: '1px solid #e2e8f0', 
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  minWidth: '140px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#0ea5e9' }}>
+                      <Package size={14} />
+                      <span>{detail.boxes} Cajas</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#f97316' }}>
+                      <Box size={14} />
+                      <span>{detail.units} Unidades</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Registrar Peso por Código (Lotes de 20 cajas)</h4>
+        {[104, 105, 106, 107, 108, 109, 110].map((code) => (
+          <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
+              <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                Total: {getTotalBoxes(code)} cajas / {getTotalWeight(code).toFixed(2)} kg
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+              {(batches[code] || []).map((batch, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Lote {index + 1}:</span>
+                  <input 
+                    type="number" 
+                    placeholder="20" 
+                    value={batch.boxes || ''} 
+                    onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
+                    style={{ 
+                      width: '60px', 
+                      padding: '6px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    placeholder="0.00" 
+                    value={batch.weight || ''} 
+                    onChange={(e) => updateBatchWeight(code, index, e.target.value)}
+                    style={{ 
+                      width: '80px', 
+                      padding: '6px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
+                  <button onClick={() => removeBatch(code, index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => addBatch(code)} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary }}>Agregar Lote de 20 Cajas</button>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Peso Total General: {getOverallTotalWeight().toFixed(2)} kg</div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+          <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Truck size={16} /> Registrar Recepción
           </button>
         </div>
       </Card>
