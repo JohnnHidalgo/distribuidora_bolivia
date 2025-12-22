@@ -447,8 +447,25 @@ const ConsolidationView = ({ theme }) => {
                     </td>
                     <td style={{ padding: '16px 20px', fontWeight: '600' }}>Pollería El Rey</td>
                     <td style={{ padding: '16px 20px', fontSize: '12px' }}>
-                      <div style={{color: theme.primary, fontWeight:'bold'}}>104: 10 Cajas</div>
-                      <div style={{color: '#64748b'}}>107: 5 Cajas</div>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
+                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                          // Mock data for demonstration - in real app this would come from state
+                          const mockDetails = {
+                            104: { boxes: 10, units: 0, grossWeight: 100.00, netWeight: 95.00 },
+                            107: { boxes: 5, units: 0, grossWeight: 50.00, netWeight: 47.50 },
+                            109: { boxes: 0, units: 5, grossWeight: 7.50, netWeight: 7.00 },
+                          };
+                          const d = mockDetails[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                          return (
+                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
+                              <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight.toFixed(2)} kg Bruto</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight.toFixed(2)} kg Neto</div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </td>
                     <td style={{ padding: '16px 20px' }}><Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} /></td>
                   </tr>
@@ -461,8 +478,24 @@ const ConsolidationView = ({ theme }) => {
                     </td>
                     <td style={{ padding: '16px 20px', fontWeight: '600' }}>Doña Juana</td>
                     <td style={{ padding: '16px 20px', fontSize: '12px' }}>
-                      <div style={{color: theme.frozen, fontWeight:'bold'}}>109: 5 Unidades</div>
-                      <div style={{color: '#64748b'}}>104: 2 Unidades</div>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
+                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                          // Mock data for demonstration - in real app this would come from state
+                          const mockDetails = {
+                            104: { boxes: 0, units: 2, grossWeight: 2.50, netWeight: 2.30 },
+                            109: { boxes: 0, units: 5, grossWeight: 7.50, netWeight: 7.00 },
+                          };
+                          const d = mockDetails[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                          return (
+                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
+                              <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight.toFixed(2)} kg Bruto</div>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight.toFixed(2)} kg Neto</div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </td>
                     <td style={{ padding: '16px 20px' }}><Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} /></td>
                   </tr>
