@@ -601,17 +601,7 @@ const ProductRow = ({ label, code, provider, values, onChange }) => (
         />
         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
       </div>
-      <div style={{ position: 'relative' }}>
-        <input 
-          type="number" 
-          step="0.01" 
-          placeholder="0.00" 
-          value={values?.grossWeight || ''} 
-          onChange={(e) => onChange(code, 'grossWeight', e.target.value)}
-          style={{ width: '70px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
-        />
-        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PESO BRUTO</span>
-      </div>
+
       <div style={{ position: 'relative' }}>
         <input 
           type="number" 
@@ -838,12 +828,17 @@ const AssignmentView = ({ theme }) => {
                   <td style={{ padding: '12px 16px', fontWeight: '600' }}>{entry.client}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {Object.entries(entry.details).map(([code, d]) => (
-                        <div key={code} style={{ padding: '6px 10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '120px' }}>
-                          <div style={{ fontSize: '12px', fontWeight: '800' }}>Código {code}</div>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>{d.boxes} Cj · {d.units} Unid</div>
-                        </div>
-                      ))}
+                      {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                        const d = entry.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                        return (
+                          <div key={code} style={{ padding: '6px 10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '160px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: '800' }}>Código {code}</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
@@ -1092,7 +1087,7 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
                       <Truck size={14} />
-                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Netoht?.toFixed(2) || '0.00'} kg Bruto</span>
+                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Bruto</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
                       <Truck size={14} />
