@@ -779,8 +779,6 @@ const AssignmentView = ({ theme }) => {
 };
 
 const DistributionView = ({ theme, assignment, onBack }) => {
-  const [distribution, setDistribution] = useState({});
-
   // Clientes de ejemplo con sus solicitudes
   const clients = [
     { id: 1, name: 'Pollería El Rey', orders: {104: 10, 107: 5} },
@@ -788,15 +786,55 @@ const DistributionView = ({ theme, assignment, onBack }) => {
     { id: 3, name: 'Doña Juana', orders: {104: 5, 107: 3} }
   ];
 
-  const handleDistributionChange = (clientId, code, value) => {
-    const key = `${clientId}-${code}`;
-    setDistribution(prev => ({ ...prev, [key]: parseInt(value) || 0 }));
+  const [deliveries, setDeliveries] = useState(() => {
+    const init = {};
+    clients.forEach(client => {
+      init[client.id] = [{104: {boxes: 0, units: 0, weight: 0}, 105: {boxes: 0, units: 0, weight: 0}, 106: {boxes: 0, units: 0, weight: 0}, 107: {boxes: 0, units: 0, weight: 0}, 108: {boxes: 0, units: 0, weight: 0}, 109: {boxes: 0, units: 0, weight: 0}, 110: {boxes: 0, units: 0, weight: 0}}];
+    });
+    return init;
+  });
+
+  const addDelivery = (clientId) => {
+    setDeliveries(prev => ({
+      ...prev,
+      [clientId]: [...prev[clientId], {104: {boxes: 0, units: 0, weight: 0}, 105: {boxes: 0, units: 0, weight: 0}, 106: {boxes: 0, units: 0, weight: 0}, 107: {boxes: 0, units: 0, weight: 0}, 108: {boxes: 0, units: 0, weight: 0}, 109: {boxes: 0, units: 0, weight: 0}, 110: {boxes: 0, units: 0, weight: 0}}]
+    }));
+  };
+
+  const updateDelivery = (clientId, deliveryIndex, code, field, value) => {
+    setDeliveries(prev => ({
+      ...prev,
+      [clientId]: prev[clientId].map((delivery, i) => 
+        i === deliveryIndex ? { ...delivery, [code]: { ...delivery[code], [field]: parseFloat(value) || 0 } } : delivery
+      )
+    }));
+  };
+
+  const removeDelivery = (clientId, deliveryIndex) => {
+    setDeliveries(prev => ({
+      ...prev,
+      [clientId]: prev[clientId].filter((_, i) => i !== deliveryIndex)
+    }));
+  };
+
+  const getClientTotal = (clientId, code, field) => {
+    return (deliveries[clientId] || []).reduce((sum, delivery) => sum + (delivery[code]?.[field] || 0), 0);
+  };
+
+  const getClientTotalBoxes = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'boxes'), 0);
+  };
+
+  const getClientTotalUnits = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'units'), 0);
+  };
+
+  const getClientTotalWeight = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'weight'), 0);
   };
 
   const getTotalDistributed = (code) => {
-    return Object.keys(distribution)
-      .filter(key => key.endsWith(`-${code}`))
-      .reduce((sum, key) => sum + (distribution[key] || 0), 0);
+    return clients.reduce((sum, client) => sum + getClientTotal(client.id, code, 'boxes'), 0);
   };
 
   const getTotalAssigned = (code) => {
@@ -841,6 +879,10 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                       <Box size={14} />
                       <span>{detail.units} Unidades</span>
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
+                      <Truck size={14} />
+                      <span>0.00 kg Recibidos</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -849,29 +891,131 @@ const DistributionView = ({ theme, assignment, onBack }) => {
         </div>
 
         <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Distribuir entre Clientes</h4>
-        {[104, 105, 106, 107, 108, 109, 110].map((code) => (
-          <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        {clients.map(client => (
+          <div key={client.id} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h5 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>Código {code}</h5>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Total: {getTotalDistributed(code)} / {getTotalAssigned(code)}</div>
+              <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>{client.name}</h5>
+              <button onClick={() => addDelivery(client.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>Agregar Entrega</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {clients.map(client => (
-                <div key={client.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ flex: 1, fontWeight: '600', fontSize: '12px' }}>{client.name}</span>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Pedido: {client.orders[code] || 0}</span>
-                  <input 
-                    type="number" 
-                    placeholder="0" 
-                    value={distribution[`${client.id}-${code}`] || ''} 
-                    onChange={(e) => handleDistributionChange(client.id, code, e.target.value)}
-                    style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none' }}
-                  />
+            
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {[104, 105, 106, 107, 108, 109, 110].map((code) => (
+                <div key={code} style={{ 
+                  padding: '12px', 
+                  backgroundColor: 'white', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e2e8f0',
+                  minWidth: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#0ea5e9' }}>
+                      <Package size={12} />
+                      <span>{getClientTotal(client.id, code, 'boxes')} Cajas</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f97316' }}>
+                      <Box size={12} />
+                      <span>{getClientTotal(client.id, code, 'units')} Unidades</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981' }}>
+                      <Truck size={12} />
+                      <span>{getClientTotal(client.id, code, 'weight').toFixed(2)} kg Asignados</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
+
+            {(deliveries[client.id] || []).map((delivery, index) => (
+              <div key={index} style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Entrega {index + 1}</span>
+                  {(deliveries[client.id] || []).length > 1 && (
+                    <button onClick={() => removeDelivery(client.id, index)} style={{ padding: '2px 6px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[104, 105, 106, 107, 108, 109, 110].map((code) => (
+                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '100px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>Código {code}</label>
+                      <input 
+                        type="number" 
+                        placeholder="Cajas" 
+                        value={delivery[code]?.boxes || ''} 
+                        onChange={(e) => updateDelivery(client.id, index, code, 'boxes', e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: '4px', 
+                          border: '1px solid #cbd5e1', 
+                          outline: 'none',
+                          fontSize: '11px',
+                          textAlign: 'center'
+                        }}
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="Unidades" 
+                        value={delivery[code]?.units || ''} 
+                        onChange={(e) => updateDelivery(client.id, index, code, 'units', e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: '4px', 
+                          border: '1px solid #cbd5e1', 
+                          outline: 'none',
+                          fontSize: '11px',
+                          textAlign: 'center'
+                        }}
+                      />
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="Peso" 
+                        value={delivery[code]?.weight || ''} 
+                        onChange={(e) => updateDelivery(client.id, index, code, 'weight', e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: '4px', 
+                          border: '1px solid #cbd5e1', 
+                          outline: 'none',
+                          fontSize: '11px',
+                          textAlign: 'center'
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ))}
+
+        <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Resumen de Distribución</h4>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {[104, 105, 106, 107, 108, 109, 110].map((code) => (
+              <div key={code} style={{ 
+                padding: '12px', 
+                backgroundColor: 'white', 
+                borderRadius: '8px', 
+                border: '1px solid #e2e8f0',
+                minWidth: '120px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Código {code}</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{getTotalDistributed(code)} / {getTotalAssigned(code)}</div>
+                <div style={{ fontSize: '11px', color: getTotalDistributed(code) > getTotalAssigned(code) ? '#ef4444' : '#10b981' }}>
+                  {getTotalDistributed(code) > getTotalAssigned(code) ? 'Excede' : 'OK'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
           <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
@@ -891,7 +1035,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
   const addBatch = (code) => {
     setBatches(prev => ({
       ...prev,
-      [code]: [...(prev[code] || []), { weight: 0, boxes: 20 }]
+      [code]: [...(prev[code] || []), { weight: 0, boxes: 20, units: 0 }]
     }));
   };
 
@@ -899,6 +1043,13 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
     setBatches(prev => ({
       ...prev,
       [code]: prev[code].map((batch, i) => i === index ? { ...batch, boxes: parseInt(boxes) || 0 } : batch)
+    }));
+  };
+
+  const updateBatchUnits = (code, index, units) => {
+    setBatches(prev => ({
+      ...prev,
+      [code]: prev[code].map((batch, i) => i === index ? { ...batch, units: parseInt(units) || 0 } : batch)
     }));
   };
 
@@ -922,6 +1073,10 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
   const getTotalBoxes = (code) => {
     return (batches[code] || []).reduce((sum, batch) => sum + batch.boxes, 0);
+  };
+
+  const getTotalUnits = (code) => {
+    return (batches[code] || []).reduce((sum, batch) => sum + batch.units, 0);
   };
 
   const getOverallTotalWeight = () => {
@@ -968,7 +1123,11 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#f97316' }}>
                       <Box size={14} />
-                      <span>{detail.units} Unidades</span>
+                      <span>{detail.units} Unidades Asignadas / {getTotalUnits(code)} Recibidas</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
+                      <Truck size={14} />
+                      <span>{getTotalWeight(code).toFixed(2)} kg Recibidos</span>
                     </div>
                   </div>
                 </div>
@@ -983,47 +1142,67 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
               <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                Total: {getTotalBoxes(code)} cajas / {getTotalWeight(code).toFixed(2)} kg
+                Total: {getTotalBoxes(code)} cajas / {getTotalUnits(code)} unidades / {getTotalWeight(code).toFixed(2)} kg
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
               {(batches[code] || []).map((batch, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Lote {index + 1}:</span>
-                  <input 
-                    type="number" 
-                    placeholder="20" 
-                    value={batch.boxes || ''} 
-                    onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
-                    style={{ 
-                      width: '60px', 
-                      padding: '6px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #cbd5e1', 
-                      outline: 'none',
-                      fontSize: '12px',
-                      textAlign: 'center'
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    placeholder="0.00" 
-                    value={batch.weight || ''} 
-                    onChange={(e) => updateBatchWeight(code, index, e.target.value)}
-                    style={{ 
-                      width: '80px', 
-                      padding: '6px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #cbd5e1', 
-                      outline: 'none',
-                      fontSize: '12px',
-                      textAlign: 'center'
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
-                  <button onClick={() => removeBatch(code, index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Lote {index + 1}:</span>
+                    <input 
+                      type="number" 
+                      placeholder="20" 
+                      value={batch.boxes || ''} 
+                      onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
+                      style={{ 
+                        width: '60px', 
+                        padding: '6px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #cbd5e1', 
+                        outline: 'none',
+                        fontSize: '12px',
+                        textAlign: 'center'
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="number" 
+                      placeholder="0" 
+                      value={batch.units || ''} 
+                      onChange={(e) => updateBatchUnits(code, index, e.target.value)}
+                      style={{ 
+                        width: '60px', 
+                        padding: '6px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #cbd5e1', 
+                        outline: 'none',
+                        fontSize: '12px',
+                        textAlign: 'center'
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      placeholder="0.00" 
+                      value={batch.weight || ''} 
+                      onChange={(e) => updateBatchWeight(code, index, e.target.value)}
+                      style={{ 
+                        width: '80px', 
+                        padding: '6px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #cbd5e1', 
+                        outline: 'none',
+                        fontSize: '12px',
+                        textAlign: 'center'
+                      }}
+                    />
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
+                  </div>
+                  <button onClick={() => removeBatch(code, index)} style={{ alignSelf: 'flex-end', padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
                 </div>
               ))}
             </div>
