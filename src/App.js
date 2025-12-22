@@ -827,15 +827,15 @@ const AssignmentView = ({ theme }) => {
                   <td style={{ padding: '12px 16px' }}>{entry.provider}</td>
                   <td style={{ padding: '12px 16px', fontWeight: '600' }}>{entry.client}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
                       {[104, 105, 106, 107, 108, 109, 110].map((code) => {
                         const d = entry.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
                         return (
-                          <div key={code} style={{ padding: '6px 10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '160px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: '800' }}>Código {code}</div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>{d.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                          <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
+                            <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
+                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
+                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
                           </div>
                         );
                       })}
