@@ -615,6 +615,8 @@ const AssignmentView = ({ theme }) => {
   const [filterProvider, setFilterProvider] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [distributionMode, setDistributionMode] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
 
   const [history, setHistory] = useState([
     { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5},107:{boxes:5,units:2}}, status: 'COMPLETO' },
@@ -635,6 +637,20 @@ const AssignmentView = ({ theme }) => {
     SOFIA: [104, 105, 106, 107, 108, 109],
     PIO: [104, 105, 106, 107, 108, 109]  // IMBA/PIO
   };
+
+  const handleDistribute = (assignment) => {
+    setSelectedAssignment(assignment);
+    setDistributionMode(true);
+  };
+
+  const handleBackToHistory = () => {
+    setDistributionMode(false);
+    setSelectedAssignment(null);
+  };
+
+  if (distributionMode && selectedAssignment) {
+    return <DistributionView theme={theme} assignment={selectedAssignment} onBack={handleBackToHistory} />;
+  }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
@@ -695,7 +711,7 @@ const AssignmentView = ({ theme }) => {
                 <th style={{ padding: '12px 16px' }}>PROVEEDOR</th>
                 <th style={{ padding: '12px 16px' }}>CLIENTE</th>
                 <th style={{ padding: '12px 16px' }}>DETALLE</th>
-                <th style={{ padding: '12px 16px' }}>ESTADO</th>
+                <th style={{ padding: '12px 16px' }}>ESTADO Y ACCIONES</th>
               </tr>
             </thead>
             <tbody>
@@ -715,7 +731,10 @@ const AssignmentView = ({ theme }) => {
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', backgroundColor: entry.status === 'COMPLETO' ? '#dcfce7' : '#fee2e2', color: entry.status === 'COMPLETO' ? '#166534' : '#991b1b' }}>{entry.status}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', backgroundColor: entry.status === 'COMPLETO' ? '#dcfce7' : '#fee2e2', color: entry.status === 'COMPLETO' ? '#166534' : '#991b1b' }}>{entry.status}</span>
+                      <button onClick={() => handleDistribute(entry)} style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer' }}>Repartir</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -724,6 +743,90 @@ const AssignmentView = ({ theme }) => {
               )}
             </tbody>
           </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const DistributionView = ({ theme, assignment, onBack }) => {
+  const [distribution, setDistribution] = useState({});
+
+  // Clientes de ejemplo con sus solicitudes
+  const clients = [
+    { id: 1, name: 'Pollería El Rey', orders: {104: 10, 107: 5} },
+    { id: 2, name: 'Feria Sector A', orders: {104: 8, 109: 12} },
+    { id: 3, name: 'Doña Juana', orders: {104: 5, 107: 3} }
+  ];
+
+  const handleDistributionChange = (clientId, code, value) => {
+    const key = `${clientId}-${code}`;
+    setDistribution(prev => ({ ...prev, [key]: parseInt(value) || 0 }));
+  };
+
+  const getTotalDistributed = (code) => {
+    return Object.keys(distribution)
+      .filter(key => key.endsWith(`-${code}`))
+      .reduce((sum, key) => sum + (distribution[key] || 0), 0);
+  };
+
+  const getTotalAssigned = (code) => {
+    return (assignment.details[code]?.boxes || 0) + (assignment.details[code]?.units || 0);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <button onClick={onBack} style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>← Volver al Historial</button>
+
+      <Card>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 'bold' }}>Repartir Asignación del {assignment.date}</h2>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+        </div>
+
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {Object.entries(assignment.details).map(([code, detail]) => (
+              <div key={code} style={{ padding: '8px 12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Código {code}</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>{detail.boxes} Cajas · {detail.units} Unidades</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Distribuir entre Clientes</h4>
+        {Object.entries(assignment.details).map(([code, detail]) => (
+          <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h5 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>Código {code}</h5>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Total: {getTotalDistributed(code)} / {getTotalAssigned(code)}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {clients.map(client => (
+                <div key={client.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ flex: 1, fontWeight: '600', fontSize: '12px' }}>{client.name}</span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Pedido: {client.orders[code] || 0}</span>
+                  <input 
+                    type="number" 
+                    placeholder="0" 
+                    value={distribution[`${client.id}-${code}`] || ''} 
+                    onChange={(e) => handleDistributionChange(client.id, code, e.target.value)}
+                    style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', outline: 'none' }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+          <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Save size={16} /> Guardar Distribución
+          </button>
         </div>
       </Card>
     </div>
