@@ -577,17 +577,51 @@ const ConsolidationView = ({ theme }) => {
 };
 
 
-const ProductRow = ({ label }) => (
+const ProductRow = ({ label, code, provider, values, onChange }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
     <span style={{ fontSize: '12px', fontWeight: 'bold', flex: 1 }}>{label}</span>
     <div style={{ display: 'flex', gap: '4px' }}>
       <div style={{ position: 'relative' }}>
-        <input type="number" placeholder="0" style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} />
+        <input 
+          type="number" 
+          placeholder="0" 
+          value={values?.boxes || ''} 
+          onChange={(e) => onChange(code, 'boxes', e.target.value)}
+          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+        />
         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
       </div>
       <div style={{ position: 'relative' }}>
-        <input type="number" placeholder="0" style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} />
+        <input 
+          type="number" 
+          placeholder="0" 
+          value={values?.units || ''} 
+          onChange={(e) => onChange(code, 'units', e.target.value)}
+          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+        />
         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+      </div>
+      <div style={{ position: 'relative' }}>
+        <input 
+          type="number" 
+          step="0.01" 
+          placeholder="0.00" 
+          value={values?.grossWeight || ''} 
+          onChange={(e) => onChange(code, 'grossWeight', e.target.value)}
+          style={{ width: '70px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+        />
+        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PESO BRUTO</span>
+      </div>
+      <div style={{ position: 'relative' }}>
+        <input 
+          type="number" 
+          step="0.01" 
+          placeholder="0.00" 
+          value={values?.netWeight || ''} 
+          onChange={(e) => onChange(code, 'netWeight', e.target.value)}
+          style={{ width: '70px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+        />
+        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PESO NETO</span>
       </div>
     </div>
   </div>
@@ -613,6 +647,12 @@ const ConsolidatedBox = ({ title, color, totals }) => (
 );
 
 const AssignmentView = ({ theme }) => {
+  // Categorías por proveedor
+  const providerCategories = {
+    SOFIA: [104, 105, 106, 107, 108, 109, 110],
+    PIO: [104, 105, 106, 107, 108, 109, 110]  // IMBA/PIO
+  };
+
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
   const [filterProvider, setFilterProvider] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
@@ -622,12 +662,31 @@ const AssignmentView = ({ theme }) => {
   const [receiveMode, setReceiveMode] = useState(false);
   const [selectedReceiveAssignment, setSelectedReceiveAssignment] = useState(null);
 
+  const [selectedProducts, setSelectedProducts] = useState(() => {
+    const init = {};
+    ['SOFIA', 'PIO'].forEach(provider => {
+      init[provider] = {};
+      providerCategories[provider].forEach(code => {
+        init[provider][code] = { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+      });
+    });
+    return init;
+  });
+
+  const [assignmentPrice, setAssignmentPrice] = useState(0);
+
   const [history, setHistory] = useState([
-    { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5},107:{boxes:5,units:2}}, status: 'COMPLETO' },
-    { id: 2, date: '2025-12-05', provider: 'PIO', client: 'Feria Sector A', details: {109:{boxes:5,units:10},104:{boxes:2,units:3}}, status: 'PENDIENTE' }
+    { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5,grossWeight:100.00,netWeight:95.00},107:{boxes:5,units:2,grossWeight:50.00,netWeight:47.50}}, status: 'COMPLETO' },
+    { id: 2, date: '2025-12-05', provider: 'PIO', client: 'Feria Sector A', details: {109:{boxes:5,units:10,grossWeight:75.00,netWeight:70.00},104:{boxes:2,units:3,grossWeight:25.00,netWeight:23.00}}, status: 'PENDIENTE' }
   ]);
 
-  const formatDetails = (details) => Object.entries(details).map(([code,d])=>`Código ${code}: ${d.boxes} Cj / ${d.units} Unid`).join(' • ');
+  const getAssignmentTotalNetWeight = () => {
+    return providerCategories[selectedProvider].reduce((sum, code) => sum + (selectedProducts[selectedProvider][code]?.netWeight || 0), 0);
+  };
+
+  const getAssignmentTotalCost = () => {
+    return getAssignmentTotalNetWeight() * assignmentPrice;
+  };
   const matchesFilters = (e) => {
     if (filterProvider !== 'ALL' && e.provider !== filterProvider) return false;
     if (dateFrom && e.date < dateFrom) return false;
@@ -635,12 +694,6 @@ const AssignmentView = ({ theme }) => {
     return true;
   };
   const filteredHistory = history.filter(matchesFilters);
-
-  // Categorías por proveedor
-  const providerCategories = {
-    SOFIA: [104, 105, 106, 107, 108, 109, 110],
-    PIO: [104, 105, 106, 107, 108, 109, 110]  // IMBA/PIO
-  };
 
   const codeNames = {
     104: 'Rojo',
@@ -704,8 +757,43 @@ const AssignmentView = ({ theme }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CANTIDADES A ASIGNAR</label>
             {providerCategories[selectedProvider].map(code => (
-              <ProductRow key={code} label={`Código ${code}`} />
+              <ProductRow 
+                key={code} 
+                label={`Código ${code}`} 
+                code={code}
+                provider={selectedProvider}
+                values={selectedProducts[selectedProvider][code]}
+                onChange={(code, field, value) => {
+                  setSelectedProducts(prev => ({
+                    ...prev,
+                    [selectedProvider]: {
+                      ...prev[selectedProvider],
+                      [code]: {
+                        ...prev[selectedProvider][code],
+                        [field]: parseFloat(value) || 0
+                      }
+                    }
+                  }));
+                }}
+              />
             ))}
+          </div>
+
+          {/* Precio y Total */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO (Bs./Kg.)</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                value={assignmentPrice || ''} 
+                onChange={(e) => setAssignmentPrice(parseFloat(e.target.value) || 0)}
+                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              />
+            </div>
+            <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Total a Pagar: Bs {getAssignmentTotalCost().toFixed(2)}</div>
+            </div>
           </div>
 
           <button style={{ 
@@ -807,6 +895,14 @@ const DistributionView = ({ theme, assignment, onBack }) => {
     return init;
   });
 
+  const [costPrices, setCostPrices] = useState(() => {
+    const init = {};
+    clients.forEach(client => {
+      init[client.id] = 0;
+    });
+    return init;
+  });
+
   const [savedClients, setSavedClients] = useState({});
 
   const addDelivery = (clientId) => {
@@ -867,6 +963,13 @@ const DistributionView = ({ theme, assignment, onBack }) => {
     }));
   };
 
+  const updateCostPrice = (clientId, price) => {
+    setCostPrices(prev => ({
+      ...prev,
+      [clientId]: parseFloat(price) || 0
+    }));
+  };
+
   const saveClient = (clientId) => {
     setSavedClients(prev => ({
       ...prev,
@@ -878,6 +981,12 @@ const DistributionView = ({ theme, assignment, onBack }) => {
   const getClientSellingTotal = (clientId) => {
     const totalWeight = getClientTotalWeight(clientId);
     const price = sellingPrices[clientId] || 0;
+    return totalWeight * price;
+  };
+
+  const getClientCostTotal = (clientId) => {
+    const totalWeight = getClientTotalWeight(clientId);
+    const price = costPrices[clientId] || 0;
     return totalWeight * price;
   };
 
@@ -954,7 +1063,7 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-              const detail = assignment.details[code] || { boxes: 0, units: 0 };
+              const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
               return (
                 <div key={code} style={{ 
                   padding: '16px', 
@@ -977,9 +1086,17 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                       <Box size={14} />
                       <span>{detail.units} Unidades</span>
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#059669' }}>
+                      <Truck size={14} />
+                      <span>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</span>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
                       <Truck size={14} />
-                      <span>0.00 kg Recibidos</span>
+                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Netoht?.toFixed(2) || '0.00'} kg Bruto</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
+                      <Truck size={14} />
+                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</span>
                     </div>
                   </div>
                 </div>
@@ -1336,67 +1453,68 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
-              <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                Total: {getTotalBoxes(code)} cajas / {getTotalUnits(code)} unidades / {getTotalWeight(code).toFixed(2)} kg
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                <span>Total:</span>
+                <span>{getTotalBoxes(code)} cajas</span>
+                <span>/</span>
+                <span>{getTotalUnits(code)} unidades</span>
+                <span>/</span>
+                <span>{getTotalWeight(code).toFixed(2)} kg</span>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
               {(batches[code] || []).map((batch, index) => (
-                <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Lote {index + 1}:</span>
-                    <input 
-                      type="number" 
-                      placeholder="20" 
-                      value={batch.boxes || ''} 
-                      onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
-                      style={{ 
-                        width: '60px', 
-                        padding: '6px', 
-                        borderRadius: '4px', 
-                        border: '1px solid #cbd5e1', 
-                        outline: 'none',
-                        fontSize: '12px',
-                        textAlign: 'center'
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input 
-                      type="number" 
-                      placeholder="0" 
-                      value={batch.units || ''} 
-                      onChange={(e) => updateBatchUnits(code, index, e.target.value)}
-                      style={{ 
-                        width: '60px', 
-                        padding: '6px', 
-                        borderRadius: '4px', 
-                        border: '1px solid #cbd5e1', 
-                        outline: 'none',
-                        fontSize: '12px',
-                        textAlign: 'center'
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="0.00" 
-                      value={batch.weight || ''} 
-                      onChange={(e) => updateBatchWeight(code, index, e.target.value)}
-                      style={{ 
-                        width: '80px', 
-                        padding: '6px', 
-                        borderRadius: '4px', 
-                        border: '1px solid #cbd5e1', 
-                        outline: 'none',
-                        fontSize: '12px',
-                        textAlign: 'center'
-                      }}
-                    />
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
-                  </div>
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Pesaje {index + 1}:</span>
+                  <input 
+                    type="number" 
+                    placeholder="20" 
+                    value={batch.boxes || ''} 
+                    onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
+                    style={{ 
+                      width: '60px', 
+                      padding: '6px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
+                  <input 
+                    type="number" 
+                    placeholder="0" 
+                    value={batch.units || ''} 
+                    onChange={(e) => updateBatchUnits(code, index, e.target.value)}
+                    style={{ 
+                      width: '60px', 
+                      padding: '6px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    placeholder="0.00" 
+                    value={batch.weight || ''} 
+                    onChange={(e) => updateBatchWeight(code, index, e.target.value)}
+                    style={{ 
+                      width: '80px', 
+                      padding: '6px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
                   <button onClick={() => removeBatch(code, index)} style={{ alignSelf: 'flex-end', padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
                 </div>
               ))}
