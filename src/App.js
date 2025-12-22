@@ -610,52 +610,125 @@ const ConsolidatedBox = ({ title, color, totals }) => (
   </Card>
 );
 
-const AssignmentView = ({ theme }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '32px' }}>
-    <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Plus color={theme.primary} size={20} /> Recepción de Proveedor
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <InputBox label="Proveedor" value="Avícola Sofía" readOnly />
-        <InputBox label="Código 104" placeholder="0" />
-        <InputBox label="Código 105" placeholder="0" />
-        <InputBox label="Código 106" placeholder="0" />
-        <button style={{ 
-          backgroundColor: theme.primary, color: 'white', border: 'none', padding: '14px', 
-          borderRadius: '10px', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' 
-        }}>
-          Registrar Entrada
-        </button>
-      </div>
-    </Card>
+const AssignmentView = ({ theme }) => {
+  const [selectedProvider, setSelectedProvider] = useState('SOFIA');
+  const [filterProvider, setFilterProvider] = useState('ALL');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
-    <Card style={{ padding: 0 }}>
-      <div style={{ padding: '16px 24px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 'bold' }}>Distribución Sugerida</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: '#10b981' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
-          LISTO PARA ASIGNAR
+  const [history, setHistory] = useState([
+    { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5},107:{boxes:5,units:2}}, status: 'COMPLETO' },
+    { id: 2, date: '2025-12-05', provider: 'PIO', client: 'Feria Sector A', details: {109:{boxes:5,units:10},104:{boxes:2,units:3}}, status: 'PENDIENTE' }
+  ]);
+
+  const formatDetails = (details) => Object.entries(details).map(([code,d])=>`Código ${code}: ${d.boxes} Cj / ${d.units} Unid`).join(' • ');
+  const matchesFilters = (e) => {
+    if (filterProvider !== 'ALL' && e.provider !== filterProvider) return false;
+    if (dateFrom && e.date < dateFrom) return false;
+    if (dateTo && e.date > dateTo) return false;
+    return true;
+  };
+  const filteredHistory = history.filter(matchesFilters);
+
+  // Categorías por proveedor
+  const providerCategories = {
+    SOFIA: [104, 105, 106, 107, 108, 109],
+    PIO: [104, 105, 106, 107, 108, 109]  // IMBA/PIO
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
+      <Card>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Plus color={theme.primary} size={20} /> Asignación de Productos
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Selección de Proveedor */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR</label>
+            <select 
+              value={selectedProvider} 
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+            >
+              <option value="SOFIA">Avícola Sofía</option>
+              <option value="PIO">PIO / IMBA</option>
+            </select>
+          </div>
+
+          {/* Detalle de Códigos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CANTIDADES A ASIGNAR</label>
+            {providerCategories[selectedProvider].map(code => (
+              <ProductRow key={code} label={`Código ${code}`} />
+            ))}
+          </div>
+
+          <button style={{ 
+            backgroundColor: theme.primary, color: 'white', border: 'none', padding: '14px', 
+            borderRadius: '10px', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+          }}>
+            <Save size={18} /> Asignar Productos
+          </button>
         </div>
-      </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
-            <th style={{ padding: '16px 24px' }}>CLIENTE</th>
-            <th style={{ padding: '16px 24px' }}>PEDIDO (104)</th>
-            <th style={{ padding: '16px 24px' }}>ASIGNADO</th>
-            <th style={{ padding: '16px 24px' }}>ESTADO</th>
-          </tr>
-        </thead>
-        <tbody>
-          <TableRow client="Pollería El Rey" req={50} asig={50} status="COMPLETO" />
-          <TableRow client="Feria Sector A" req={120} asig={100} status="INCOMPLETO" />
-          <TableRow client="Súper Pollo" req={30} asig={30} status="COMPLETO" />
-        </tbody>
-      </table>
-    </Card>
-  </div>
-);
+      </Card>
+
+      <Card style={{ padding: 0 }}>
+        <div style={{ padding: '16px 24px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontWeight: 'bold' }}>Historial de Asignaciones</span>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <select value={filterProvider} onChange={e=>setFilterProvider(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <option value="ALL">Todos los Proveedores</option>
+              <option value="SOFIA">SOFIA</option>
+              <option value="PIO">PIO / IMBA</option>
+            </select>
+            <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+            <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          </div>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
+                <th style={{ padding: '12px 16px' }}>FECHA</th>
+                <th style={{ padding: '12px 16px' }}>PROVEEDOR</th>
+                <th style={{ padding: '12px 16px' }}>CLIENTE</th>
+                <th style={{ padding: '12px 16px' }}>DETALLE</th>
+                <th style={{ padding: '12px 16px' }}>ESTADO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredHistory.map(entry => (
+                <tr key={entry.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <td style={{ padding: '12px 16px' }}>{entry.date}</td>
+                  <td style={{ padding: '12px 16px' }}>{entry.provider}</td>
+                  <td style={{ padding: '12px 16px', fontWeight: '600' }}>{entry.client}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {Object.entries(entry.details).map(([code, d]) => (
+                        <div key={code} style={{ padding: '6px 10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '120px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '800' }}>Código {code}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>{d.boxes} Cj · {d.units} Unid</div>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', backgroundColor: entry.status === 'COMPLETO' ? '#dcfce7' : '#fee2e2', color: entry.status === 'COMPLETO' ? '#166534' : '#991b1b' }}>{entry.status}</span>
+                  </td>
+                </tr>
+              ))}
+              {filteredHistory.length === 0 && (
+                <tr><td colSpan={5} style={{ padding: '16px', color: '#64748b' }}>No hay registros que coincidan con los filtros.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 const BasketView = ({ theme }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
