@@ -574,11 +574,21 @@ const ConsolidationView = ({ theme }) => {
                                   <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td style={{ padding: '8px 12px', fontWeight: '600' }}>{clientData.client}</td>
                                     <td style={{ padding: '8px 12px' }}>
-                                      {Object.entries(clientData.orders).map(([code, qty]) => (
-                                        <div key={code} style={{ marginBottom: '4px' }}>
-                                          <span style={{ fontWeight: 'bold', color: theme.primary }}>Código {code}:</span> {qty} unidades
-                                        </div>
-                                      ))}
+                                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                                          const order = clientData.orders[code] || 0;
+                                          // Mock: assume if order > 10 it's boxes, else units
+                                          const boxes = order > 10 ? Math.floor(order / 10) : 0;
+                                          const units = order > 10 ? order % 10 : order;
+                                          return (
+                                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
+                                              <div style={{ fontWeight: 'bold', color: theme.primary }}>Código {code}:</div>
+                                              <div>{boxes} Cajas</div>
+                                              <div>{units} Unidades</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}
