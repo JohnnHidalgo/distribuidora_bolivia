@@ -285,6 +285,17 @@ const InventoryView = ({ theme }) => (
 const ConsolidationView = ({ theme }) => {
   const [viewStep, setViewStep] = useState('register');
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [selectedProvider, setSelectedProvider] = useState('SOFIA');
+  const [selectedProducts, setSelectedProducts] = useState(() => {
+    const init = {};
+    ['SOFIA', 'PIO'].forEach(provider => {
+      init[provider] = {};
+      [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+        init[provider][code] = { boxes: 0, units: 0, netWeight: 0 };
+      });
+    });
+    return init;
+  });
 
   // Categorías por proveedor
   const providerCategories = {
@@ -373,10 +384,14 @@ const ConsolidationView = ({ theme }) => {
               {/* Selección de Proveedor */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
-                <select style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}>
-                  <option>Avícola Sofía</option>
-                  <option>PIO</option>
-                  <option>Pío Lindo</option>
+                <select 
+                  value={selectedProvider} 
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}
+                >
+                  <option value="SOFIA">Avícola Sofía</option>
+                  <option value="PIO">PIO</option>
+                  <option value="Pío Lindo">Pío Lindo</option>
                 </select>
               </div>
 
@@ -406,13 +421,27 @@ const ConsolidationView = ({ theme }) => {
               {/* Grid de Productos */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
-                <ProductRow label="Código 104 (Rojo)" />
-                <ProductRow label="Código 105 (Blanco)" />
-                <ProductRow label="Código 106 (Amarillo)" />
-                <ProductRow label="Código 107 (Verde)" />
-                <ProductRow label="Código 108 (Azul)" />
-                <ProductRow label="Código 109 (Negro)" />
-                <ProductRow label="Código 110 (Menudencia)" />
+                {providerCategories[selectedProvider].map(code => (
+                  <ProductRow 
+                    key={code} 
+                    label={`Código ${code}`} 
+                    code={code}
+                    provider={selectedProvider}
+                    values={selectedProducts[selectedProvider][code]}
+                    onChange={(code, field, value) => {
+                      setSelectedProducts(prev => ({
+                        ...prev,
+                        [selectedProvider]: {
+                          ...prev[selectedProvider],
+                          [code]: {
+                            ...prev[selectedProvider][code],
+                            [field]: parseFloat(value) || 0
+                          }
+                        }
+                      }));
+                    }}
+                  />
+                ))}
               </div>
 
               <button style={{ 
@@ -862,7 +891,6 @@ const AssignmentView = ({ theme }) => {
               <tr style={{ textAlign: 'left', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
                 <th style={{ padding: '12px 16px' }}>FECHA</th>
                 <th style={{ padding: '12px 16px' }}>PROVEEDOR</th>
-                <th style={{ padding: '12px 16px' }}>CLIENTE</th>
                 <th style={{ padding: '12px 16px' }}>DETALLE</th>
                 <th style={{ padding: '12px 16px' }}>ESTADO Y ACCIONES</th>
               </tr>
@@ -872,7 +900,6 @@ const AssignmentView = ({ theme }) => {
                 <tr key={entry.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '12px 16px' }}>{entry.date}</td>
                   <td style={{ padding: '12px 16px' }}>{entry.provider}</td>
-                  <td style={{ padding: '12px 16px', fontWeight: '600' }}>{entry.client}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
                       {[104, 105, 106, 107, 108, 109, 110].map((code) => {
