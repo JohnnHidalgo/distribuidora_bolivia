@@ -407,8 +407,12 @@ const ConsolidationView = ({ theme }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
                 <ProductRow label="Código 104 (Rojo)" />
+                <ProductRow label="Código 105 (Blanco)" />
+                <ProductRow label="Código 106 (Amarillo)" />
                 <ProductRow label="Código 107 (Verde)" />
+                <ProductRow label="Código 108 (Azul)" />
                 <ProductRow label="Código 109 (Negro)" />
+                <ProductRow label="Código 110 (Menudencia)" />
               </div>
 
               <button style={{ 
