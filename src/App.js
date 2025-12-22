@@ -794,15 +794,25 @@ const DistributionView = ({ theme, assignment, onBack }) => {
   const [deliveries, setDeliveries] = useState(() => {
     const init = {};
     clients.forEach(client => {
-      init[client.id] = [{104: {boxes: 0, units: 0, weight: 0}, 105: {boxes: 0, units: 0, weight: 0}, 106: {boxes: 0, units: 0, weight: 0}, 107: {boxes: 0, units: 0, weight: 0}, 108: {boxes: 0, units: 0, weight: 0}, 109: {boxes: 0, units: 0, weight: 0}, 110: {boxes: 0, units: 0, weight: 0}}];
+      init[client.id] = [{104: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 105: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 106: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 107: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 108: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 109: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 110: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}}];
     });
     return init;
   });
 
+  const [sellingPrices, setSellingPrices] = useState(() => {
+    const init = {};
+    clients.forEach(client => {
+      init[client.id] = 0;
+    });
+    return init;
+  });
+
+  const [savedClients, setSavedClients] = useState({});
+
   const addDelivery = (clientId) => {
     setDeliveries(prev => ({
       ...prev,
-      [clientId]: [...prev[clientId], {104: {boxes: 0, units: 0, weight: 0}, 105: {boxes: 0, units: 0, weight: 0}, 106: {boxes: 0, units: 0, weight: 0}, 107: {boxes: 0, units: 0, weight: 0}, 108: {boxes: 0, units: 0, weight: 0}, 109: {boxes: 0, units: 0, weight: 0}, 110: {boxes: 0, units: 0, weight: 0}}]
+      [clientId]: [...prev[clientId], {104: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 105: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 106: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 107: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 108: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 109: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 110: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}}]
     }));
   };
 
@@ -835,7 +845,11 @@ const DistributionView = ({ theme, assignment, onBack }) => {
   };
 
   const getClientTotalWeight = (clientId) => {
-    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'weight'), 0);
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'netWeight'), 0);
+  };
+
+  const getClientTotalGrossWeight = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'grossWeight'), 0);
   };
 
   const getTotalDistributed = (code) => {
@@ -844,6 +858,85 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 
   const getTotalAssigned = (code) => {
     return (assignment.details[code]?.boxes || 0) + (assignment.details[code]?.units || 0);
+  };
+
+  const updateSellingPrice = (clientId, price) => {
+    setSellingPrices(prev => ({
+      ...prev,
+      [clientId]: parseFloat(price) || 0
+    }));
+  };
+
+  const saveClient = (clientId) => {
+    setSavedClients(prev => ({
+      ...prev,
+      [clientId]: true
+    }));
+    alert(`Cliente ${clients.find(c => c.id === clientId).name} guardado exitosamente`);
+  };
+
+  const getClientSellingTotal = (clientId) => {
+    const totalWeight = getClientTotalWeight(clientId);
+    const price = sellingPrices[clientId] || 0;
+    return totalWeight * price;
+  };
+
+  const printClientDetails = (client) => {
+    const printWindow = window.open('', '_blank');
+    const totalGrossWeight = getClientTotalGrossWeight(client.id);
+    const totalNetWeight = getClientTotalWeight(client.id);
+    const totalBoxes = getClientTotalBoxes(client.id);
+    const totalUnits = getClientTotalUnits(client.id);
+    const sellingPrice = sellingPrices[client.id] || 0;
+    const totalSelling = getClientSellingTotal(client.id);
+
+    const html = `
+      <html>
+        <head>
+          <title>Detalle de Venta - ${client.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #e11d48; }
+            .details { margin: 20px 0; }
+            .codes { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+            .code { border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 120px; }
+            .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>Detalle de Venta</h1>
+          <div class="details">
+            <p><strong>Cliente:</strong> ${client.name}</p>
+            <p><strong>Grupo:</strong> ${client.group}</p>
+            <p><strong>Asignación:</strong> ${assignment.date} - ${assignment.provider}</p>
+            <p><strong>Precio de Venta:</strong> Bs ${sellingPrice.toFixed(2)} / kg</p>
+          </div>
+          <h2>Productos Entregados</h2>
+          <div class="codes">
+            ${[104, 105, 106, 107, 108, 109, 110].map(code => `
+              <div class="code">
+                <div><strong>Código ${code}</strong></div>
+                <div>Cajas: ${getClientTotal(client.id, code, 'boxes')}</div>
+                <div>Unidades: ${getClientTotal(client.id, code, 'units')}</div>
+                <div>Peso Bruto: ${getClientTotal(client.id, code, 'grossWeight').toFixed(2)} kg</div>
+                <div>Peso Neto: ${getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="total">
+            <p>Total Cajas: ${totalBoxes}</p>
+            <p>Total Unidades: ${totalUnits}</p>
+            <p>Total Peso Bruto: ${totalGrossWeight.toFixed(2)} kg</p>
+            <p>Total Peso Neto: ${totalNetWeight.toFixed(2)} kg</p>
+            <p>Total Precio de Venta: Bs ${totalSelling.toFixed(2)}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
@@ -913,7 +1006,64 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           <div key={client.id} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>{client.name}</h5>
-              <button onClick={() => addDelivery(client.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>Agregar Entrega</button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>PRECIO VENTA (Bs/Kg)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    value={sellingPrices[client.id] || ''} 
+                    onChange={(e) => updateSellingPrice(client.id, e.target.value)}
+                    style={{ 
+                      width: '100px', 
+                      padding: '4px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #cbd5e1', 
+                      outline: 'none',
+                      fontSize: '11px',
+                      textAlign: 'center'
+                    }}
+                  />
+                </div>
+                <button onClick={() => addDelivery(client.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>Agregar Entrega</button>
+                <button 
+                  onClick={() => saveClient(client.id)} 
+                  disabled={savedClients[client.id]}
+                  style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '6px', 
+                    border: 'none', 
+                    backgroundColor: savedClients[client.id] ? '#10b981' : theme.primary, 
+                    color: 'white', 
+                    cursor: savedClients[client.id] ? 'not-allowed' : 'pointer', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Save size={12} /> {savedClients[client.id] ? 'Guardado' : 'Guardar'}
+                </button>
+                <button 
+                  onClick={() => printClientDetails(client)} 
+                  style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '6px', 
+                    border: '1px solid #e2e8f0', 
+                    backgroundColor: 'white', 
+                    color: theme.primary, 
+                    cursor: 'pointer', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🖨️ Imprimir
+                </button>
+              </div>
             </div>
             
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -940,12 +1090,23 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981' }}>
                       <Truck size={12} />
-                      <span>{getClientTotal(client.id, code, 'weight').toFixed(2)} kg Asignados</span>
+                      <span>{getClientTotal(client.id, code, 'grossWeight').toFixed(2)} kg Bruto</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#059669' }}>
+                      <Truck size={12} />
+                      <span>{getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg Neto</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
+            <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Peso Bruto Total: {getClientTotalGrossWeight(client.id).toFixed(2)} kg</div>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#059669' }}>Peso Neto Total: {getClientTotalWeight(client.id).toFixed(2)} kg</div>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Total Precio de Venta: Bs {getClientSellingTotal(client.id).toFixed(2)}</div>
+            </div>
+            
 
             {(deliveries[client.id] || []).map((delivery, index) => (
               <div key={index} style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -992,9 +1153,25 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                       <input 
                         type="number" 
                         step="0.01"
-                        placeholder="Peso" 
-                        value={delivery[code]?.weight || ''} 
-                        onChange={(e) => updateDelivery(client.id, index, code, 'weight', e.target.value)}
+                        placeholder="Peso Bruto" 
+                        value={delivery[code]?.grossWeight || ''} 
+                        onChange={(e) => updateDelivery(client.id, index, code, 'grossWeight', e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: '4px', 
+                          border: '1px solid #cbd5e1', 
+                          outline: 'none',
+                          fontSize: '11px',
+                          textAlign: 'center'
+                        }}
+                      />
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="Peso Neto" 
+                        value={delivery[code]?.netWeight || ''} 
+                        onChange={(e) => updateDelivery(client.id, index, code, 'netWeight', e.target.value)}
                         style={{ 
                           width: '100%', 
                           padding: '4px', 
