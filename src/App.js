@@ -886,6 +886,7 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 
 const ReceiveView = ({ theme, assignment, onBack }) => {
   const [batches, setBatches] = useState({});
+  const [costPerKg, setCostPerKg] = useState(0);
 
   const addBatch = (code) => {
     setBatches(prev => ({
@@ -924,7 +925,11 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
   };
 
   const getOverallTotalWeight = () => {
-    return [104, 105, 106, 107, 108, 109, 'Menudencia'].reduce((sum, code) => sum + getTotalWeight(code), 0);
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getTotalWeight(code), 0);
+  };
+
+  const getTotalCost = () => {
+    return getOverallTotalWeight() * costPerKg;
   };
 
   return (
@@ -1028,6 +1033,47 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Peso Total General: {getOverallTotalWeight().toFixed(2)} kg</div>
+        </div>
+
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Cálculo de Costo Total</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG (Bs)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                placeholder="0.00" 
+                value={costPerKg || ''} 
+                onChange={(e) => setCostPerKg(parseFloat(e.target.value) || 0)}
+                style={{ 
+                  width: '120px', 
+                  padding: '10px', 
+                  borderRadius: '6px', 
+                  border: '1px solid #e2e8f0', 
+                  outline: 'none',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL</label>
+              <div style={{ 
+                padding: '10px', 
+                borderRadius: '6px', 
+                backgroundColor: 'white', 
+                border: '1px solid #e2e8f0',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: theme.primary,
+                minWidth: '140px',
+                textAlign: 'center'
+              }}>
+                Bs {getTotalCost().toFixed(2)}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
