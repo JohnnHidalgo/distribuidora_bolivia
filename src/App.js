@@ -781,10 +781,15 @@ const AssignmentView = ({ theme }) => {
 const DistributionView = ({ theme, assignment, onBack }) => {
   // Clientes de ejemplo con sus solicitudes
   const clients = [
-    { id: 1, name: 'Pollería El Rey', orders: {104: 10, 107: 5} },
-    { id: 2, name: 'Feria Sector A', orders: {104: 8, 109: 12} },
-    { id: 3, name: 'Doña Juana', orders: {104: 5, 107: 3} }
+    { id: 1, name: 'Pollería El Rey', group: 'El Alto Norte', orders: {104: 10, 107: 5} },
+    { id: 2, name: 'Feria Sector A', group: 'El Alto Norte', orders: {104: 8, 109: 12} },
+    { id: 3, name: 'Doña Juana', group: 'El Alto Sur', orders: {104: 5, 107: 3} }
   ];
+
+  const [selectedGroup, setSelectedGroup] = useState('ALL');
+
+  const groups = ['ALL', ...new Set(clients.map(c => c.group))];
+  const filteredClients = selectedGroup === 'ALL' ? clients : clients.filter(c => c.group === selectedGroup);
 
   const [deliveries, setDeliveries] = useState(() => {
     const init = {};
@@ -890,8 +895,21 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           </div>
         </div>
 
+        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>FILTRAR POR GRUPO:</label>
+          <select 
+            value={selectedGroup} 
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '12px' }}
+          >
+            {groups.map(group => (
+              <option key={group} value={group}>{group === 'ALL' ? 'Todos los Grupos' : group}</option>
+            ))}
+          </select>
+        </div>
+
         <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Distribuir entre Clientes</h4>
-        {clients.map(client => (
+        {filteredClients.map(client => (
           <div key={client.id} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>{client.name}</h5>
