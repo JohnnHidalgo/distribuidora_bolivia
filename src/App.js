@@ -20,8 +20,24 @@ import {
   Save,
   Trash2,
   MapPin,
-  Box
+  Box,
+  TrendingDown,
+  Target,
+  Clock,
+  Fuel,
+  Activity
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix para los iconos de Leaflet en React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('orders');
@@ -100,7 +116,6 @@ const App = () => {
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': return <DashboardView theme={theme} />;
-      case 'inventory': return <InventoryView theme={theme} />;
       case 'orders': return <ConsolidationView theme={theme} />;
       case 'assignments': return <AssignmentView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
@@ -119,7 +134,6 @@ const App = () => {
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <SidebarBtn id="dashboard" icon={LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="inventory" icon={Package} label="Inventario" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
@@ -198,38 +212,164 @@ const Card = ({ children, style }) => (
 
 // --- VISTAS ESPECÍFICAS ---
 
-const DashboardView = ({ theme }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
-      <StatCard title="Entregas Hoy" value="42" change="+5" icon={CheckCircle2} color="#10b981" />
-      <StatCard title="Total Solicitudes" value="158" change="+12" icon={ShoppingCart} color="#3b82f6" />
-      <StatCard title="Canastos en Clientes" value="842" change="-18" icon={Archive} color="#f59e0b" />
-      <StatCard title="Stock Crítico" value="3 Categorías" icon={AlertCircle} color="#ef4444" />
-    </div>
+const DashboardView = ({ theme }) => {
+  // Datos de ejemplo para los indicadores
+  const salesByClient = [
+    { name: 'Pollería El Rey', sales: 12500 },
+    { name: 'Doña Juana', sales: 8900 },
+    { name: 'Feria Sector A', sales: 11200 },
+    { name: 'Mercado Central', sales: 7500 },
+    { name: 'Distribuidor Sucre', sales: 9800 }
+  ];
 
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-      <Card>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Pedidos por Categoría (Hoy)</h3>
-        {['104', '105', '106', '107', '108', '109', '110'].map((cat, i) => (
-          <div key={cat} style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyBetween: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
-              <span>Código {cat}</span>
-              <span style={{ marginLeft: 'auto' }}>{80 - i * 10} Unid.</span>
+  const maxSales = Math.max(...salesByClient.map(c => c.sales));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Primera fila de indicadores */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <StatCard title="Entregas Hoy" value="42" change="+5" icon={CheckCircle2} color="#10b981" />
+        <StatCard title="Total Solicitudes" value="158" change="+12" icon={ShoppingCart} color="#3b82f6" />
+        <StatCard title="Canastos en Clientes" value="842" change="-18" icon={Archive} color="#f59e0b" />
+        <StatCard title="Stock Crítico" value="3 Categorías" icon={AlertCircle} color="#ef4444" />
+      </div>
+
+      {/* Segunda fila de indicadores nuevos */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <StatCard title="Fuga de Canastos" value="18" change="-3" icon={TrendingDown} color="#f43f5e" />
+        <StatCard title="Efectividad de Entregas" value="94.2%" change="+2.1" icon={Target} color="#10b981" />
+        <StatCard title="Tiempo Promedio Entrega" value="2.4h" change="-0.3" icon={Clock} color="#3b82f6" />
+        <StatCard title="Utilización Vehículos" value="78%" change="+5" icon={Activity} color="#f59e0b" />
+      </div>
+
+      {/* Tercera fila con gráficos y métricas */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Gráfico de Ventas por Cliente */}
+        <Card>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Ventas por Cliente</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {salesByClient.map((client, i) => (
+              <div key={i} style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                  <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.name}</span>
+                  <span style={{ color: theme.primary, fontWeight: 'bold' }}>Bs {client.sales.toLocaleString()}</span>
+                </div>
+                <div style={{ width: '100%', height: '10px', backgroundColor: '#f1f5f9', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div 
+                    style={{ 
+                      width: `${(client.sales / maxSales) * 100}%`, 
+                      height: '100%', 
+                      backgroundColor: theme.primary,
+                      transition: 'width 0.3s ease'
+                    }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Gasolina por Entrega */}
+        <Card>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Fuel size={20} color={theme.primary} />
+            Gasolina por Entrega
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '36px', fontWeight: '900', color: theme.primary, marginBottom: '8px' }}>8.5</div>
+              <div style={{ fontSize: '14px', color: theme.textMuted, fontWeight: '600' }}>Litros por Entrega</div>
             </div>
-            <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${100 - (i * 12)}%`, height: '100%', backgroundColor: theme.primary }}></div>
+            <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: theme.textMuted }}>
+                <span>Total Entregas Hoy:</span>
+                <span style={{ fontWeight: 'bold', color: theme.textMain }}>42</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: theme.textMuted }}>
+                <span>Consumo Total:</span>
+                <span style={{ fontWeight: 'bold', color: theme.textMain }}>357 L</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: theme.textMuted }}>
+                <span>Costo Estimado:</span>
+                <span style={{ fontWeight: 'bold', color: theme.primary }}>Bs 2,142</span>
+              </div>
             </div>
           </div>
-        ))}
-      </Card>
-      <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-        <Truck size={64} style={{ marginBottom: '16px', opacity: 0.2 }} />
-        <p style={{ margin: 0, fontWeight: '500' }}>Seguimiento de Vehículos en Tiempo Real</p>
-        <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '8px' }}>Módulo de Mapas</span>
-      </Card>
+        </Card>
+      </div>
+
+      {/* Cuarta fila con gráficos adicionales */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <Card>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Pedidos por Categoría (Hoy)</h3>
+          {['104', '105', '106', '107', '108', '109', '110'].map((cat, i) => (
+            <div key={cat} style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
+                <span>Código {cat}</span>
+                <span style={{ marginLeft: 'auto' }}>{80 - i * 10} Unid.</span>
+              </div>
+              <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${100 - (i * 12)}%`, height: '100%', backgroundColor: theme.primary }}></div>
+              </div>
+            </div>
+          ))}
+        </Card>
+        <Card style={{ padding: 0, overflow: 'hidden', height: '400px' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Truck size={20} color={theme.primary} />
+              Seguimiento de Vehículos en Tiempo Real
+            </h3>
+          </div>
+          <div style={{ height: 'calc(100% - 60px)', width: '100%', position: 'relative' }}>
+            <MapContainer 
+              center={[-16.5000, -68.1500]} 
+              zoom={12} 
+              style={{ height: '100%', width: '100%', zIndex: 0 }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {/* Vehículos de ejemplo */}
+              <Marker position={[-16.5000, -68.1500]}>
+                <Popup>
+                  <div style={{ padding: '8px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Vehículo #001</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Conductor: Juan Pérez</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Ruta: El Alto Norte</div>
+                    <div style={{ fontSize: '12px', color: theme.primary, marginTop: '4px' }}>En ruta → Pollería El Rey</div>
+                  </div>
+                </Popup>
+              </Marker>
+              <Marker position={[-16.5100, -68.1400]}>
+                <Popup>
+                  <div style={{ padding: '8px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Vehículo #002</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Conductor: María González</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Ruta: El Alto Sur</div>
+                    <div style={{ fontSize: '12px', color: theme.primary, marginTop: '4px' }}>En ruta → Doña Juana</div>
+                  </div>
+                </Popup>
+              </Marker>
+              <Marker position={[-16.4900, -68.1600]}>
+                <Popup>
+                  <div style={{ padding: '8px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Vehículo #003</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Conductor: Carlos Ramírez</div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>Ruta: La Paz Centro</div>
+                    <div style={{ fontSize: '12px', color: '#10b981', marginTop: '4px' }}>✓ Entrega completada</div>
+                  </div>
+                </Popup>
+              </Marker>
+            </MapContainer>
+          </div>
+        </Card>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const InventoryView = ({ theme }) => (
   <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -317,6 +457,33 @@ const ConsolidationView = ({ theme }) => {
     }
   };
 
+  // Estado editable para cajas / unidades por cliente y código en la vista de consolidación
+  const [clientOrders, setClientOrders] = useState(() => {
+    const init = {};
+    Object.entries(consolidatedData).forEach(([provider, groups]) => {
+      init[provider] = {};
+      Object.entries(groups).forEach(([groupName, clients]) => {
+        init[provider][groupName] = clients.map(client => {
+          const codesState = {};
+          providerCategories[provider].forEach(code => {
+            const totalUnits = client.orders[code] || 0;
+            const boxes = totalUnits > 10 ? Math.floor(totalUnits / 10) : 0;
+            const units = totalUnits > 10 ? totalUnits % 10 : totalUnits;
+            codesState[code] = { boxes, units };
+          });
+          return {
+            client: client.client,
+            codes: codesState
+          };
+        });
+      });
+    });
+    return init;
+  });
+
+  // Switch para habilitar / deshabilitar edición
+  const [editEnabled, setEditEnabled] = useState(false);
+
   const toggleGroup = (provider, group) => {
     const key = `${provider}-${group}`;
     setExpandedGroups(prev => ({ ...prev, [key]: !prev[key] }));
@@ -343,6 +510,83 @@ const ConsolidationView = ({ theme }) => {
       });
     });
     return totals;
+  };
+
+  // Helpers para usar el estado editable en la vista de consolidación
+  const getClientCodeState = (provider, group, clientIndex, code) => {
+    const groupState = clientOrders[provider]?.[group]?.[clientIndex];
+    if (!groupState) {
+      return { boxes: 0, units: 0 };
+    }
+    return groupState.codes[code] || { boxes: 0, units: 0 };
+  };
+
+  const handleClientOrderChange = (provider, group, clientIndex, code, field, value) => {
+    if (!editEnabled) return;
+    const numeric = parseInt(value, 10);
+    const safeValue = isNaN(numeric) || numeric < 0 ? 0 : numeric;
+    setClientOrders(prev => {
+      const providerState = prev[provider] || {};
+      const groupState = providerState[group] || [];
+      const clientState = groupState[clientIndex] || { client: '', codes: {} };
+      const currentCode = clientState.codes[code] || { boxes: 0, units: 0 };
+
+      const newClient = {
+        ...clientState,
+        codes: {
+          ...clientState.codes,
+          [code]: {
+            ...currentCode,
+            [field]: safeValue
+          }
+        }
+      };
+
+      const newGroupArray = [...groupState];
+      newGroupArray[clientIndex] = newClient;
+
+      return {
+        ...prev,
+        [provider]: {
+          ...providerState,
+          [group]: newGroupArray
+        }
+      };
+    });
+  };
+
+  const calculateGroupTotalsFromState = (provider, group, categories) => {
+    const totals = {};
+    categories.forEach(code => totals[code] = 0);
+    const clientsState = clientOrders[provider]?.[group] || [];
+    clientsState.forEach(client => {
+      categories.forEach(code => {
+        const codeState = client.codes[code] || { boxes: 0, units: 0 };
+        // Regla simple: 1 caja = 10 unidades
+        const totalUnits = (codeState.boxes || 0) * 10 + (codeState.units || 0);
+        totals[code] += totalUnits;
+      });
+    });
+    return totals;
+  };
+
+  const calculateProviderTotalsFromState = (provider, categories) => {
+    const totals = {};
+    categories.forEach(code => totals[code] = 0);
+    const groups = clientOrders[provider] || {};
+    Object.entries(groups).forEach(([groupName]) => {
+      const groupTotals = calculateGroupTotalsFromState(provider, groupName, categories);
+      Object.entries(groupTotals).forEach(([code, qty]) => {
+        totals[code] += qty;
+      });
+    });
+    return totals;
+  };
+
+  const handleSaveConsolidatedChanges = () => {
+    // Aquí en el futuro se puede enviar clientOrders al backend
+    alert('Cambios de consolidación guardados (mock).');
+    setEditEnabled(false);
   };
 
   return (
@@ -543,7 +787,7 @@ const ConsolidationView = ({ theme }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             {Object.entries(consolidatedData).map(([provider, groups]) => {
               const categories = providerCategories[provider];
-              const providerTotals = calculateProviderTotals(groups, categories);
+              const providerTotals = calculateProviderTotalsFromState(provider, categories);
               return (
                 <ConsolidatedBox 
                   key={provider} 
@@ -557,7 +801,63 @@ const ConsolidationView = ({ theme }) => {
 
           {/* Detalle por Grupo y Cliente */}
           <Card>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Detalle de Pedidos Consolidados</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Detalle de Pedidos Consolidados</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: theme.textMuted }}>
+                  <span style={{ fontWeight: 'bold' }}>Edición manual</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditEnabled(prev => !prev)}
+                    style={{
+                      width: '40px',
+                      height: '22px',
+                      borderRadius: '999px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: editEnabled ? theme.primary : '#e2e8f0',
+                      padding: '2px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: editEnabled ? 'flex-end' : 'flex-start',
+                      transition: 'background-color 0.2s ease, justify-content 0.2s ease'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '999px',
+                        backgroundColor: 'white',
+                        boxShadow: '0 1px 2px rgba(15,23,42,0.3)'
+                      }}
+                    />
+                  </button>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSaveConsolidatedChanges}
+                  disabled={!editEnabled}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: editEnabled ? 'pointer' : 'not-allowed',
+                    backgroundColor: editEnabled ? theme.primary : '#e2e8f0',
+                    color: editEnabled ? 'white' : '#94a3b8',
+                    boxShadow: editEnabled ? '0 2px 4px rgba(225,29,72,0.3)' : 'none'
+                  }}
+                >
+                  <Save size={14} />
+                  Guardar cambios
+                </button>
+              </div>
+            </div>
             {Object.entries(consolidatedData).map(([provider, groups]) => {
               const categories = providerCategories[provider];
               return (
@@ -566,7 +866,7 @@ const ConsolidationView = ({ theme }) => {
                     Proveedor: {provider}
                   </h4>
                   {Object.entries(groups).map(([group, clients]) => {
-                    const groupTotals = calculateGroupTotals(clients, categories);
+                    const groupTotals = calculateGroupTotalsFromState(provider, group, categories);
                     const isExpanded = expandedGroups[`${provider}-${group}`];
                     return (
                       <div key={group} style={{ marginBottom: '16px', padding: '16px', border: `1px solid #e2e8f0`, borderRadius: '8px', backgroundColor: '#f8fafc' }}>
@@ -595,7 +895,7 @@ const ConsolidationView = ({ theme }) => {
                               <thead>
                                 <tr style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}>
                                   <th style={{ padding: '8px 12px', textAlign: 'left' }}>Cliente</th>
-                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Detalle de Pedido</th>
+                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Detalle de Pedido (Editable)</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -603,17 +903,36 @@ const ConsolidationView = ({ theme }) => {
                                   <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td style={{ padding: '8px 12px', fontWeight: '600' }}>{clientData.client}</td>
                                     <td style={{ padding: '8px 12px' }}>
-                                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                         {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                                          const order = clientData.orders[code] || 0;
-                                          // Mock: assume if order > 10 it's boxes, else units
-                                          const boxes = order > 10 ? Math.floor(order / 10) : 0;
-                                          const units = order > 10 ? order % 10 : order;
+                                          const codeState = getClientCodeState(provider, group, index, code);
+                                          const totalUnits = (codeState.boxes || 0) * 10 + (codeState.units || 0);
                                           return (
-                                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
-                                              <div style={{ fontWeight: 'bold', color: theme.primary }}>Código {code}:</div>
-                                              <div>{boxes} Cajas</div>
-                                              <div>{units} Unidades</div>
+                                            <div key={code} style={{ padding: '6px 8px', background: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '11px', minWidth: '140px' }}>
+                                              <div style={{ fontWeight: 'bold', color: theme.primary, marginBottom: '4px' }}>Código {code}</div>
+                                              <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                                                <input
+                                                  type="number"
+                                                  min="0"
+                                                  value={codeState.boxes || ''}
+                                                  onChange={(e) => handleClientOrderChange(provider, group, index, code, 'boxes', e.target.value)}
+                                                  style={{ width: '52px', padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '10px', backgroundColor: editEnabled ? 'white' : '#e5e7eb' }}
+                                                  disabled={!editEnabled}
+                                                  placeholder="Cj"
+                                                />
+                                                <input
+                                                  type="number"
+                                                  min="0"
+                                                  value={codeState.units || ''}
+                                                  onChange={(e) => handleClientOrderChange(provider, group, index, code, 'units', e.target.value)}
+                                                  style={{ width: '52px', padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '10px', backgroundColor: editEnabled ? 'white' : '#e5e7eb' }}
+                                                  disabled={!editEnabled}
+                                                  placeholder="Unid"
+                                                />
+                                              </div>
+                                              <div style={{ fontSize: '10px', color: '#64748b' }}>
+                                                Total: <strong>{totalUnits}</strong> unidades
+                                              </div>
                                             </div>
                                           );
                                         })}
