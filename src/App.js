@@ -1293,6 +1293,29 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 
   const [savedClients, setSavedClients] = useState({});
 
+  // Vehículos y choferes de ejemplo por grupo de clientes
+  const availableVehicles = [
+    { id: 'VH-01', plate: '1234-ABC', capacity: '3.5 Ton', description: 'Camión frigorífico pequeño' },
+    { id: 'VH-02', plate: '5678-DEF', capacity: '5 Ton', description: 'Camión frigorífico mediano' },
+    { id: 'VH-03', plate: '9999-XYZ', capacity: '1.5 Ton', description: 'Camioneta refrigerada' },
+  ];
+
+  const availableDrivers = [
+    { id: 'CH-01', name: 'Juan Pérez' },
+    { id: 'CH-02', name: 'María González' },
+    { id: 'CH-03', name: 'Carlos Ramírez' },
+  ];
+
+  // Asignación de vehículo/chofer por grupo de clientes (ruta)
+  const [groupAssignments, setGroupAssignments] = useState(() => {
+    const init = {};
+    groups.forEach(g => {
+      if (g === 'ALL') return;
+      init[g] = { vehicleId: 'VH-01', driverId: 'CH-01' };
+    });
+    return init;
+  });
+
   const addDelivery = (clientId) => {
     setDeliveries(prev => ({
       ...prev,
@@ -1493,17 +1516,106 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>FILTRAR POR GRUPO:</label>
-          <select 
-            value={selectedGroup} 
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '12px' }}
-          >
-            {groups.map(group => (
-              <option key={group} value={group}>{group === 'ALL' ? 'Todos los Grupos' : group}</option>
-            ))}
-          </select>
+        <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA:</label>
+            <select 
+              value={selectedGroup} 
+              onChange={(e) => setSelectedGroup(e.target.value)}
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '12px' }}
+            >
+              {groups.map(group => (
+                <option key={group} value={group}>{group === 'ALL' ? 'Todos los Grupos' : group}</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedGroup !== 'ALL' && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '16px',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px dashed #e2e8f0',
+                backgroundColor: '#f8fafc',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>
+                  VEHÍCULO ASIGNADO (para todo el grupo)
+                </label>
+                <select
+                  value={groupAssignments[selectedGroup]?.vehicleId || ''}
+                  onChange={(e) =>
+                    setGroupAssignments(prev => ({
+                      ...prev,
+                      [selectedGroup]: {
+                        ...(prev[selectedGroup] || {}),
+                        vehicleId: e.target.value,
+                      },
+                    }))
+                  }
+                  style={{
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                    outline: 'none',
+                    fontSize: '12px',
+                  }}
+                >
+                  {availableVehicles.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.id} · {v.plate} · {v.capacity}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>
+                  CHOFER ASIGNADO
+                </label>
+                <select
+                  value={groupAssignments[selectedGroup]?.driverId || ''}
+                  onChange={(e) =>
+                    setGroupAssignments(prev => ({
+                      ...prev,
+                      [selectedGroup]: {
+                        ...(prev[selectedGroup] || {}),
+                        driverId: e.target.value,
+                      },
+                    }))
+                  }
+                  style={{
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0',
+                    outline: 'none',
+                    fontSize: '12px',
+                  }}
+                >
+                  {availableDrivers.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.id} · {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ flex: 1, minWidth: '200px', fontSize: '12px', color: '#64748b' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Contexto de ruta</div>
+                <div>
+                  Este vehículo y chofer se aplicarán a todos los clientes del grupo{' '}
+                  <span style={{ fontWeight: 'bold', color: theme.primary }}>
+                    {selectedGroup}
+                  </span>
+                  . Úsalo como referencia para la logística y el despacho.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Distribuir entre Clientes</h4>
