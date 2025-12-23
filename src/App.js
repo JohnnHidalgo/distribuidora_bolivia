@@ -118,6 +118,7 @@ const App = () => {
       case 'dashboard': return <DashboardView theme={theme} />;
       case 'orders': return <ConsolidationView theme={theme} />;
       case 'assignments': return <AssignmentView theme={theme} />;
+      case 'tracking': return <TrackingView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
       default: return <DashboardView theme={theme} />;
     }
@@ -133,9 +134,10 @@ const App = () => {
         </div>
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <SidebarBtn id="dashboard" icon={LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+          <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+          <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
         </nav>
@@ -2073,6 +2075,436 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             <Truck size={16} /> Registrar Recepción
           </button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const TrackingView = ({ theme }) => {
+  const [selectedVehicleId, setSelectedVehicleId] = useState('VH-01');
+  const [routeFilter, setRouteFilter] = useState('ALL');
+
+  const vehicles = [
+    {
+      id: 'VH-01',
+      plate: '1234-ABC',
+      driver: 'Juan Pérez',
+      route: 'El Alto Norte',
+      status: 'En ruta',
+      lat: -16.5,
+      lng: -68.15,
+      deliveredOrders: 8,
+      pendingOrders: 4,
+      basketsOnTruck: 60,
+      basketsDelivered: 40,
+      lastUpdate: '10:25',
+    },
+    {
+      id: 'VH-02',
+      plate: '5678-DEF',
+      driver: 'María González',
+      route: 'El Alto Sur',
+      status: 'Entregando',
+      lat: -16.51,
+      lng: -68.14,
+      deliveredOrders: 5,
+      pendingOrders: 2,
+      basketsOnTruck: 35,
+      basketsDelivered: 25,
+      lastUpdate: '10:22',
+    },
+    {
+      id: 'VH-03',
+      plate: '9999-XYZ',
+      driver: 'Carlos Ramírez',
+      route: 'La Paz Centro',
+      status: 'Retornando',
+      lat: -16.49,
+      lng: -68.16,
+      deliveredOrders: 10,
+      pendingOrders: 0,
+      basketsOnTruck: 5,
+      basketsDelivered: 80,
+      lastUpdate: '10:15',
+    },
+  ];
+
+  const deliveries = [
+    { 
+      time: '09:40',
+      client: 'Pollería El Rey',
+      route: 'El Alto Norte',
+      vehicleId: 'VH-01',
+      driver: 'Juan Pérez',
+      orders: 3,
+      baskets: 10,
+      lat: -16.495,
+      lng: -68.145,
+    },
+    {
+      time: '09:55',
+      client: 'Feria 16 de Julio - Sector A',
+      route: 'El Alto Norte',
+      vehicleId: 'VH-01',
+      driver: 'Juan Pérez',
+      orders: 2,
+      baskets: 8,
+      lat: -16.505,
+      lng: -68.155,
+    },
+    {
+      time: '10:05',
+      client: 'Doña Juana',
+      route: 'El Alto Sur',
+      vehicleId: 'VH-02',
+      driver: 'María González',
+      orders: 2,
+      baskets: 6,
+      lat: -16.515,
+      lng: -68.135,
+    },
+    {
+      time: '09:30',
+      client: 'Mercado Central - Puesto 4',
+      route: 'La Paz Centro',
+      vehicleId: 'VH-03',
+      driver: 'Carlos Ramírez',
+      orders: 4,
+      baskets: 15,
+      lat: -16.485,
+      lng: -68.165,
+    },
+  ];
+
+  const routes = ['ALL', ...Array.from(new Set(vehicles.map(v => v.route)))];
+
+  const filteredVehicles = vehicles.filter(v =>
+    routeFilter === 'ALL' ? true : v.route === routeFilter
+  );
+
+  const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId) || vehicles[0];
+
+  const filteredDeliveries = deliveries.filter(d =>
+    routeFilter === 'ALL' ? true : d.route === routeFilter
+  );
+
+  const selectedVehicleDeliveries = deliveries.filter(d => d.vehicleId === selectedVehicle.id);
+
+  const totalBasketsDelivered = deliveries.reduce((sum, d) => sum + d.baskets, 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Resumen rápido */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+        <StatCard
+          title="Vehículos en ruta"
+          value={vehicles.length}
+          change="+2"
+          icon={Truck}
+          color={theme.primary}
+        />
+        <StatCard
+          title="Órdenes entregadas (hoy)"
+          value={deliveries.reduce((s, d) => s + d.orders, 0)}
+          change="+12"
+          icon={CheckCircle2}
+          color="#10b981"
+        />
+        <StatCard
+          title="Canastos entregados (hoy)"
+          value={totalBasketsDelivered}
+          change="+18"
+          icon={Archive}
+          color="#f59e0b"
+        />
+        <StatCard
+          title="Vehículo seleccionado"
+          value={selectedVehicle.id}
+          icon={MapPin}
+          color="#3b82f6"
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '24px', alignItems: 'stretch' }}>
+        {/* Mapa y detalle de vehículo */}
+        <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              padding: '14px 18px',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Mapa de Vehículos en Ruta</div>
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>
+                Visualiza la ubicación actual y el estado de cada unidad
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textMuted }}>RUTA</label>
+              <select
+                value={routeFilter}
+                onChange={(e) => {
+                  setRouteFilter(e.target.value);
+                  const first = vehicles.find(v => e.target.value === 'ALL' || v.route === e.target.value);
+                  if (first) setSelectedVehicleId(first.id);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  fontSize: '12px',
+                  outline: 'none',
+                }}
+              >
+                {routes.map(r => (
+                  <option key={r} value={r}>
+                    {r === 'ALL' ? 'Todas las rutas' : r}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div style={{ height: '360px' }}>
+            <MapContainer
+              center={[selectedVehicle.lat, selectedVehicle.lng]}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              {/* Marcadores de vehículos */}
+              {filteredVehicles.map(v => (
+                <Marker
+                  key={v.id}
+                  position={[v.lat, v.lng]}
+                  eventHandlers={{
+                    click: () => setSelectedVehicleId(v.id),
+                  }}
+                >
+                  <Popup>
+                    <div style={{ fontSize: '12px' }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        🚚 {v.id} · {v.plate}
+                      </div>
+                      <div>Chofer: <strong>{v.driver}</strong></div>
+                      <div>Ruta: {v.route}</div>
+                      <div>Estado: {v.status}</div>
+                      <div>Órdenes: {v.deliveredOrders} / {v.pendingOrders + v.deliveredOrders}</div>
+                      <div>Canastos en camión: {v.basketsOnTruck}</div>
+                      <div>Canastos entregados: {v.basketsDelivered}</div>
+                      <div style={{ marginTop: '4px', color: theme.textMuted }}>Últ. actualización: {v.lastUpdate}</div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* Marcadores de clientes / entregas */}
+              {filteredDeliveries.map((d, idx) => (
+                <Marker
+                  key={`cli-${idx}-${d.client}`}
+                  position={[d.lat, d.lng]}
+                >
+                  <Popup>
+                    <div style={{ fontSize: '12px' }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        📍 {d.client}
+                      </div>
+                      <div>Ruta: {d.route}</div>
+                      <div>Vehículo: {d.vehicleId}</div>
+                      <div>Chofer: {d.driver}</div>
+                      <div>Órdenes entregadas: {d.orders}</div>
+                      <div>Canastos entregados: {d.baskets}</div>
+                      <div style={{ marginTop: '4px', color: theme.textMuted }}>Hora: {d.time}</div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+          <div style={{ padding: '12px 18px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
+              Detalle del vehículo seleccionado
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '12px', color: theme.textMuted }}>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Unidad</div>
+                <div>{selectedVehicle.id} · {selectedVehicle.plate}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Chofer</div>
+                <div>{selectedVehicle.driver}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Ruta</div>
+                <div>{selectedVehicle.route}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Estado</div>
+                <div>{selectedVehicle.status}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Órdenes</div>
+                <div>{selectedVehicle.deliveredOrders} entregadas / {selectedVehicle.pendingOrders} pendientes</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold' }}>Canastos</div>
+                <div>{selectedVehicle.basketsDelivered} entregados · {selectedVehicle.basketsOnTruck} en camión</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Lista de vehículos y resumen de canastos/órdenes */}
+        <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ fontWeight: 'bold' }}>Vehículos en ruta</div>
+            <div style={{ fontSize: '12px', color: theme.textMuted }}>Selecciona una unidad para centrar el mapa</div>
+          </div>
+          <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+            {filteredVehicles.map(v => {
+              const isActive = v.id === selectedVehicleId;
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedVehicleId(v.id)}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    border: 'none',
+                    borderBottom: '1px solid #f1f5f9',
+                    backgroundColor: isActive ? '#fee2e2' : 'transparent',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontWeight: '600', color: isActive ? theme.primary : 'inherit' }}>
+                      {v.id} · {v.plate}
+                    </span>
+                    <span style={{ fontSize: '12px', color: theme.textMuted }}>
+                      {v.driver} · {v.route}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: '11px' }}>
+                    <div style={{ fontWeight: 'bold' }}>
+                      {v.deliveredOrders}/{v.deliveredOrders + v.pendingOrders} ord.
+                    </div>
+                    <div style={{ color: theme.textMuted }}>Canastos: {v.basketsOnTruck + v.basketsDelivered}</div>
+                    <div
+                      style={{
+                        marginTop: '2px',
+                        display: 'inline-block',
+                        padding: '2px 6px',
+                        borderRadius: '999px',
+                        backgroundColor:
+                          v.status === 'En ruta' ? '#dbeafe'
+                            : v.status === 'Entregando' ? '#dcfce7'
+                            : '#fef9c3',
+                        color:
+                          v.status === 'En ruta' ? '#1d4ed8'
+                            : v.status === 'Entregando' ? '#15803d'
+                            : '#854d0e',
+                      }}
+                    >
+                      {v.status}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ padding: '14px 18px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '13px' }}>
+              Entregas del vehículo seleccionado
+            </div>
+            {selectedVehicleDeliveries.length === 0 ? (
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>
+                No hay entregas registradas para esta unidad.
+              </div>
+            ) : (
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '12px', maxHeight: '140px', overflowY: 'auto' }}>
+                {selectedVehicleDeliveries.map((d, idx) => (
+                  <li key={idx} style={{ padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '600' }}>{d.client}</span>
+                      <span style={{ color: theme.textMuted }}>{d.time}</span>
+                    </div>
+                    <div style={{ color: theme.textMuted }}>
+                      {d.orders} ord. · {d.baskets} canastos
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Detalle general de solicitudes entregadas */}
+      <Card style={{ padding: 0 }}>
+        <div
+          style={{
+            padding: '14px 18px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 'bold' }}>Detalle de Solicitudes Entregadas</div>
+            <div style={{ fontSize: '12px', color: theme.textMuted }}>
+              Resumen de entregas por cliente, vehículo y canastos
+            </div>
+          </div>
+        </div>
+        <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                <th style={{ padding: '8px 14px' }}>Hora</th>
+                <th style={{ padding: '8px 14px' }}>Cliente</th>
+                <th style={{ padding: '8px 14px' }}>Ruta</th>
+                <th style={{ padding: '8px 14px' }}>Vehículo</th>
+                <th style={{ padding: '8px 14px' }}>Chofer</th>
+                <th style={{ padding: '8px 14px' }}>Órdenes</th>
+                <th style={{ padding: '8px 14px' }}>Canastos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDeliveries.map((d, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '8px 14px', fontSize: '12px', color: theme.textMuted }}>{d.time}</td>
+                  <td style={{ padding: '8px 14px', fontWeight: '600' }}>{d.client}</td>
+                  <td style={{ padding: '8px 14px' }}>{d.route}</td>
+                  <td style={{ padding: '8px 14px' }}>{d.vehicleId}</td>
+                  <td style={{ padding: '8px 14px' }}>{d.driver}</td>
+                  <td style={{ padding: '8px 14px' }}>{d.orders}</td>
+                  <td style={{ padding: '8px 14px', fontWeight: '800', color: theme.primary }}>{d.baskets}</td>
+                </tr>
+              ))}
+              {filteredDeliveries.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: theme.textMuted }}>
+                    No hay entregas registradas para el filtro actual.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>
