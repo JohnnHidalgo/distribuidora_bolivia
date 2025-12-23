@@ -1967,54 +1967,314 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
   );
 };
 
-const BasketView = ({ theme }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-      <div style={{ 
-        backgroundColor: 'white', padding: '40px', borderRadius: '16px', border: '2px dashed #e2e8f0', 
-        textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' 
-      }}>
-        <Archive size={48} color="#cbd5e1" style={{ marginBottom: '16px' }} />
-        <div style={{ fontSize: '36px', fontWeight: '900' }}>1,240</div>
-        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', letterSpacing: '1px' }}>EN ALMACÉN FÍSICO</div>
-      </div>
-      <div style={{ 
-        backgroundColor: 'white', padding: '40px', borderRadius: '16px', border: '2px dashed #e2e8f0', 
-        textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' 
-      }}>
-        <ArrowRightLeft size={48} color="#fda4af" style={{ marginBottom: '16px' }} />
-        <div style={{ fontSize: '36px', fontWeight: '900', color: theme.primary }}>842</div>
-        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', letterSpacing: '1px' }}>DEUDA EN CLIENTES</div>
-      </div>
-    </div>
+const BasketView = ({ theme }) => {
+  // Datos de ejemplo
+  const summary = {
+    totalBaskets: 2200,
+    inWarehouse: 1350,
+    withClients: 820,
+    lostOrDamaged: 30,
+  };
 
-    <Card style={{ padding: 0 }}>
-      <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 'bold' }}>Deuda por Cliente</span>
-        <button style={{ background: 'none', border: 'none', color: theme.primary, fontWeight: 'bold', cursor: 'pointer' }}>Filtrar Mora</button>
-      </div>
-      {[
-        { name: 'Dona Juana - Ruta Norte', qty: 45 },
-        { name: 'Mercado Central Puesto 4', qty: 22 },
-        { name: 'Distribuidor Local Sucre', qty: 89 },
-      ].map((c, i) => (
-        <div key={i} style={{ 
-          padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: i === 2 ? 'none' : '1px solid #f8fafc', cursor: 'pointer'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '32px', height: '32px', backgroundColor: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#64748b' }}>{c.name[0]}</div>
-            <span style={{ fontWeight: '600' }}>{c.name}</span>
+  const clientBaskets = [
+    { client: 'Pollería El Rey', route: 'El Alto Norte', baskets: 120, lastMovement: '2025-12-22', status: 'Al día' },
+    { client: 'Doña Juana', route: 'El Alto Sur', baskets: 80, lastMovement: '2025-12-21', status: 'Mora 3 días' },
+    { client: 'Mercado Central - Puesto 4', route: 'La Paz Centro', baskets: 45, lastMovement: '2025-12-20', status: 'Al día' },
+    { client: 'Distribuidor Sucre', route: 'Sucre Centro', baskets: 160, lastMovement: '2025-12-18', status: 'Mora 7 días' },
+    { client: 'Feria 16 de Julio - Sector A', route: 'El Alto Norte', baskets: 95, lastMovement: '2025-12-23', status: 'Al día' },
+  ];
+
+  const warehouseLocations = [
+    { name: 'Almacén Central La Paz', section: 'Zona A', baskets: 620 },
+    { name: 'Depósito El Alto', section: 'Zona Frío', baskets: 430 },
+    { name: 'Depósito Viacha', section: 'Principal', baskets: 300 },
+  ];
+
+  const movements = [
+    { date: '2025-12-23', client: 'Feria 16 de Julio - Sector A', type: 'Salida a cliente', baskets: -40, warehouse: 'Depósito El Alto', balanceWarehouse: 390, balanceClient: 95 },
+    { date: '2025-12-23', client: 'Pollería El Rey', type: 'Devolución de canastos', baskets: +30, warehouse: 'Almacén Central La Paz', balanceWarehouse: 650, balanceClient: 120 },
+    { date: '2025-12-22', client: 'Doña Juana', type: 'Salida a cliente', baskets: -20, warehouse: 'Depósito El Alto', balanceWarehouse: 430, balanceClient: 80 },
+    { date: '2025-12-21', client: 'Distribuidor Sucre', type: 'Salida a cliente', baskets: -50, warehouse: 'Depósito Viacha', balanceWarehouse: 300, balanceClient: 160 },
+    { date: '2025-12-20', client: 'Mercado Central - Puesto 4', type: 'Devolución parcial', baskets: +10, warehouse: 'Almacén Central La Paz', balanceWarehouse: 620, balanceClient: 45 },
+  ];
+
+  const [search, setSearch] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+
+  const filteredClients = clientBaskets.filter(c => {
+    const s = search.toLowerCase();
+    return (
+      c.client.toLowerCase().includes(s) ||
+      c.route.toLowerCase().includes(s)
+    );
+  });
+
+  const filteredMovements = movements.filter(m => {
+    if (!selectedDate) return true;
+    return m.date === selectedDate;
+    });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Resumen de canastos */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+        <Card>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Total Canastos</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            <div>
+              <div style={{ fontSize: '28px', fontWeight: '900' }}>{summary.totalBaskets.toLocaleString()}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Inventario teórico</div>
+            </div>
+            <Archive size={32} color={theme.primary} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ fontWeight: '800', color: theme.primary }}>{c.qty} canastos</span>
-            <ChevronRight size={18} color="#cbd5e1" />
+        </Card>
+        <Card>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>En Almacén</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            <div>
+              <div style={{ fontSize: '28px', fontWeight: '900' }}>{summary.inWarehouse.toLocaleString()}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Entre todos los depósitos</div>
+            </div>
+            <Box size={32} color={theme.frozen} />
+          </div>
+        </Card>
+        <Card>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>En Clientes</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            <div>
+              <div style={{ fontSize: '28px', fontWeight: '900', color: theme.primary }}>{summary.withClients.toLocaleString()}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Deuda de canastos</div>
+            </div>
+            <ArrowRightLeft size={32} color={theme.primary} />
+          </div>
+        </Card>
+        <Card>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Perdidos / Dañados</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+            <div>
+              <div style={{ fontSize: '28px', fontWeight: '900', color: '#b91c1c' }}>{summary.lostOrDamaged}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Pendiente regularización</div>
+            </div>
+            <AlertCircle size={28} color="#b91c1c" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Canastos en clientes + stock en almacén */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        {/* Clientes con canastos */}
+        <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Canastos en Clientes</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Detalle por cliente y ruta</div>
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar cliente o ruta..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '999px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                minWidth: '220px',
+                outline: 'none',
+              }}
+            />
+          </div>
+          <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                  <th style={{ padding: '10px 16px' }}>Cliente</th>
+                  <th style={{ padding: '10px 16px' }}>Ruta</th>
+                  <th style={{ padding: '10px 16px' }}>Canastos</th>
+                  <th style={{ padding: '10px 16px' }}>Últ. movimiento</th>
+                  <th style={{ padding: '10px 16px' }}>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredClients.map((c, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '10px 16px', fontWeight: '600' }}>{c.client}</td>
+                    <td style={{ padding: '10px 16px' }}>{c.route}</td>
+                    <td style={{ padding: '10px 16px', fontWeight: '800', color: theme.primary }}>{c.baskets}</td>
+                    <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{c.lastMovement}</td>
+                    <td style={{ padding: '10px 16px' }}>
+                      <span
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '999px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          backgroundColor: c.status.includes('Mora') ? '#fef2f2' : '#ecfdf3',
+                          color: c.status.includes('Mora') ? '#b91c1c' : '#166534',
+                        }}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filteredClients.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                      No se encontraron clientes con ese criterio.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* Stock en almacenes */}
+        <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Canastos en Almacén</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Distribución por depósito</div>
+            </div>
+          </div>
+          <div>
+            {warehouseLocations.map((w, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '14px 20px',
+                  borderBottom: idx === warehouseLocations.length - 1 ? 'none' : '1px solid #f1f5f9',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '600' }}>{w.name}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Sector: {w.section}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: '800', color: theme.frozen }}>{w.baskets} canastos</div>
+                  <div
+                    style={{
+                      marginTop: '4px',
+                      width: '120px',
+                      height: '6px',
+                      backgroundColor: '#e5e7eb',
+                      borderRadius: '999px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${(w.baskets / summary.inWarehouse) * 100}%`,
+                        height: '100%',
+                        backgroundColor: theme.frozen,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Histórico de movimientos por día */}
+      <Card style={{ padding: 0 }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 'bold' }}>Histórico de Movimientos por Día</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Entradas y salidas de canastos por fecha</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Fecha</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
+            {selectedDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDate('')}
+                style={{
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: theme.primary,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                Limpiar
+              </button>
+            )}
           </div>
         </div>
-      ))}
-    </Card>
-  </div>
-);
+        <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                <th style={{ padding: '10px 16px' }}>Fecha</th>
+                <th style={{ padding: '10px 16px' }}>Cliente</th>
+                <th style={{ padding: '10px 16px' }}>Tipo Movimiento</th>
+                <th style={{ padding: '10px 16px' }}>Canastos (+/-)</th>
+                <th style={{ padding: '10px 16px' }}>Almacén</th>
+                <th style={{ padding: '10px 16px' }}>Saldo Cliente</th>
+                <th style={{ padding: '10px 16px' }}>Saldo Almacén</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMovements.map((m, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.date}</td>
+                  <td style={{ padding: '10px 16px', fontWeight: '600' }}>{m.client}</td>
+                  <td style={{ padding: '10px 16px' }}>{m.type}</td>
+                  <td
+                    style={{
+                      padding: '10px 16px',
+                      fontWeight: '800',
+                      color: m.baskets < 0 ? theme.primary : '#16a34a',
+                    }}
+                  >
+                    {m.baskets > 0 ? `+${m.baskets}` : m.baskets}
+                  </td>
+                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.warehouse}</td>
+                  <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceClient} can.</td>
+                  <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceWarehouse} can.</td>
+                </tr>
+              ))}
+              {filteredMovements.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                    No se encontraron movimientos para la fecha seleccionada.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 // Componentes Pequeños
 const StatCard = ({ title, value, change, icon: Icon, color }) => (
