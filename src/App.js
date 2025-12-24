@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Package, 
@@ -30,7 +30,8 @@ import {
   Building2,
   DollarSign,
   Edit,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -47,6 +48,25 @@ L.Icon.Default.mergeOptions({
 const App = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [userType, setUserType] = useState('operador'); // 'cliente', 'chofer', 'operador'
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarVisible(true); // Mostrar sidebar en desktop
+      } else {
+        setSidebarVisible(false); // Ocultar sidebar en móvil por defecto
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Llamar inicialmente
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const getAllowedMenus = () => {
     switch (userType) {
@@ -63,6 +83,13 @@ const App = () => {
 
   const allowedMenus = getAllowedMenus();
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (isMobile) {
+      setSidebarVisible(false);
+    }
+  };
+
   const theme = {
     primary: '#e11d48',
     secondary: '#1e293b',
@@ -76,7 +103,7 @@ const App = () => {
     sidebarBg: '#0f172a'
   };
 
-  const styles = {
+  const styles = (isMobile, sidebarVisible) => ({
     container: {
       display: 'flex',
       height: '100vh',
@@ -86,13 +113,30 @@ const App = () => {
       overflow: 'hidden'
     },
     sidebar: {
-      width: '260px',
+      width: isMobile ? '280px' : '260px',
       backgroundColor: theme.sidebarBg,
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
       padding: '20px',
-      boxShadow: '4px 0 10px rgba(0,0,0,0.1)'
+      boxShadow: '4px 0 10px rgba(0,0,0,0.1)',
+      position: isMobile ? 'fixed' : 'relative',
+      top: 0,
+      left: 0,
+      height: '100vh',
+      zIndex: 1000,
+      transform: isMobile && !sidebarVisible ? 'translateX(-100%)' : 'translateX(0)',
+      transition: 'transform 0.3s ease-in-out'
+    },
+    sidebarOverlay: {
+      display: isMobile && sidebarVisible ? 'block' : 'none',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      zIndex: 999
     },
     logoSection: {
       display: 'flex',
@@ -116,7 +160,8 @@ const App = () => {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      marginLeft: isMobile ? 0 : (sidebarVisible ? 0 : 0)
     },
     header: {
       height: '64px',
@@ -125,14 +170,23 @@ const App = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 32px'
+      padding: isMobile ? '0 16px' : '0 32px'
     },
     contentArea: {
       flex: 1,
-      padding: '32px',
+      padding: isMobile ? '16px' : '32px',
       overflowY: 'auto'
+    },
+    mobileMenuBtn: {
+      display: isMobile ? 'block' : 'none',
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: theme.textMain,
+      fontSize: '24px',
+      cursor: 'pointer',
+      padding: '8px'
     }
-  };
+  });
 
   const renderView = () => {
     switch (activeTab) {
@@ -149,12 +203,20 @@ const App = () => {
     }
   };
 
+  const currentStyles = styles(isMobile, sidebarVisible);
+
   return (
-    <div style={styles.container}>
+    <div style={currentStyles.container}>
+      {/* Sidebar Overlay for Mobile */}
+      <div 
+        style={currentStyles.sidebarOverlay} 
+        onClick={() => setSidebarVisible(false)}
+      />
+      
       {/* Sidebar */}
-      <div style={styles.sidebar}>
-        <div style={styles.logoSection}>
-          <div style={styles.logoIcon}>D</div>
+      <div style={currentStyles.sidebar}>
+        <div style={currentStyles.logoSection}>
+          <div style={currentStyles.logoIcon}>D</div>
           <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>BOLIVIA</span>
         </div>
 
@@ -171,7 +233,7 @@ const App = () => {
               // Cambiar activeTab al primer menú permitido
               const allowed = getAllowedMenus();
               if (allowed.length > 0 && !allowed.includes(activeTab)) {
-                setActiveTab(allowed[0]);
+                handleTabChange(allowed[0]);
               }
             }}
             style={{
@@ -192,18 +254,18 @@ const App = () => {
         </div>
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
-          {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
         </nav>
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
-          {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
           <button style={{ 
             width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
             backgroundColor: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left'
@@ -215,12 +277,20 @@ const App = () => {
       </div>
 
       {/* Main Content Area */}
-      <div style={styles.main}>
-        <header style={styles.header}>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', color: theme.textMain, textTransform: 'capitalize' }}>
-            {activeTab.replace(/([A-Z])/g, ' $1').trim()}
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <div style={currentStyles.main}>
+        <header style={currentStyles.header}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button 
+              style={currentStyles.mobileMenuBtn}
+              onClick={() => setSidebarVisible(!sidebarVisible)}
+            >
+              <Menu size={24} />
+            </button>
+            <h1 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: theme.textMain, textTransform: 'capitalize', margin: 0 }}>
+              {activeTab.replace(/([A-Z])/g, ' $1').trim()}
+            </h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '24px' }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 'bold' }}>HORA DE CORTE</div>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>10:00 AM</div>
@@ -235,7 +305,7 @@ const App = () => {
           </div>
         </header>
 
-        <div style={styles.contentArea}>
+        <div style={currentStyles.contentArea}>
           {renderView()}
         </div>
       </div>
