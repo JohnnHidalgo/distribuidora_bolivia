@@ -46,6 +46,22 @@ L.Icon.Default.mergeOptions({
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('orders');
+  const [userType, setUserType] = useState('operador'); // 'cliente', 'chofer', 'operador'
+
+  const getAllowedMenus = () => {
+    switch (userType) {
+      case 'cliente':
+        return ['clientApp'];
+      case 'chofer':
+        return ['driverApp'];
+      case 'operador':
+        return ['dashboard', 'orders', 'assignments', 'tracking', 'baskets', 'reports', 'settings'];
+      default:
+        return [];
+    }
+  };
+
+  const allowedMenus = getAllowedMenus();
 
   const theme = {
     primary: '#e11d48',
@@ -127,6 +143,7 @@ const App = () => {
       case 'driverApp': return <DriverAppView theme={theme} />;
       case 'clientApp': return <ClientAppView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
+      case 'reports': return <ReportsView theme={theme} />;
       case 'settings': return <SettingsView theme={theme} />;
       default: return <DashboardView theme={theme} />;
     }
@@ -140,20 +157,53 @@ const App = () => {
           <div style={styles.logoIcon}>D</div>
           <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>BOLIVIA</span>
         </div>
+
+        {/* Selector de Tipo de Usuario */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '8px', fontWeight: '500' }}>
+            TIPO DE USUARIO
+          </label>
+          <select
+            value={userType}
+            onChange={(e) => {
+              const newType = e.target.value;
+              setUserType(newType);
+              // Cambiar activeTab al primer menú permitido
+              const allowed = getAllowedMenus();
+              if (allowed.length > 0 && !allowed.includes(activeTab)) {
+                setActiveTab(allowed[0]);
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              backgroundColor: '#1e293b',
+              border: '1px solid #374151',
+              borderRadius: '6px',
+              color: 'white',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="cliente">Cliente</option>
+            <option value="chofer">Chofer</option>
+            <option value="operador">Operador</option>
+          </select>
+        </div>
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-            <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
-          <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+          {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
+          {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
         </nav>
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
-          <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+          {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
           <button style={{ 
             width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
             backgroundColor: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left'
@@ -4243,6 +4293,19 @@ const ClientAppView = ({ theme }) => {
           </Card>
         </div>
       </div>
+    </div>
+  );
+};
+
+const ReportsView = ({ theme }) => {
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ marginBottom: '20px', color: theme.primary }}>Reportes</h1>
+      <Card>
+        <p style={{ textAlign: 'center', color: theme.textMuted }}>
+          Módulo de reportes en desarrollo...
+        </p>
+      </Card>
     </div>
   );
 };
