@@ -124,6 +124,8 @@ const App = () => {
       case 'orders': return <ConsolidationView theme={theme} />;
       case 'assignments': return <AssignmentView theme={theme} />;
       case 'tracking': return <TrackingView theme={theme} />;
+      case 'driverApp': return <DriverAppView theme={theme} />;
+      case 'clientApp': return <ClientAppView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
       case 'settings': return <SettingsView theme={theme} />;
       default: return <DashboardView theme={theme} />;
@@ -146,6 +148,8 @@ const App = () => {
           <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
           <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+            <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+          <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
         </nav>
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
@@ -3531,6 +3535,715 @@ const UsersSettings = ({ theme }) => {
         </tbody>
       </table>
     </Card>
+  );
+};
+
+const DriverAppView = ({ theme }) => {
+  const [route] = useState({ id: 'R-001', name: 'El Alto Norte', vehicle: 'VH-01', driver: 'Juan Pérez', center: [-16.5000, -68.1500] });
+
+  const [clients, setClients] = useState([
+    { id: 1, name: 'Pollería El Rey', codes: [{code:104, boxes:10, units:5, grossWeight:100, netWeight:95}], lat: -16.495, lng: -68.145, total: 450.00, delivered: false, paid: false, paymentMethod: null, paidAmount: 0, returnedBaskets: 0 },
+    { id: 2, name: 'Feria Sector A', codes: [{code:104, boxes:8, units:12, grossWeight:100, netWeight:80},{code:109, boxes:5, units:10, grossWeight:75, netWeight:75}], lat: -16.505, lng: -68.155, total: 620.00, delivered: false, paid: false, paymentMethod: null, paidAmount: 0, returnedBaskets: 0 },
+    { id: 3, name: 'Doña Juana', codes: [{code:107, boxes:5, units:3, grossWeight:50, netWeight:47.5}], lat: -16.515, lng: -68.135, total: 285.00, delivered: false, paid: false, paymentMethod: null, paidAmount: 0, returnedBaskets: 0 }
+  ]);
+
+  const toggleDelivered = (id) => {
+    setClients(prev => prev.map(c => c.id === id ? { ...c, delivered: !c.delivered } : c));
+  };
+
+  const registerPayment = (id, method) => {
+    setClients(prev => prev.map(c => c.id === id ? { ...c, paid: true, paymentMethod: method, paidAmount: c.total } : c));
+  };
+
+  const updateReturnedBaskets = (id, baskets) => {
+    setClients(prev => prev.map(c => c.id === id ? { ...c, returnedBaskets: parseInt(baskets) || 0, basketsRegistered: true } : c));
+  };
+
+  const totalToCharge = clients.reduce((s, c) => s + (c.total || 0), 0);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '20px' }}>
+      <div>
+        <Card>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>Ruta: {route.name} · {route.id}</div>
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>Vehículo: {route.vehicle} · Chofer: {route.driver}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>Total a Cobrar</div>
+              <div style={{ fontSize: '18px', fontWeight: '900', color: theme.primary }}>Bs {totalToCharge.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div style={{ height: '360px' }}>
+            <MapContainer center={route.center} zoom={12} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {clients.map(c => (
+                <Marker key={c.id} position={[c.lat, c.lng]}>
+                  <Popup>
+                    <div style={{ minWidth: '220px' }}>
+                      <div style={{ fontWeight: 'bold' }}>{c.name}</div>
+                      <div style={{ fontSize: '12px', color: theme.textMuted }}>Total: Bs {c.total.toFixed(2)}</div>
+                      <div style={{ marginTop: '8px' }}>
+                        <div style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '6px' }}>Detalle de Entrega</div>
+                        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto' }}>
+                          {[104,105,106,107,108,109,110].map(code => {
+                            const item = c.codes.find(x => x.code === code) || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                            return (
+                              <div key={code} style={{ minWidth: '140px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '800', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#0ea5e9' }}>
+                                    <Package size={12} />
+                                    <span>{item.boxes || 0} Cajas</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f97316' }}>
+                                    <Box size={12} />
+                                    <span>{item.units || 0} Unidades</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#059669' }}>
+                                    <Truck size={12} />
+                                    <span>{(item.grossWeight || 0).toFixed(2)} kg Bruto</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981' }}>
+                                    <Truck size={12} />
+                                    <span>{(item.netWeight || 0).toFixed(2)} kg Neto</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexDirection: 'column' }}>
+                        {/* Paso 1: Entregar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                          <div style={{ 
+                            width: '16px', 
+                            height: '16px', 
+                            borderRadius: '50%', 
+                            backgroundColor: c.delivered ? '#10b981' : '#e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            color: c.delivered ? 'white' : '#64748b'
+                          }}>
+                            {c.delivered ? '✓' : '1'}
+                          </div>
+                          <button onClick={() => toggleDelivered(c.id)} style={{ padding: '6px 8px', borderRadius: '4px', border: 'none', backgroundColor: c.delivered ? '#10b981' : theme.primary, color: 'white', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', flex: 1 }}>
+                            {c.delivered ? '✓ Entregado' : 'Entregar'}
+                          </button>
+                        </div>
+
+                        {/* Paso 2: Cobrar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                          <div style={{ 
+                            width: '16px', 
+                            height: '16px', 
+                            borderRadius: '50%', 
+                            backgroundColor: c.paid ? '#10b981' : '#e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            color: c.paid ? 'white' : '#64748b'
+                          }}>
+                            {c.paid ? '✓' : '2'}
+                          </div>
+                          {c.paid ? (
+                            <div style={{ 
+                              padding: '6px 8px', 
+                              borderRadius: '4px', 
+                              backgroundColor: '#10b981', 
+                              color: 'white',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              flex: 1,
+                              textAlign: 'center'
+                            }}>
+                              ✓ {c.paymentMethod}
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: 1 }}>
+                              <select 
+                                value={c.selectedPaymentMethod || ''} 
+                                onChange={(e) => setClients(prev => prev.map(client => client.id === c.id ? { ...client, selectedPaymentMethod: e.target.value } : client))}
+                                style={{ 
+                                  flex: 1,
+                                  padding: '4px', 
+                                  borderRadius: '3px', 
+                                  border: '1px solid #cbd5e1', 
+                                  outline: 'none',
+                                  fontSize: '10px',
+                                  backgroundColor: 'white'
+                                }}
+                              >
+                                <option value="">Método...</option>
+                                <option value="Efectivo">💵 Efectivo</option>
+                                <option value="QR">📱 QR</option>
+                                <option value="Transferencia">🏦 Transf</option>
+                                <option value="Cheque">📄 Cheque</option>
+                                <option value="Tarjeta">💳 Tarjeta</option>
+                              </select>
+                              <button 
+                                onClick={() => c.selectedPaymentMethod && registerPayment(c.id, c.selectedPaymentMethod)} 
+                                disabled={!c.selectedPaymentMethod}
+                                style={{ 
+                                  padding: '4px 6px', 
+                                  borderRadius: '3px', 
+                                  border: 'none', 
+                                  backgroundColor: c.selectedPaymentMethod ? '#10b981' : '#cbd5e1', 
+                                  color: 'white', 
+                                  cursor: c.selectedPaymentMethod ? 'pointer' : 'not-allowed', 
+                                  fontSize: '10px',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                ✓
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Paso 3: Canastos */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ 
+                            width: '16px', 
+                            height: '16px', 
+                            borderRadius: '50%', 
+                            backgroundColor: c.basketsRegistered ? '#10b981' : '#e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            color: c.basketsRegistered ? 'white' : '#64748b'
+                          }}>
+                            {c.basketsRegistered ? '✓' : '3'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>Canastos:</span>
+                            <input 
+                              type="number" 
+                              value={c.returnedBaskets || ''} 
+                              onChange={(e) => setClients(prev => prev.map(client => client.id === c.id ? { ...client, returnedBaskets: e.target.value } : client))}
+                              style={{ 
+                                width: '35px', 
+                                padding: '4px', 
+                                borderRadius: '3px', 
+                                border: '1px solid #cbd5e1', 
+                                outline: 'none',
+                                fontSize: '10px',
+                                textAlign: 'center'
+                              }}
+                              placeholder="0"
+                            />
+                            <button 
+                              onClick={() => updateReturnedBaskets(c.id, c.returnedBaskets || '0')} 
+                              disabled={c.basketsRegistered || (!c.returnedBaskets && c.returnedBaskets !== '0')}
+                              style={{ 
+                                padding: '4px 6px', 
+                                borderRadius: '3px', 
+                                border: 'none', 
+                                backgroundColor: c.basketsRegistered ? '#10b981' : (c.returnedBaskets || c.returnedBaskets === '0') ? '#10b981' : '#cbd5e1', 
+                                color: 'white', 
+                                cursor: c.basketsRegistered ? 'default' : (c.returnedBaskets || c.returnedBaskets === '0') ? 'pointer' : 'not-allowed', 
+                                fontSize: '10px',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              {c.basketsRegistered ? '✓' : 'OK'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        </Card>
+
+        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {clients.map(c => (
+            <Card key={c.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 'bold', color: theme.primary, fontSize: '16px' }}>{c.name}</div>
+                  <div style={{ fontSize: '12px', color: theme.textMuted }}>Total a Cobrar: Bs {c.total.toFixed(2)}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '12px', color: theme.textMuted }}>
+                    {(() => {
+                      const steps = [];
+                      if (c.delivered) steps.push('✓Entregado');
+                      if (c.paid) steps.push(`✓${c.paymentMethod}`);
+                      if (c.basketsRegistered) steps.push('✓Canastos');
+                      
+                      if (steps.length === 0) return 'Pendiente';
+                      if (steps.length === 3) return 'Completado';
+                      return steps.join(' • ');
+                    })()}
+                  </div>
+                  {c.paid && <div style={{ fontSize: '14px', fontWeight: '800', color: '#10b981' }}>Recibido: Bs {c.paidAmount.toFixed(2)}</div>}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
+                {[104,105,106,107,108,109,110].map(code => {
+                  const item = c.codes.find(x => x.code === code) || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                  return (
+                    <div key={code} style={{ minWidth: '140px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#0ea5e9' }}>
+                          <Package size={12} />
+                          <span>{item.boxes || 0} Cajas</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#f97316' }}>
+                          <Box size={12} />
+                          <span>{item.units || 0} Unidades</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#059669' }}>
+                          <Truck size={12} />
+                          <span>{(item.grossWeight || 0).toFixed(2)} kg Bruto</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981' }}>
+                          <Truck size={12} />
+                          <span>{(item.netWeight || 0).toFixed(2)} kg Neto</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Paso 1: Entregar Solicitud */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ 
+                    width: '20px', 
+                    height: '20px', 
+                    borderRadius: '50%', 
+                    backgroundColor: c.delivered ? '#10b981' : '#e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: c.delivered ? 'white' : '#64748b'
+                  }}>
+                    {c.delivered ? '✓' : '1'}
+                  </div>
+                  <button 
+                    onClick={() => toggleDelivered(c.id)} 
+                    style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: '6px', 
+                      border: 'none', 
+                      backgroundColor: c.delivered ? '#10b981' : theme.primary, 
+                      color: 'white', 
+                      cursor: 'pointer', 
+                      fontWeight: 'bold',
+                      flex: 1
+                    }}
+                  >
+                    {c.delivered ? '✓ Entregado' : 'Entregar Solicitud'}
+                  </button>
+                </div>
+
+                {/* Paso 2: Cobrar Monto */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ 
+                    width: '20px', 
+                    height: '20px', 
+                    borderRadius: '50%', 
+                    backgroundColor: c.paid ? '#10b981' : '#e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: c.paid ? 'white' : '#64748b'
+                  }}>
+                    {c.paid ? '✓' : '2'}
+                  </div>
+                  {c.paid ? (
+                    <div style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: '6px', 
+                      backgroundColor: '#10b981', 
+                      color: 'white',
+                      fontWeight: 'bold',
+                      flex: 1,
+                      textAlign: 'center'
+                    }}>
+                      ✓ Pagado ({c.paymentMethod})
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1 }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', minWidth: '80px' }}>Cobranza:</span>
+                      <select 
+                        value={c.selectedPaymentMethod || ''} 
+                        onChange={(e) => setClients(prev => prev.map(client => client.id === c.id ? { ...client, selectedPaymentMethod: e.target.value } : client))}
+                        style={{ 
+                          padding: '6px 8px', 
+                          borderRadius: '4px', 
+                          border: '1px solid #cbd5e1', 
+                          outline: 'none',
+                          fontSize: '12px',
+                          backgroundColor: 'white',
+                          flex: 1
+                        }}
+                      >
+                        <option value="">Seleccionar método...</option>
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="QR">📱 QR</option>
+                        <option value="Transferencia">🏦 Transferencia</option>
+                        <option value="Cheque">📄 Cheque</option>
+                        <option value="Tarjeta">💳 Tarjeta</option>
+                      </select>
+                      <button 
+                        onClick={() => c.selectedPaymentMethod && registerPayment(c.id, c.selectedPaymentMethod)} 
+                        disabled={!c.selectedPaymentMethod}
+                        style={{ 
+                          padding: '6px 12px', 
+                          borderRadius: '4px', 
+                          border: 'none', 
+                          backgroundColor: c.selectedPaymentMethod ? '#10b981' : '#cbd5e1', 
+                          color: 'white', 
+                          cursor: c.selectedPaymentMethod ? 'pointer' : 'not-allowed', 
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Paso 3: Recibir Canastos */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ 
+                    width: '20px', 
+                    height: '20px', 
+                    borderRadius: '50%', 
+                    backgroundColor: c.basketsRegistered ? '#10b981' : '#e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: c.basketsRegistered ? 'white' : '#64748b'
+                  }}>
+                    {c.basketsRegistered ? '✓' : '3'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', minWidth: '120px' }}>Canastos devueltos:</span>
+                    <input 
+                      type="number" 
+                      value={c.returnedBaskets || ''} 
+                      onChange={(e) => setClients(prev => prev.map(client => client.id === c.id ? { ...client, returnedBaskets: e.target.value } : client))}
+                      style={{ 
+                        width: '60px', 
+                        padding: '6px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #cbd5e1', 
+                        outline: 'none',
+                        fontSize: '12px',
+                        textAlign: 'center',
+                        fontWeight: 'bold'
+                      }}
+                      placeholder="0"
+                    />
+                    <button 
+                      onClick={() => updateReturnedBaskets(c.id, c.returnedBaskets || '0')} 
+                      disabled={c.basketsRegistered || (!c.returnedBaskets && c.returnedBaskets !== '0')}
+                      style={{ 
+                        padding: '6px 10px', 
+                        borderRadius: '4px', 
+                        border: 'none', 
+                        backgroundColor: c.basketsRegistered ? '#10b981' : (c.returnedBaskets || c.returnedBaskets === '0') ? '#10b981' : '#cbd5e1', 
+                        color: 'white', 
+                        cursor: c.basketsRegistered ? 'default' : (c.returnedBaskets || c.returnedBaskets === '0') ? 'pointer' : 'not-allowed', 
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {c.basketsRegistered ? '✓' : 'OK'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Card>
+          <h3 style={{ margin: 0, marginBottom: '12px' }}>Resumen de Ruta</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Clientes</span><strong>{clients.length}</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Entregados</span><strong>{clients.filter(c=>c.delivered).length}</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Pagados</span><strong>{clients.filter(c=>c.paid).length}</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Total a Cobrar</span><strong>Bs {totalToCharge.toFixed(2)}</strong></div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button onClick={() => alert('Ruta marcada como completada (simulado)')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: theme.primary, color: 'white', fontWeight: 'bold' }}>Marcar Ruta Completada</button>
+              <button onClick={() => alert('Enviando resumen por WhatsApp (simulado)')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'white', color: theme.textMain, fontWeight: 'bold' }}>Enviar Resumen</button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const ClientAppView = ({ theme }) => {
+  const [selectedClient, setSelectedClient] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [orderItems, setOrderItems] = useState({});
+  const [basketHistory, setBasketHistory] = useState([
+    { date: '2025-12-20', type: 'Entregados', quantity: 5, balance: 12 },
+    { date: '2025-12-18', type: 'Devueltos', quantity: -2, balance: 14 },
+    { date: '2025-12-15', type: 'Entregados', quantity: 8, balance: 6 },
+    { date: '2025-12-10', type: 'Devueltos', quantity: -1, balance: 7 },
+  ]);
+
+  const clients = [
+    { id: 'sofia', name: 'Sofia' },
+    { id: 'pio', name: 'PIO' },
+  ];
+
+  const productCodes = [104, 105, 106, 107, 108, 109, 110];
+
+  const updateOrderItem = (code, field, value) => {
+    setOrderItems(prev => ({
+      ...prev,
+      [code]: {
+        ...prev[code],
+        [field]: parseInt(value) || 0
+      }
+    }));
+  };
+
+  const submitOrder = () => {
+    if (!selectedClient) {
+      alert('Por favor seleccione un proveedor');
+      return;
+    }
+    
+    if (!deliveryDate) {
+      alert('Por favor seleccione una fecha de entrega');
+      return;
+    }
+    
+    const hasItems = Object.values(orderItems).some(item => item.boxes > 0 || item.units > 0);
+    if (!hasItems) {
+      alert('Por favor agregue al menos un producto a la solicitud');
+      return;
+    }
+
+    alert('Solicitud enviada exitosamente');
+    setOrderItems({});
+    setDeliveryDate('');
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, color: theme.primary, fontSize: '28px', fontWeight: '800' }}>App Cliente</h1>
+        <p style={{ margin: '8px 0 0 0', color: theme.textMuted }}>Realice sus solicitudes y consulte su extracto de canastos</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px' }}>
+        {/* Nueva Solicitud */}
+        <div>
+          <Card>
+            <h3 style={{ margin: 0, marginBottom: '16px', color: theme.primary }}>Nueva Solicitud</h3>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: theme.textMain, marginBottom: '8px' }}>
+                Proveedor
+              </label>
+              <select 
+                value={selectedClient}
+                onChange={(e) => setSelectedClient(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  fontSize: '14px',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">Seleccione un proveedor...</option>
+                {clients.map(client => (
+                  <option key={client.id} value={client.id}>{client.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: theme.textMain, marginBottom: '8px' }}>
+                Fecha de Entrega
+              </label>
+              <input 
+                type="date"
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  fontSize: '14px',
+                  backgroundColor: 'white'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: theme.textMain, marginBottom: '12px' }}>
+                Productos Solicitados
+              </label>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {productCodes.map(code => {
+                  const item = orderItems[code] || { boxes: 0, units: 0 };
+                  return (
+                    <div key={code} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      padding: '12px',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      backgroundColor: 'white'
+                    }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, minWidth: '80px' }}>
+                        Código {code}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Package size={16} color="#0ea5e9" />
+                        <input
+                          type="number"
+                          placeholder="Cajas"
+                          value={item.boxes || ''}
+                          onChange={(e) => updateOrderItem(code, 'boxes', e.target.value)}
+                          style={{
+                            width: '80px',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #cbd5e1',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Box size={16} color="#f97316" />
+                        <input
+                          type="number"
+                          placeholder="Unidades"
+                          value={item.units || ''}
+                          onChange={(e) => updateOrderItem(code, 'units', e.target.value)}
+                          style={{
+                            width: '80px',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            border: '1px solid #cbd5e1',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button 
+              onClick={submitOrder}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: theme.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              Enviar Solicitud
+            </button>
+          </Card>
+        </div>
+
+        {/* Extracto de Canastos */}
+        <div>
+          <Card>
+            <h3 style={{ margin: 0, marginBottom: '16px', color: theme.primary }}>Extracto de Canastos</h3>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', color: theme.textMain }}>
+                <span>Fecha</span>
+                <span>Movimiento</span>
+                <span>Cantidad</span>
+                <span>Saldo</span>
+              </div>
+              
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {basketHistory.map((movement, index) => (
+                  <div key={index} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '12px 0', 
+                    borderBottom: '1px solid #f1f5f9',
+                    fontSize: '14px'
+                  }}>
+                    <span style={{ color: theme.textMuted }}>{movement.date}</span>
+                    <span style={{ 
+                      color: movement.type === 'Entregados' ? '#10b981' : '#ef4444',
+                      fontWeight: '500'
+                    }}>
+                      {movement.type}
+                    </span>
+                    <span style={{ 
+                      color: movement.quantity > 0 ? '#10b981' : '#ef4444',
+                      fontWeight: 'bold'
+                    }}>
+                      {movement.quantity > 0 ? '+' : ''}{movement.quantity}
+                    </span>
+                    <span style={{ fontWeight: 'bold', color: theme.textMain }}>{movement.balance}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#f8fafc', 
+              borderRadius: '6px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: theme.primary }}>
+                Saldo Actual: {basketHistory[0]?.balance || 0} canastos
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 };
 
