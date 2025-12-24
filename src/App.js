@@ -25,7 +25,12 @@ import {
   Target,
   Clock,
   Fuel,
-  Activity
+  Activity,
+  Users,
+  Building2,
+  DollarSign,
+  Edit,
+  X
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -120,6 +125,7 @@ const App = () => {
       case 'assignments': return <AssignmentView theme={theme} />;
       case 'tracking': return <TrackingView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
+      case 'settings': return <SettingsView theme={theme} />;
       default: return <DashboardView theme={theme} />;
     }
   };
@@ -2865,5 +2871,667 @@ const TableRow = ({ client, req, asig, status }) => (
     </td>
   </tr>
 );
+
+// Vista de Configuración
+const SettingsView = ({ theme }) => {
+  const [activeSection, setActiveSection] = useState('general');
+  
+  const sections = [
+    { id: 'general', label: 'General', icon: Settings },
+    { id: 'providers', label: 'Proveedores', icon: Package },
+    { id: 'products', label: 'Productos', icon: Box },
+    { id: 'clients', label: 'Clientes', icon: UserCircle },
+    { id: 'routes', label: 'Rutas', icon: MapPin },
+    { id: 'vehicles', label: 'Vehículos', icon: Truck },
+    { id: 'drivers', label: 'Choferes', icon: Users },
+    { id: 'warehouses', label: 'Almacenes', icon: Building2 },
+    { id: 'prices', label: 'Precios', icon: DollarSign },
+    { id: 'baskets', label: 'Canastos', icon: Archive },
+    { id: 'users', label: 'Usuarios', icon: UserCircle },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '12px', flexWrap: 'wrap' }}>
+        {sections.map(section => {
+          const Icon = section.icon;
+          const isActive = activeSection === section.id;
+          return (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '13px',
+                backgroundColor: isActive ? 'white' : 'transparent',
+                color: isActive ? theme.primary : theme.textMuted,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              <Icon size={16} />
+              {section.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeSection === 'general' && <GeneralSettings theme={theme} />}
+      {activeSection === 'providers' && <ProvidersSettings theme={theme} />}
+      {activeSection === 'products' && <ProductsSettings theme={theme} />}
+      {activeSection === 'clients' && <ClientsSettings theme={theme} />}
+      {activeSection === 'routes' && <RoutesSettings theme={theme} />}
+      {activeSection === 'vehicles' && <VehiclesSettings theme={theme} />}
+      {activeSection === 'drivers' && <DriversSettings theme={theme} />}
+      {activeSection === 'warehouses' && <WarehousesSettings theme={theme} />}
+      {activeSection === 'prices' && <PricesSettings theme={theme} />}
+      {activeSection === 'baskets' && <BasketsSettings theme={theme} />}
+      {activeSection === 'users' && <UsersSettings theme={theme} />}
+    </div>
+  );
+};
+
+// Componentes de cada sección de configuración
+const GeneralSettings = ({ theme }) => {
+  const [cutoffTime, setCutoffTime] = useState('10:00');
+  const [companyName, setCompanyName] = useState('Distribuidora Bolivia');
+  const [timezone, setTimezone] = useState('America/La_Paz');
+
+  return (
+    <Card>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración General</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE DE LA EMPRESA</label>
+          <input
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>HORA DE CORTE</label>
+          <input
+            type="time"
+            value={cutoffTime}
+            onChange={(e) => setCutoffTime(e.target.value)}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '200px' }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>ZONA HORARIA</label>
+          <select
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
+          >
+            <option value="America/La_Paz">America/La_Paz (GMT-4)</option>
+            <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
+          </select>
+        </div>
+        <button style={{ alignSelf: 'flex-start', backgroundColor: theme.primary, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Save size={16} /> Guardar Configuración
+        </button>
+      </div>
+    </Card>
+  );
+};
+
+const ProvidersSettings = ({ theme }) => {
+  const [providers, setProviders] = useState([
+    { id: 1, name: 'Avícola Sofía', code: 'SOFIA', contact: 'contacto@sofia.com', phone: '+591 2 1234567', active: true },
+    { id: 2, name: 'PIO / IMBA', code: 'PIO', contact: 'contacto@pio.com', phone: '+591 2 7654321', active: true },
+  ]);
+  const [editing, setEditing] = useState(null);
+  const [formData, setFormData] = useState({ name: '', code: '', contact: '', phone: '' });
+
+  const handleSave = () => {
+    if (editing) {
+      setProviders(providers.map(p => p.id === editing ? { ...p, ...formData } : p));
+    } else {
+      setProviders([...providers, { id: Date.now(), ...formData, active: true }]);
+    }
+    setEditing(null);
+    setFormData({ name: '', code: '', contact: '', phone: '' });
+  };
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Proveedores</h3>
+        <button
+          onClick={() => setEditing('new')}
+          style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Plus size={16} /> Nuevo Proveedor
+        </button>
+      </div>
+      {(editing === 'new' || editing) && (
+        <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE</label>
+              <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CÓDIGO</label>
+              <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CONTACTO</label>
+              <input type="email" value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>TELÉFONO</label>
+              <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleSave} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <Save size={14} /> Guardar
+            </button>
+            <button onClick={() => { setEditing(null); setFormData({ name: '', code: '', contact: '', phone: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Contacto</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {providers.map(p => (
+            <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{p.name}</td>
+              <td style={{ padding: '12px' }}>{p.code}</td>
+              <td style={{ padding: '12px' }}>{p.contact}</td>
+              <td style={{ padding: '12px' }}>{p.phone}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
+                  {p.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button onClick={() => { setEditing(p.id); setFormData({ name: p.name, code: p.code, contact: p.contact, phone: p.phone }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button onClick={() => setProviders(providers.filter(pr => pr.id !== p.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const ProductsSettings = ({ theme }) => {
+  const [products, setProducts] = useState([
+    { code: 104, name: 'Rojo', color: '#ef4444', active: true },
+    { code: 105, name: 'Blanco', color: '#ffffff', active: true },
+    { code: 106, name: 'Amarillo', color: '#facc15', active: true },
+    { code: 107, name: 'Verde', color: '#22c55e', active: true },
+    { code: 108, name: 'Azul', color: '#3b82f6', active: true },
+    { code: 109, name: 'Negro', color: '#000000', active: true },
+    { code: 110, name: 'Menudencia', color: '#8b5cf6', active: true },
+  ]);
+
+  return (
+    <Card>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Productos / Categorías</h3>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Color</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(p => (
+            <tr key={p.code} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: 'bold' }}>{p.code}</td>
+              <td style={{ padding: '12px' }}>{p.name}</td>
+              <td style={{ padding: '12px' }}>
+                <div style={{ width: '40px', height: '16px', backgroundColor: p.color, borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
+                  {p.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const ClientsSettings = ({ theme }) => {
+  const [clients, setClients] = useState([
+    { id: 1, name: 'Pollería El Rey', route: 'El Alto Norte', contact: 'rey@email.com', phone: '+591 71234567', active: true },
+    { id: 2, name: 'Doña Juana', route: 'El Alto Sur', contact: 'juana@email.com', phone: '+591 71234568', active: true },
+    { id: 3, name: 'Mercado Central - Puesto 4', route: 'La Paz Centro', contact: 'mercado@email.com', phone: '+591 71234569', active: true },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Clientes</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nuevo Cliente
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Ruta</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Contacto</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {clients.map(c => (
+            <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{c.name}</td>
+              <td style={{ padding: '12px' }}>{c.route}</td>
+              <td style={{ padding: '12px' }}>{c.contact}</td>
+              <td style={{ padding: '12px' }}>{c.phone}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: c.active ? '#dcfce7' : '#fee2e2', color: c.active ? '#166534' : '#991b1b' }}>
+                  {c.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const RoutesSettings = ({ theme }) => {
+  const [routes, setRoutes] = useState([
+    { id: 1, name: 'El Alto Norte', description: 'Zona norte de El Alto', active: true },
+    { id: 2, name: 'El Alto Sur', description: 'Zona sur de El Alto', active: true },
+    { id: 3, name: 'La Paz Centro', description: 'Centro de La Paz', active: true },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Rutas / Grupos</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nueva Ruta
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Descripción</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {routes.map(r => (
+            <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{r.name}</td>
+              <td style={{ padding: '12px' }}>{r.description}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: r.active ? '#dcfce7' : '#fee2e2', color: r.active ? '#166534' : '#991b1b' }}>
+                  {r.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const VehiclesSettings = ({ theme }) => {
+  const [vehicles, setVehicles] = useState([
+    { id: 'VH-01', plate: '1234-ABC', capacity: '5000 kg', status: 'Activo', active: true },
+    { id: 'VH-02', plate: '5678-DEF', capacity: '4500 kg', status: 'Activo', active: true },
+    { id: 'VH-03', plate: '9999-XYZ', capacity: '6000 kg', status: 'Mantenimiento', active: false },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Vehículos</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nuevo Vehículo
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>ID</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Placa</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Capacidad</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vehicles.map(v => (
+            <tr key={v.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{v.id}</td>
+              <td style={{ padding: '12px' }}>{v.plate}</td>
+              <td style={{ padding: '12px' }}>{v.capacity}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: v.active ? '#dcfce7' : '#fee2e2', color: v.active ? '#166534' : '#991b1b' }}>
+                  {v.status}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const DriversSettings = ({ theme }) => {
+  const [drivers, setDrivers] = useState([
+    { id: 1, name: 'Juan Pérez', license: 'ABC123', phone: '+591 71234567', active: true },
+    { id: 2, name: 'María González', license: 'DEF456', phone: '+591 71234568', active: true },
+    { id: 3, name: 'Carlos Ramírez', license: 'GHI789', phone: '+591 71234569', active: true },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Choferes</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nuevo Chofer
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Licencia</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {drivers.map(d => (
+            <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{d.name}</td>
+              <td style={{ padding: '12px' }}>{d.license}</td>
+              <td style={{ padding: '12px' }}>{d.phone}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: d.active ? '#dcfce7' : '#fee2e2', color: d.active ? '#166534' : '#991b1b' }}>
+                  {d.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const WarehousesSettings = ({ theme }) => {
+  const [warehouses, setWarehouses] = useState([
+    { id: 1, name: 'Almacén Central La Paz', section: 'Zona A', address: 'Av. Principal 123', active: true },
+    { id: 2, name: 'Depósito El Alto', section: 'Zona Frío', address: 'Calle Comercio 456', active: true },
+    { id: 3, name: 'Depósito Viacha', section: 'Principal', address: 'Carretera Viacha Km 5', active: true },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Almacenes / Depósitos</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nuevo Almacén
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Sector</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Dirección</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {warehouses.map(w => (
+            <tr key={w.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{w.name}</td>
+              <td style={{ padding: '12px' }}>{w.section}</td>
+              <td style={{ padding: '12px' }}>{w.address}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: w.active ? '#dcfce7' : '#fee2e2', color: w.active ? '#166534' : '#991b1b' }}>
+                  {w.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const PricesSettings = ({ theme }) => {
+  const [prices, setPrices] = useState([
+    { provider: 'SOFIA', code: 104, basePrice: 12.50, active: true },
+    { provider: 'SOFIA', code: 107, basePrice: 13.00, active: true },
+    { provider: 'PIO', code: 104, basePrice: 12.00, active: true },
+  ]);
+
+  return (
+    <Card>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Precios</h3>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Proveedor</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Precio Base (Bs/kg)</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {prices.map((p, idx) => (
+            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{p.provider}</td>
+              <td style={{ padding: '12px' }}>{p.code}</td>
+              <td style={{ padding: '12px' }}>Bs {p.basePrice.toFixed(2)}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
+                  {p.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
+
+const BasketsSettings = ({ theme }) => {
+  const [basketConfig, setBasketConfig] = useState({
+    totalBaskets: 2200,
+    costPerBasket: 25.00,
+    maxDaysInClient: 7,
+  });
+
+  return (
+    <Card>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Canastos</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>TOTAL DE CANASTOS EN INVENTARIO</label>
+          <input
+            type="number"
+            value={basketConfig.totalBaskets}
+            onChange={(e) => setBasketConfig({...basketConfig, totalBaskets: parseInt(e.target.value) || 0})}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR CANASTO (Bs)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={basketConfig.costPerBasket}
+            onChange={(e) => setBasketConfig({...basketConfig, costPerBasket: parseFloat(e.target.value) || 0})}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>DÍAS MÁXIMOS EN CLIENTE (ANTES DE MORA)</label>
+          <input
+            type="number"
+            value={basketConfig.maxDaysInClient}
+            onChange={(e) => setBasketConfig({...basketConfig, maxDaysInClient: parseInt(e.target.value) || 0})}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
+          />
+        </div>
+        <button style={{ alignSelf: 'flex-start', backgroundColor: theme.primary, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Save size={16} /> Guardar Configuración
+        </button>
+      </div>
+    </Card>
+  );
+};
+
+const UsersSettings = ({ theme }) => {
+  const [users, setUsers] = useState([
+    { id: 1, name: 'Admin Bolivia', email: 'admin@distribuidora.com', role: 'Administrador', active: true },
+    { id: 2, name: 'Operador 1', email: 'operador1@distribuidora.com', role: 'Operador', active: true },
+  ]);
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Usuarios</h3>
+        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Nuevo Usuario
+        </button>
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Rol</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(u => (
+            <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{u.name}</td>
+              <td style={{ padding: '12px' }}>{u.email}</td>
+              <td style={{ padding: '12px' }}>{u.role}</td>
+              <td style={{ padding: '12px' }}>
+                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: u.active ? '#dcfce7' : '#fee2e2', color: u.active ? '#166534' : '#991b1b' }}>
+                  {u.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+};
 
 export default App;
