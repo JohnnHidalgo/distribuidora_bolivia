@@ -555,9 +555,12 @@ const InventoryView = ({ theme }) => (
 // --- VISTA DE CONSOLIDACIÓN ---
 
 const ConsolidationView = ({ theme }) => {
-  const [viewStep, setViewStep] = useState('register');
   const [expandedGroups, setExpandedGroups] = useState({});
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [clientSearch, setClientSearch] = useState('');
+  const [selectedClient, setSelectedClient] = useState('');
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState(() => {
     const init = {};
     ['SOFIA', 'PIO'].forEach(provider => {
@@ -587,6 +590,46 @@ const ConsolidationView = ({ theme }) => {
         { client: 'Doña Juana', orders: {109: 5, 104: 2} }
       ]
     }
+  };
+
+  // Lista de clientes por grupo
+  const clientsByGroup = {
+    'El Alto - Zona Norte': [
+      'Pollería El Rey',
+      'Súper Pollo',
+      'Pollería Los Hermanos',
+      'Carnicería El Norte',
+      'Restaurante La Cumbre'
+    ],
+    'El Alto - Zona Sur': [
+      'Doña Juana',
+      'Pollería Sur',
+      'Carnicería El Sur',
+      'Restaurante Valle',
+      'Pollería Los Andes'
+    ],
+    'La Paz - Centro': [
+      'Pollería Central',
+      'Carnicería Plaza',
+      'Restaurante Plaza',
+      'Pollería Murillo',
+      'Súper Pollo Centro'
+    ],
+    'La Paz - Zona Norte': [
+      'Pollería Norte',
+      'Carnicería Norte',
+      'Restaurante Norte',
+      'Pollería Achumani',
+      'Súper Pollo Norte'
+    ]
+  };
+
+  // Función para filtrar clientes basado en la búsqueda
+  const getFilteredClients = () => {
+    if (!selectedGroup || !clientsByGroup[selectedGroup]) return [];
+    return clientsByGroup[selectedGroup].filter(client =>
+      client.toLowerCase().includes(clientSearch.toLowerCase())
+    );
   };
 
   // Estado editable para cajas / unidades por cliente y código en la vista de consolidación
@@ -725,31 +768,18 @@ const ConsolidationView = ({ theme }) => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '12px', width: 'fit-content' }}>
         <button 
-          onClick={() => setViewStep('register')}
           style={{ 
             padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold',
-            backgroundColor: viewStep === 'register' ? 'white' : 'transparent',
-            color: viewStep === 'register' ? theme.primary : theme.textMuted,
+            backgroundColor: 'white',
+            color: theme.primary,
             display: 'flex', alignItems: 'center', gap: '8px'
           }}
         >
-          <ClipboardList size={18} /> 1. Registro de Pedidos
-        </button>
-        <button 
-          onClick={() => setViewStep('consolidate')}
-          style={{ 
-            padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold',
-            backgroundColor: viewStep === 'consolidate' ? 'white' : 'transparent',
-            color: viewStep === 'consolidate' ? theme.primary : theme.textMuted,
-            display: 'flex', alignItems: 'center', gap: '8px'
-          }}
-        >
-          <Layers size={18} /> 2. Consolidación Total
+          <ClipboardList size={18} /> Registro de Pedidos
         </button>
       </div>
 
-      {viewStep === 'register' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
           {/* Formulario */}
           <Card>
             <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -774,24 +804,87 @@ const ConsolidationView = ({ theme }) => {
               {/* Selección de Grupo de Cliente (NUEVO) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA</label>
-                <select style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}>
-                  <option>Seleccionar Grupo...</option>
-                  <option>El Alto - Zona Norte</option>
-                  <option>El Alto - Zona Sur</option>
-                  <option>La Paz - Centro</option>
-                  <option>Viacha</option>
+                <select 
+                  value={selectedGroup}
+                  onChange={(e) => {
+                    setSelectedGroup(e.target.value);
+                    setSelectedClient(''); // Limpiar cliente seleccionado al cambiar grupo
+                    setClientSearch('');
+                  }}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                >
+                  <option value="">Seleccionar Grupo...</option>
+                  <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+                  <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+                  <option value="La Paz - Centro">La Paz - Centro</option>
+                  <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
                 </select>
               </div>
 
               {/* Selección de Cliente */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
-                <select style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}>
-                  <option>Seleccionar Cliente...</option>
-                  <option>Pollería El Rey</option>
-                  <option>Súper Pollo</option>
-                  <option>Doña Juana</option>
-                </select>
+                <input
+                  type="text"
+                  value={clientSearch}
+                  onChange={(e) => {
+                    setClientSearch(e.target.value);
+                    setShowClientSuggestions(true);
+                  }}
+                  onFocus={() => setShowClientSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                  placeholder="Buscar cliente..."
+                  disabled={!selectedGroup}
+                  style={{ 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0', 
+                    outline: 'none',
+                    opacity: selectedGroup ? 1 : 0.5
+                  }}
+                />
+                {showClientSuggestions && selectedGroup && clientSearch && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  }}>
+                    {getFilteredClients().map((client, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setClientSearch(client);
+                          setShowClientSuggestions(false);
+                        }}
+                        style={{
+                          padding: '12px',
+                          cursor: 'pointer',
+                          borderBottom: index < getFilteredClients().length - 1 ? '1px solid #f1f5f9' : 'none',
+                          backgroundColor: selectedClient === client ? '#f8fafc' : 'white',
+                          ':hover': { backgroundColor: '#f8fafc' }
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = selectedClient === client ? '#f8fafc' : 'white'}
+                      >
+                        {client}
+                      </div>
+                    ))}
+                    {getFilteredClients().length === 0 && (
+                      <div style={{ padding: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                        No se encontraron clientes
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Grid de Productos */}
@@ -913,192 +1006,7 @@ const ConsolidationView = ({ theme }) => {
             </div>
           </Card>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Totales Consolidados */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {Object.entries(consolidatedData).map(([provider, groups]) => {
-              const categories = providerCategories[provider];
-              const providerTotals = calculateProviderTotalsFromState(provider, categories);
-              return (
-                <ConsolidatedBox 
-                  key={provider} 
-                  title={`Pedido Maestro: ${provider}`} 
-                  color={provider === 'SOFIA' ? theme.primary : theme.frozen} 
-                  totals={providerTotals} 
-                />
-              );
-            })}
-          </div>
-
-          {/* Detalle por Grupo y Cliente */}
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Detalle de Pedidos Consolidados</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: theme.textMuted }}>
-                  <span style={{ fontWeight: 'bold' }}>Edición manual</span>
-                  <button
-                    type="button"
-                    onClick={() => setEditEnabled(prev => !prev)}
-                    style={{
-                      width: '40px',
-                      height: '22px',
-                      borderRadius: '999px',
-                      border: '1px solid #cbd5e1',
-                      backgroundColor: editEnabled ? theme.primary : '#e2e8f0',
-                      padding: '2px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: editEnabled ? 'flex-end' : 'flex-start',
-                      transition: 'background-color 0.2s ease, justify-content 0.2s ease'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '999px',
-                        backgroundColor: 'white',
-                        boxShadow: '0 1px 2px rgba(15,23,42,0.3)'
-                      }}
-                    />
-                  </button>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleSaveConsolidatedChanges}
-                  disabled={!editEnabled}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: editEnabled ? 'pointer' : 'not-allowed',
-                    backgroundColor: editEnabled ? theme.primary : '#e2e8f0',
-                    color: editEnabled ? 'white' : '#94a3b8',
-                    boxShadow: editEnabled ? '0 2px 4px rgba(225,29,72,0.3)' : 'none'
-                  }}
-                >
-                  <Save size={14} />
-                  Guardar cambios
-                </button>
-              </div>
-            </div>
-            {Object.entries(consolidatedData).map(([provider, groups]) => {
-              const categories = providerCategories[provider];
-              return (
-                <div key={provider} style={{ marginBottom: '24px' }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: provider === 'SOFIA' ? theme.primary : theme.frozen, marginBottom: '12px' }}>
-                    Proveedor: {provider}
-                  </h4>
-                  {Object.entries(groups).map(([group, clients]) => {
-                    const groupTotals = calculateGroupTotalsFromState(provider, group, categories);
-                    const isExpanded = expandedGroups[`${provider}-${group}`];
-                    return (
-                      <div key={group} style={{ marginBottom: '16px', padding: '16px', border: `1px solid #e2e8f0`, borderRadius: '8px', backgroundColor: '#f8fafc' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: theme.textMain, margin: 0 }}>
-                            Grupo: {group}
-                          </h5>
-                          <button 
-                            onClick={() => toggleGroup(provider, group)}
-                            style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: theme.primary, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            {isExpanded ? 'Ocultar Detalle' : 'Ver Detalle'} <ChevronRight size={16} style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
-                          </button>
-                        </div>
-                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                          {Object.entries(groupTotals).map(([code, total]) => (
-                            <div key={code} style={{ textAlign: 'center', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Código {code}</div>
-                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: theme.primary }}>{total}</div>
-                            </div>
-                          ))}
-                        </div>
-                        {isExpanded && (
-                          <div style={{ marginTop: '16px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                              <thead>
-                                <tr style={{ backgroundColor: '#f1f5f9', color: '#64748b' }}>
-                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Cliente</th>
-                                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Detalle de Pedido (Editable)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {clients.map((clientData, index) => (
-                                  <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '8px 12px', fontWeight: '600' }}>{clientData.client}</td>
-                                    <td style={{ padding: '8px 12px' }}>
-                                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                                          const codeState = getClientCodeState(provider, group, index, code);
-                                          const totalUnits = (codeState.boxes || 0) * 10 + (codeState.units || 0);
-                                          return (
-                                            <div key={code} style={{ padding: '6px 8px', background: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '11px', minWidth: '140px' }}>
-                                              <div style={{ fontWeight: 'bold', color: theme.primary, marginBottom: '4px' }}>Código {code}</div>
-                                              <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                                                <input
-                                                  type="number"
-                                                  min="0"
-                                                  value={codeState.boxes || ''}
-                                                  onChange={(e) => handleClientOrderChange(provider, group, index, code, 'boxes', e.target.value)}
-                                                  style={{ width: '52px', padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '10px', backgroundColor: editEnabled ? 'white' : '#e5e7eb' }}
-                                                  disabled={!editEnabled}
-                                                  placeholder="Cj"
-                                                />
-                                                <input
-                                                  type="number"
-                                                  min="0"
-                                                  value={codeState.units || ''}
-                                                  onChange={(e) => handleClientOrderChange(provider, group, index, code, 'units', e.target.value)}
-                                                  style={{ width: '52px', padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '10px', backgroundColor: editEnabled ? 'white' : '#e5e7eb' }}
-                                                  disabled={!editEnabled}
-                                                  placeholder="Unid"
-                                                />
-                                              </div>
-                                              <div style={{ fontSize: '10px', color: '#64748b' }}>
-                                                Total: <strong>{totalUnits}</strong> unidades
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </Card>
-
-          {/* Botón para guardar el consolidado */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
-            <button 
-              onClick={() => alert('Consolidado guardado exitosamente')}
-              style={{ 
-                backgroundColor: theme.primary, color: 'white', border: 'none', padding: '16px 32px', 
-                borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(225, 29, 72, 0.2)'
-              }}
-            >
-              <Save size={20} /> Guardar Consolidado
-            </button>
-          </div>
-        </div>
-      )}
+        
     </div>
   );
 };
