@@ -566,7 +566,7 @@ const ConsolidationView = ({ theme }) => {
     ['SOFIA', 'PIO'].forEach(provider => {
       init[provider] = {};
       [104, 105, 106, 107, 108, 109, 110].forEach(code => {
-        init[provider][code] = { boxes: 0, units: 0, netWeight: 0 };
+        init[provider][code] = { boxes: 0, units: 0, hasOffal: true };
       });
     });
     return init;
@@ -904,7 +904,7 @@ const ConsolidationView = ({ theme }) => {
                           ...prev[selectedProvider],
                           [code]: {
                             ...prev[selectedProvider][code],
-                            [field]: parseFloat(value) || 0
+                            [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
                           }
                         }
                       }));
@@ -926,7 +926,7 @@ const ConsolidationView = ({ theme }) => {
           {/* Tabla de Pendientes */}
           <Card style={{ padding: 0 }}>
             <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
-              <h3 style={{ margin: 0, fontSize: '16px' }}>Solicitudes Pendientes del Día</h3>
+              <h3 style={{ margin: 0, fontSize: '16px' }}>Solicitudes</h3>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1015,38 +1015,42 @@ const ConsolidationView = ({ theme }) => {
 const ProductRow = ({ label, code, provider, values, onChange }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
     <span style={{ fontSize: '12px', fontWeight: 'bold', flex: 1 }}>{label}</span>
-    <div style={{ display: 'flex', gap: '4px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
       <div style={{ position: 'relative' }}>
-        <input 
-          type="number" 
-          placeholder="0" 
-          value={values?.boxes || ''} 
+        <input
+          type="number"
+          placeholder="0"
+          value={values?.boxes || ''}
           onChange={(e) => onChange(code, 'boxes', e.target.value)}
-          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }}
         />
         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
       </div>
       <div style={{ position: 'relative' }}>
-        <input 
-          type="number" 
-          placeholder="0" 
-          value={values?.units || ''} 
+        <input
+          type="number"
+          placeholder="0"
+          value={values?.units || ''}
           onChange={(e) => onChange(code, 'units', e.target.value)}
-          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+          style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }}
         />
         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
       </div>
 
-      <div style={{ position: 'relative' }}>
-        <input 
-          type="number" 
-          step="0.01" 
-          placeholder="0.00" 
-          value={values?.netWeight || ''} 
-          onChange={(e) => onChange(code, 'netWeight', e.target.value)}
-          style={{ width: '70px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }} 
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <input
+          type="checkbox"
+          id={`offal-${code}`}
+          checked={values?.hasOffal || false}
+          onChange={(e) => onChange(code, 'hasOffal', e.target.checked)}
+          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
         />
-        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PESO NETO</span>
+        <label
+          htmlFor={`offal-${code}`}
+          style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', cursor: 'pointer', userSelect: 'none' }}
+        >
+          MENUDENCIA
+        </label>
       </div>
     </div>
   </div>
@@ -1182,9 +1186,9 @@ const AssignmentView = ({ theme }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CANTIDADES A ASIGNAR</label>
             {providerCategories[selectedProvider].map(code => (
-              <ProductRow 
-                key={code} 
-                label={`Código ${code}`} 
+              <ProductRow
+                key={code}
+                label={`Código ${code}`}
                 code={code}
                 provider={selectedProvider}
                 values={selectedProducts[selectedProvider][code]}
@@ -1195,7 +1199,7 @@ const AssignmentView = ({ theme }) => {
                       ...prev[selectedProvider],
                       [code]: {
                         ...prev[selectedProvider][code],
-                        [field]: parseFloat(value) || 0
+                        [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
                       }
                     }
                   }));
