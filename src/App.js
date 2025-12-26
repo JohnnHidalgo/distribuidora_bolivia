@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ArrowRightLeft,
   ChevronRight,
+  ChevronLeft,
   UserCircle,
   ClipboardList,
   Layers,
@@ -49,6 +50,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [userType, setUserType] = useState('operador'); // 'cliente', 'chofer', 'operador'
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -103,7 +105,7 @@ const App = () => {
     sidebarBg: '#0f172a'
   };
 
-  const styles = (isMobile, sidebarVisible) => ({
+  const styles = (isMobile, sidebarVisible, sidebarCollapsed) => ({
     container: {
       display: 'flex',
       height: '100vh',
@@ -113,7 +115,7 @@ const App = () => {
       overflow: 'hidden'
     },
     sidebar: {
-      width: isMobile ? '280px' : '260px',
+      width: isMobile ? '280px' : (sidebarCollapsed ? '80px' : '260px'),
       backgroundColor: theme.sidebarBg,
       color: 'white',
       display: 'flex',
@@ -126,7 +128,7 @@ const App = () => {
       height: '100vh',
       zIndex: 1000,
       transform: isMobile && !sidebarVisible ? 'translateX(-100%)' : 'translateX(0)',
-      transition: 'transform 0.3s ease-in-out'
+      transition: 'all 0.3s ease-in-out'
     },
     sidebarOverlay: {
       display: isMobile && sidebarVisible ? 'block' : 'none',
@@ -143,7 +145,8 @@ const App = () => {
       alignItems: 'center',
       gap: '12px',
       marginBottom: '32px',
-      padding: '0 8px'
+      padding: '0 8px',
+      justifyContent: sidebarCollapsed && !isMobile ? 'center' : 'flex-start'
     },
     logoIcon: {
       width: '32px',
@@ -156,12 +159,19 @@ const App = () => {
       fontWeight: 'bold',
       fontSize: '18px'
     },
+    logoText: {
+      fontSize: '20px',
+      fontWeight: '800',
+      letterSpacing: '1px',
+      display: sidebarCollapsed && !isMobile ? 'none' : 'block'
+    },
     main: {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      marginLeft: isMobile ? 0 : (sidebarVisible ? 0 : 0)
+      marginLeft: isMobile ? 0 : (sidebarVisible ? 0 : 0),
+      transition: 'margin-left 0.3s ease-in-out'
     },
     header: {
       height: '64px',
@@ -185,6 +195,18 @@ const App = () => {
       fontSize: '24px',
       cursor: 'pointer',
       padding: '8px'
+    },
+    collapseBtn: {
+      display: isMobile ? 'none' : 'block',
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: '#94a3b8',
+      cursor: 'pointer',
+      padding: '8px',
+      borderRadius: '6px',
+      alignSelf: 'flex-end',
+      marginBottom: '16px',
+      transition: 'all 0.2s ease'
     }
   });
 
@@ -203,7 +225,7 @@ const App = () => {
     }
   };
 
-  const currentStyles = styles(isMobile, sidebarVisible);
+  const currentStyles = styles(isMobile, sidebarVisible, sidebarCollapsed);
 
   return (
     <div style={currentStyles.container}>
@@ -217,11 +239,21 @@ const App = () => {
       <div style={currentStyles.sidebar}>
         <div style={currentStyles.logoSection}>
           <div style={currentStyles.logoIcon}>D</div>
-          <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>BOLIVIA</span>
+          <span style={currentStyles.logoText}>BOLIVIA</span>
         </div>
 
+        {/* Botón de colapso/expansión */}
+        <button 
+          style={currentStyles.collapseBtn}
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#1e293b'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+        >
+          {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        </button>
+
         {/* Selector de Tipo de Usuario */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', display: sidebarCollapsed && !isMobile ? 'none' : 'block' }}>
           <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '8px', fontWeight: '500' }}>
             TIPO DE USUARIO
           </label>
@@ -254,18 +286,18 @@ const App = () => {
         </div>
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
-          {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
         </nav>
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
-          {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} />}
+          {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           <button style={{ 
             width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
             backgroundColor: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left'
@@ -314,13 +346,14 @@ const App = () => {
 };
 
 // Componentes Auxiliares
-const SidebarBtn = ({ id, icon: Icon, label, activeTab, setActiveTab, theme }) => {
+const SidebarBtn = ({ id, icon: Icon, label, activeTab, setActiveTab, theme, collapsed }) => {
   const isActive = activeTab === id;
   return (
     <button
       onClick={() => setActiveTab(id)}
       style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', 
+        gap: collapsed ? '0' : '12px', padding: '12px 16px',
         borderRadius: '8px', border: 'none', cursor: 'pointer', textAlign: 'left', transition: '0.2s',
         backgroundColor: isActive ? theme.primary : 'transparent',
         color: isActive ? 'white' : '#94a3b8',
@@ -328,7 +361,7 @@ const SidebarBtn = ({ id, icon: Icon, label, activeTab, setActiveTab, theme }) =
       }}
     >
       <Icon size={20} />
-      <span style={{ fontWeight: '600' }}>{label}</span>
+      {!collapsed && <span style={{ fontWeight: '600' }}>{label}</span>}
     </button>
   );
 };
@@ -561,6 +594,84 @@ const ConsolidationView = ({ theme }) => {
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  
+  // Estados para filtros de solicitudes
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterProvider, setFilterProvider] = useState('ALL');
+  const [filterClient, setFilterClient] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterGroup, setFilterGroup] = useState('ALL');
+  
+  // Datos de solicitudes con filtros
+  const [requests, setRequests] = useState([
+    {
+      id: 1,
+      provider: 'SOFIA',
+      group: 'El Alto Norte',
+      client: 'Pollería El Rey',
+      date: '2025-12-25',
+      status: 'emitido',
+      products: {
+        104: { boxes: 10, units: 0, hasOffal: false },
+        107: { boxes: 5, units: 0, hasOffal: true },
+        109: { boxes: 0, units: 5, hasOffal: false }
+      }
+    },
+    {
+      id: 2,
+      provider: 'PIO',
+      group: 'El Alto Sur',
+      client: 'Doña Juana',
+      date: '2025-12-24',
+      status: 'enviado',
+      products: {
+        104: { boxes: 0, units: 2, hasOffal: true },
+        109: { boxes: 0, units: 5, hasOffal: false }
+      }
+    },
+    {
+      id: 3,
+      provider: 'SOFIA',
+      group: 'La Paz - Centro',
+      client: 'Pollería Central',
+      date: '2025-12-25',
+      status: 'emitido',
+      products: {
+        105: { boxes: 8, units: 0, hasOffal: false },
+        106: { boxes: 3, units: 0, hasOffal: true }
+      }
+    },
+    {
+      id: 4,
+      provider: 'PIO',
+      group: 'La Paz - Zona Norte',
+      client: 'Carnicería Norte',
+      date: '2025-12-23',
+      status: 'enviado',
+      products: {
+        110: { boxes: 0, units: 10, hasOffal: false }
+      }
+    }
+  ]);
+  
+  // Función para filtrar solicitudes
+  const getFilteredRequests = () => {
+    return requests.filter(request => {
+      const requestDate = new Date(request.date);
+      const startDate = filterStartDate ? new Date(filterStartDate) : null;
+      const endDate = filterEndDate ? new Date(filterEndDate) : null;
+      
+      const matchesDate = (!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate);
+      const matchesProvider = filterProvider === 'ALL' || request.provider === filterProvider;
+      const matchesClient = !filterClient || request.client.toLowerCase().includes(filterClient.toLowerCase());
+      const matchesStatus = filterStatus === 'ALL' || request.status === filterStatus;
+      const matchesGroup = filterGroup === 'ALL' || request.group === filterGroup;
+      
+      return matchesDate && matchesProvider && matchesClient && matchesStatus && matchesGroup;
+    });
+  };
+  
   const [selectedProducts, setSelectedProducts] = useState(() => {
     const init = {};
     ['SOFIA', 'PIO'].forEach(provider => {
@@ -928,79 +1039,167 @@ const ConsolidationView = ({ theme }) => {
             <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
               <h3 style={{ margin: 0, fontSize: '16px' }}>Solicitudes</h3>
             </div>
+            
+            {/* Filtros */}
+            <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    FECHA INICIO
+                  </label>
+                  <input
+                    type="date"
+                    value={filterStartDate}
+                    onChange={(e) => setFilterStartDate(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    FECHA FIN
+                  </label>
+                  <input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(e) => setFilterEndDate(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    PROVEEDOR
+                  </label>
+                  <select
+                    value={filterProvider}
+                    onChange={(e) => setFilterProvider(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  >
+                    <option value="ALL">Todos los Proveedores</option>
+                    <option value="SOFIA">SOFIA</option>
+                    <option value="PIO">PIO</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    CLIENTE
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    value={filterClient}
+                    onChange={(e) => setFilterClient(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    GRUPO
+                  </label>
+                  <select
+                    value={filterGroup}
+                    onChange={(e) => setFilterGroup(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  >
+                    <option value="ALL">Todos los Grupos</option>
+                    <option value="El Alto Norte">El Alto Norte</option>
+                    <option value="El Alto Sur">El Alto Sur</option>
+                    <option value="La Paz - Centro">La Paz - Centro</option>
+                    <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    ESTADO
+                  </label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                  >
+                    <option value="ALL">Todos los Estados</option>
+                    <option value="emitido">Emitido</option>
+                    <option value="enviado">Enviado</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', fontSize: '11px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+                    <th style={{ padding: '16px 20px' }}>FECHA</th>
                     <th style={{ padding: '16px 20px' }}>PROVEEDOR</th>
                     <th style={{ padding: '16px 20px' }}>GRUPO / RUTA</th>
                     <th style={{ padding: '16px 20px' }}>CLIENTE</th>
-                    <th style={{ padding: '16px 20px' }}>DETALLE MIXTO</th>
+                    <th style={{ padding: '16px 20px' }}>ESTADO</th>
+                    <th style={{ padding: '16px 20px' }}>PRODUCTOS SOLICITADOS</th>
                     <th style={{ padding: '16px 20px' }}>ACCIONES</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '16px 20px' }}><span style={{fontSize:'10px', fontWeight:'bold', background:'#fee2e2', color:theme.primary, padding:'2px 6px', borderRadius:'4px'}}>SOFIA</span></td>
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                        <MapPin size={12} color="#94a3b8" /> El Alto Norte
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 20px', fontWeight: '600' }}>Pollería El Rey</td>
-                    <td style={{ padding: '16px 20px', fontSize: '12px' }}>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
-                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                          // Mock data for demonstration - in real app this would come from state
-                          const mockDetails = {
-                            104: { boxes: 10, units: 0, grossWeight: 100.00, netWeight: 95.00 },
-                            107: { boxes: 5, units: 0, grossWeight: 50.00, netWeight: 47.50 },
-                            109: { boxes: 0, units: 5, grossWeight: 7.50, netWeight: 7.00 },
-                          };
-                          const d = mockDetails[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
-                          return (
-                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
-                              <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight.toFixed(2)} kg Bruto</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight.toFixed(2)} kg Neto</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 20px' }}><Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} /></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '16px 20px' }}><span style={{fontSize:'10px', fontWeight:'bold', background:'#e0f2fe', color:'#0369a1', padding:'2px 6px', borderRadius:'4px'}}>PIO</span></td>
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                        <MapPin size={12} color="#94a3b8" /> El Alto Sur
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 20px', fontWeight: '600' }}>Doña Juana</td>
-                    <td style={{ padding: '16px 20px', fontSize: '12px' }}>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
-                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                          // Mock data for demonstration - in real app this would come from state
-                          const mockDetails = {
-                            104: { boxes: 0, units: 2, grossWeight: 2.50, netWeight: 2.30 },
-                            109: { boxes: 0, units: 5, grossWeight: 7.50, netWeight: 7.00 },
-                          };
-                          const d = mockDetails[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
-                          return (
-                            <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
-                              <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight.toFixed(2)} kg Bruto</div>
-                              <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight.toFixed(2)} kg Neto</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 20px' }}><Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} /></td>
-                  </tr>
+                  {getFilteredRequests().map((request) => (
+                    <tr key={request.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                      <td style={{ padding: '16px 20px', fontSize: '12px', color: '#64748b' }}>
+                        {new Date(request.date).toLocaleDateString('es-ES')}
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{
+                          fontSize:'10px', 
+                          fontWeight:'bold', 
+                          background: request.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
+                          color: request.provider === 'SOFIA' ? theme.primary : '#0369a1', 
+                          padding:'2px 6px', 
+                          borderRadius:'4px'
+                        }}>
+                          {request.provider}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                          <MapPin size={12} color="#94a3b8" /> {request.group}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontWeight: '600' }}>{request.client}</td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
+                          color: request.status === 'emitido' ? '#92400e' : '#065f46',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          textTransform: 'capitalize'
+                        }}>
+                          {request.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                          {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                            const details = request.products[code] || { boxes: 0, units: 0, hasOffal: false };
+                            return (
+                              <div key={code} style={{ padding: '6px 8px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '140px', flexShrink: 0 }}>
+                                <div style={{ fontSize: '11px', fontWeight: '800', marginBottom: '4px' }}>Código {code}</div>
+                                <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>{details.boxes} cajas, {details.units} unidades</div>
+                                <div style={{ fontSize: '10px', color: details.hasOffal ? '#059669' : '#dc2626', fontWeight: '600' }}>
+                                  {details.hasOffal ? 'Con menudencia' : 'Sin menudencia'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} />
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
