@@ -881,135 +881,140 @@ const ConsolidationView = ({ theme }) => {
       {/* Formulario de Nueva Solicitud */}
       <Card>
         <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Plus size={20} color={theme.primary} /> Detalle de Solicitud
+          <Plus size={20} color={theme.primary} /> Nueva de Solicitud
         </h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Selección de Proveedor */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
-            <select 
-              value={selectedProvider} 
-              onChange={(e) => setSelectedProvider(e.target.value)}
-              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}
-            >
-              <option value="SOFIA">Avícola Sofía</option>
-              <option value="PIO">PIO</option>
-              <option value="Pío Lindo">Pío Lindo</option>
-            </select>
-          </div>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start' }}>
+            {/* Columna izquierda: PROVEEDOR ORIGEN, GRUPO/RUTA, CLIENTE DESTINO */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: '0 0 auto', minWidth: '300px' }}>
+              {/* Selección de Proveedor */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
+                <select 
+                  value={selectedProvider} 
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}
+                >
+                  <option value="SOFIA">Avícola Sofía</option>
+                  <option value="PIO">PIO</option>
+                  <option value="Pío Lindo">Pío Lindo</option>
+                </select>
+              </div>
 
-          {/* Selección de Grupo de Cliente (NUEVO) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA</label>
-            <select 
-              value={selectedGroup}
-              onChange={(e) => {
-                setSelectedGroup(e.target.value);
-                setSelectedClient(''); // Limpiar cliente seleccionado al cambiar grupo
-                setClientSearch('');
-              }}
-              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-            >
-              <option value="">Seleccionar Grupo...</option>
-              <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
-              <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
-              <option value="La Paz - Centro">La Paz - Centro</option>
-              <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
-            </select>
-          </div>
+              {/* Selección de Grupo de Cliente (NUEVO) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA</label>
+                <select 
+                  value={selectedGroup}
+                  onChange={(e) => {
+                    setSelectedGroup(e.target.value);
+                    setSelectedClient(''); // Limpiar cliente seleccionado al cambiar grupo
+                    setClientSearch('');
+                  }}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                >
+                  <option value="">Seleccionar Grupo...</option>
+                  <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+                  <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+                  <option value="La Paz - Centro">La Paz - Centro</option>
+                  <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+                </select>
+              </div>
 
-          {/* Selección de Cliente */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
-            <input
-              type="text"
-              value={clientSearch}
-              onChange={(e) => {
-                setClientSearch(e.target.value);
-                setShowClientSuggestions(true);
-              }}
-              onFocus={() => setShowClientSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
-              placeholder="Buscar cliente..."
-              disabled={!selectedGroup}
-              style={{ 
-                padding: '12px', 
-                borderRadius: '8px', 
-                border: '1px solid #e2e8f0', 
-                outline: 'none',
-                opacity: selectedGroup ? 1 : 0.5
-              }}
-            />
-            {showClientSuggestions && selectedGroup && clientSearch && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                zIndex: 1000,
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }}>
-                {getFilteredClients().map((client, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      setSelectedClient(client);
-                      setClientSearch(client);
-                      setShowClientSuggestions(false);
-                    }}
-                    style={{
-                      padding: '12px',
-                      cursor: 'pointer',
-                      borderBottom: index < getFilteredClients().length - 1 ? '1px solid #f1f5f9' : 'none',
-                      backgroundColor: selectedClient === client ? '#f8fafc' : 'white',
-                      ':hover': { backgroundColor: '#f8fafc' }
-                    }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = selectedClient === client ? '#f8fafc' : 'white'}
-                  >
-                    {client}
-                  </div>
-                ))}
-                {getFilteredClients().length === 0 && (
-                  <div style={{ padding: '12px', color: '#64748b', fontStyle: 'italic' }}>
-                    No se encontraron clientes
+              {/* Selección de Cliente */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
+                <input
+                  type="text"
+                  value={clientSearch}
+                  onChange={(e) => {
+                    setClientSearch(e.target.value);
+                    setShowClientSuggestions(true);
+                  }}
+                  onFocus={() => setShowClientSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                  placeholder="Buscar cliente..."
+                  disabled={!selectedGroup}
+                  style={{ 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0', 
+                    outline: 'none',
+                    opacity: selectedGroup ? 1 : 0.5
+                  }}
+                />
+                {showClientSuggestions && selectedGroup && clientSearch && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  }}>
+                    {getFilteredClients().map((client, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setClientSearch(client);
+                          setShowClientSuggestions(false);
+                        }}
+                        style={{
+                          padding: '12px',
+                          cursor: 'pointer',
+                          borderBottom: index < getFilteredClients().length - 1 ? '1px solid #f1f5f9' : 'none',
+                          backgroundColor: selectedClient === client ? '#f8fafc' : 'white',
+                          ':hover': { backgroundColor: '#f8fafc' }
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = selectedClient === client ? '#f8fafc' : 'white'}
+                      >
+                        {client}
+                      </div>
+                    ))}
+                    {getFilteredClients().length === 0 && (
+                      <div style={{ padding: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                        No se encontraron clientes
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Grid de Productos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
-            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
-              {providerCategories[selectedProvider].map(code => (
-                <ProductRow 
-                  key={code} 
-                  label={`Código ${code}`} 
-                  code={code}
-                  provider={selectedProvider}
-                  values={selectedProducts[selectedProvider][code]}
-                  onChange={(code, field, value) => {
-                    setSelectedProducts(prev => ({
-                      ...prev,
-                      [selectedProvider]: {
-                        ...prev[selectedProvider],
-                        [code]: {
-                          ...prev[selectedProvider][code],
-                          [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
+            {/* Columna derecha: PRODUCTOS REQUERIDOS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: '1 1 auto' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                {providerCategories[selectedProvider].map(code => (
+                  <ProductRow 
+                    key={code} 
+                    label={`Código ${code}`} 
+                    code={code}
+                    provider={selectedProvider}
+                    values={selectedProducts[selectedProvider][code]}
+                    onChange={(code, field, value) => {
+                      setSelectedProducts(prev => ({
+                        ...prev,
+                        [selectedProvider]: {
+                          ...prev[selectedProvider],
+                          [code]: {
+                            ...prev[selectedProvider][code],
+                            [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
+                          }
                         }
-                      }
-                    }));
-                  }}
-                />
-              ))}
+                      }));
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
