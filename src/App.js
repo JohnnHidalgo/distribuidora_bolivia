@@ -876,333 +876,328 @@ const ConsolidationView = ({ theme }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
-          {/* Formulario */}
-          <Card>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Plus size={20} color={theme.primary} /> Detalle de Solicitud
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Selección de Proveedor */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
-                <select 
-                  value={selectedProvider} 
-                  onChange={(e) => setSelectedProvider(e.target.value)}
-                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}
-                >
-                  <option value="SOFIA">Avícola Sofía</option>
-                  <option value="PIO">PIO</option>
-                  <option value="Pío Lindo">Pío Lindo</option>
-                </select>
-              </div>
+      {/* Formulario de Nueva Solicitud */}
+      <Card>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={20} color={theme.primary} /> Detalle de Solicitud
+        </h3>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Selección de Proveedor */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR ORIGEN</label>
+            <select 
+              value={selectedProvider} 
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#fdf2f2' }}
+            >
+              <option value="SOFIA">Avícola Sofía</option>
+              <option value="PIO">PIO</option>
+              <option value="Pío Lindo">Pío Lindo</option>
+            </select>
+          </div>
 
-              {/* Selección de Grupo de Cliente (NUEVO) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA</label>
-                <select 
-                  value={selectedGroup}
-                  onChange={(e) => {
-                    setSelectedGroup(e.target.value);
-                    setSelectedClient(''); // Limpiar cliente seleccionado al cambiar grupo
-                    setClientSearch('');
-                  }}
-                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                >
-                  <option value="">Seleccionar Grupo...</option>
-                  <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
-                  <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
-                  <option value="La Paz - Centro">La Paz - Centro</option>
-                  <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
-                </select>
-              </div>
+          {/* Selección de Grupo de Cliente (NUEVO) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA</label>
+            <select 
+              value={selectedGroup}
+              onChange={(e) => {
+                setSelectedGroup(e.target.value);
+                setSelectedClient(''); // Limpiar cliente seleccionado al cambiar grupo
+                setClientSearch('');
+              }}
+              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+            >
+              <option value="">Seleccionar Grupo...</option>
+              <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+              <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+              <option value="La Paz - Centro">La Paz - Centro</option>
+              <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+            </select>
+          </div>
 
-              {/* Selección de Cliente */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
-                <input
-                  type="text"
-                  value={clientSearch}
-                  onChange={(e) => {
-                    setClientSearch(e.target.value);
-                    setShowClientSuggestions(true);
-                  }}
-                  onFocus={() => setShowClientSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
-                  placeholder="Buscar cliente..."
-                  disabled={!selectedGroup}
-                  style={{ 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: '1px solid #e2e8f0', 
-                    outline: 'none',
-                    opacity: selectedGroup ? 1 : 0.5
-                  }}
-                />
-                {showClientSuggestions && selectedGroup && clientSearch && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    zIndex: 1000,
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                  }}>
-                    {getFilteredClients().map((client, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setSelectedClient(client);
-                          setClientSearch(client);
-                          setShowClientSuggestions(false);
-                        }}
-                        style={{
-                          padding: '12px',
-                          cursor: 'pointer',
-                          borderBottom: index < getFilteredClients().length - 1 ? '1px solid #f1f5f9' : 'none',
-                          backgroundColor: selectedClient === client ? '#f8fafc' : 'white',
-                          ':hover': { backgroundColor: '#f8fafc' }
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = selectedClient === client ? '#f8fafc' : 'white'}
-                      >
-                        {client}
-                      </div>
-                    ))}
-                    {getFilteredClients().length === 0 && (
-                      <div style={{ padding: '12px', color: '#64748b', fontStyle: 'italic' }}>
-                        No se encontraron clientes
-                      </div>
-                    )}
+          {/* Selección de Cliente */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
+            <input
+              type="text"
+              value={clientSearch}
+              onChange={(e) => {
+                setClientSearch(e.target.value);
+                setShowClientSuggestions(true);
+              }}
+              onFocus={() => setShowClientSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+              placeholder="Buscar cliente..."
+              disabled={!selectedGroup}
+              style={{ 
+                padding: '12px', 
+                borderRadius: '8px', 
+                border: '1px solid #e2e8f0', 
+                outline: 'none',
+                opacity: selectedGroup ? 1 : 0.5
+              }}
+            />
+            {showClientSuggestions && selectedGroup && clientSearch && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                zIndex: 1000,
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+                {getFilteredClients().map((client, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setSelectedClient(client);
+                      setClientSearch(client);
+                      setShowClientSuggestions(false);
+                    }}
+                    style={{
+                      padding: '12px',
+                      cursor: 'pointer',
+                      borderBottom: index < getFilteredClients().length - 1 ? '1px solid #f1f5f9' : 'none',
+                      backgroundColor: selectedClient === client ? '#f8fafc' : 'white',
+                      ':hover': { backgroundColor: '#f8fafc' }
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = selectedClient === client ? '#f8fafc' : 'white'}
+                  >
+                    {client}
+                  </div>
+                ))}
+                {getFilteredClients().length === 0 && (
+                  <div style={{ padding: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                    No se encontraron clientes
                   </div>
                 )}
               </div>
+            )}
+          </div>
 
-              {/* Grid de Productos */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
-                {providerCategories[selectedProvider].map(code => (
-                  <ProductRow 
-                    key={code} 
-                    label={`Código ${code}`} 
-                    code={code}
-                    provider={selectedProvider}
-                    values={selectedProducts[selectedProvider][code]}
-                    onChange={(code, field, value) => {
-                      setSelectedProducts(prev => ({
-                        ...prev,
-                        [selectedProvider]: {
-                          ...prev[selectedProvider],
-                          [code]: {
-                            ...prev[selectedProvider][code],
-                            [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
-                          }
+          {/* Grid de Productos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRODUCTOS REQUERIDOS</label>
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+              {providerCategories[selectedProvider].map(code => (
+                <ProductRow 
+                  key={code} 
+                  label={`Código ${code}`} 
+                  code={code}
+                  provider={selectedProvider}
+                  values={selectedProducts[selectedProvider][code]}
+                  onChange={(code, field, value) => {
+                    setSelectedProducts(prev => ({
+                      ...prev,
+                      [selectedProvider]: {
+                        ...prev[selectedProvider],
+                        [code]: {
+                          ...prev[selectedProvider][code],
+                          [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
                         }
-                      }));
-                    }}
-                  />
-                ))}
-              </div>
+                      }
+                    }));
+                  }}
+                />
+              ))}
+            </div>
+          </div>
 
-              <button style={{ 
-                backgroundColor: theme.primary, color: 'white', border: 'none', padding: '14px', 
-                borderRadius: '10px', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-              }}>
-                <Save size={18} /> Registrar Pedido
-              </button>
-            </div>
-          </Card>
+          <button style={{ 
+            backgroundColor: theme.primary, color: 'white', border: 'none', padding: '14px', 
+            borderRadius: '10px', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+          }}>
+            <Save size={18} /> Registrar Pedido
+          </button>
+        </div>
+      </Card>
 
-          {/* Tabla de Pendientes */}
-          <Card style={{ padding: 0 }}>
-            <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
-              <h3 style={{ margin: 0, fontSize: '16px' }}>Solicitudes</h3>
-            </div>
-            
-            {/* Filtros */}
-            <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    FECHA INICIO
-                  </label>
-                  <input
-                    type="date"
-                    value={filterStartDate}
-                    onChange={(e) => setFilterStartDate(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    FECHA FIN
-                  </label>
-                  <input
-                    type="date"
-                    value={filterEndDate}
-                    onChange={(e) => setFilterEndDate(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    PROVEEDOR
-                  </label>
-                  <select
-                    value={filterProvider}
-                    onChange={(e) => setFilterProvider(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  >
-                    <option value="ALL">Todos los Proveedores</option>
-                    <option value="SOFIA">SOFIA</option>
-                    <option value="PIO">PIO</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    CLIENTE
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={filterClient}
-                    onChange={(e) => setFilterClient(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    GRUPO
-                  </label>
-                  <select
-                    value={filterGroup}
-                    onChange={(e) => setFilterGroup(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  >
-                    <option value="ALL">Todos los Grupos</option>
-                    <option value="El Alto Norte">El Alto Norte</option>
-                    <option value="El Alto Sur">El Alto Sur</option>
-                    <option value="La Paz - Centro">La Paz - Centro</option>
-                    <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                    ESTADO
-                  </label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                  >
-                    <option value="ALL">Todos los Estados</option>
-                    <option value="emitido">Emitido</option>
-                    <option value="enviado">Enviado</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', fontSize: '11px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                    <th style={{ padding: '16px 20px' }}>FECHA</th>
-                    <th style={{ padding: '16px 20px' }}>PROVEEDOR</th>
-                    <th style={{ padding: '16px 20px' }}>GRUPO / RUTA</th>
-                    <th style={{ padding: '16px 20px' }}>CLIENTE</th>
-                    <th style={{ padding: '16px 20px' }}>ESTADO</th>
-                    <th style={{ padding: '16px 20px' }}>PRODUCTOS SOLICITADOS</th>
-                    <th style={{ padding: '16px 20px' }}>ACCIONES</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredRequests().map((request) => (
-                    <tr key={request.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                      <td style={{ padding: '16px 20px', fontSize: '12px', color: '#64748b' }}>
-                        {new Date(request.date).toLocaleDateString('es-ES')}
-                      </td>
-                      <td style={{ padding: '16px 20px' }}>
-                        <span style={{
-                          fontSize:'10px', 
-                          fontWeight:'bold', 
-                          background: request.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
-                          color: request.provider === 'SOFIA' ? theme.primary : '#0369a1', 
-                          padding:'2px 6px', 
-                          borderRadius:'4px'
-                        }}>
-                          {request.provider}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-                          <MapPin size={12} color="#94a3b8" /> {request.group}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontWeight: '600' }}>{request.client}</td>
-                      <td style={{ padding: '16px 20px' }}>
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: 'bold',
-                          background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
-                          color: request.status === 'emitido' ? '#92400e' : '#065f46',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          textTransform: 'capitalize'
-                        }}>
-                          {request.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: '12px' }}>
-                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                          {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                            const details = request.products[code] || { boxes: 0, units: 0, hasOffal: false };
-                            return (
-                              <div key={code} style={{ padding: '6px 8px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '140px', flexShrink: 0 }}>
-                                <div style={{ fontSize: '11px', fontWeight: '800', marginBottom: '4px' }}>Código {code}</div>
-                                <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>{details.boxes} cajas, {details.units} unidades</div>
-                                <div style={{ fontSize: '10px', color: details.hasOffal ? '#059669' : '#dc2626', fontWeight: '600' }}>
-                                  {details.hasOffal ? 'Con menudencia' : 'Sin menudencia'}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 20px' }}>
-                        <Trash2 size={16} color="#cbd5e1" style={{cursor:'pointer'}} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+      {/* Tabla de Pendientes */}
+      <Card style={{ padding: 0 }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
+          <h3 style={{ margin: 0, fontSize: '16px' }}>Solicitudes</h3>
         </div>
         
+        {/* Filtros */}
+        <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                FECHA INICIO
+              </label>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => setFilterStartDate(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                FECHA FIN
+              </label>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => setFilterEndDate(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                PROVEEDOR
+              </label>
+              <select
+                value={filterProvider}
+                onChange={(e) => setFilterProvider(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              >
+                <option value="ALL">Todos los Proveedores</option>
+                <option value="SOFIA">SOFIA</option>
+                <option value="PIO">PIO</option>
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                CLIENTE
+              </label>
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                value={filterClient}
+                onChange={(e) => setFilterClient(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                GRUPO
+              </label>
+              <select
+                value={filterGroup}
+                onChange={(e) => setFilterGroup(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              >
+                <option value="ALL">Todos los Grupos</option>
+                <option value="El Alto Norte">El Alto Norte</option>
+                <option value="El Alto Sur">El Alto Sur</option>
+                <option value="La Paz - Centro">La Paz - Centro</option>
+                <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                ESTADO
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              >
+                <option value="ALL">Todos los Estados</option>
+                <option value="emitido">Emitido</option>
+                <option value="enviado">Enviado</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {getFilteredRequests().map((request) => (
+            <Card key={request.id}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'start' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>FECHA</div>
+                  <div style={{ fontSize: '14px' }}>{new Date(request.date).toLocaleDateString('es-ES')}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>PROVEEDOR</div>
+                  <span style={{
+                    fontSize:'12px', 
+                    fontWeight:'bold', 
+                    background: request.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
+                    color: request.provider === 'SOFIA' ? theme.primary : '#0369a1', 
+                    padding:'4px 8px', 
+                    borderRadius:'6px'
+                  }}>
+                    {request.provider}
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>GRUPO / RUTA</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px' }}>
+                    <MapPin size={14} color="#94a3b8" /> {request.group}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>CLIENTE</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>{request.client}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
+                    color: request.status === 'emitido' ? '#92400e' : '#065f46',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    textTransform: 'capitalize'
+                  }}>
+                    {request.status}
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ACCIONES</div>
+                  <Trash2 size={18} color="#cbd5e1" style={{cursor:'pointer'}} />
+                </div>
+              </div>
+              <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '12px' }}>PRODUCTOS SOLICITADOS</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                  {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                    const details = request.products[code] || { boxes: 0, units: 0, hasOffal: false };
+                    return (
+                      <div key={code} style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '14px', fontWeight: '800', marginBottom: '8px' }}>Código {code}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>{details.boxes} cajas, {details.units} unidades</div>
+                        <div style={{ fontSize: '12px', color: details.hasOffal ? '#059669' : '#dc2626', fontWeight: '600' }}>
+                          {details.hasOffal ? 'Con menudencia' : 'Sin menudencia'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
 
 
 const ProductRow = ({ label, code, provider, values, deferredPricing, onChange }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
-    <span style={{ fontSize: '12px', fontWeight: 'bold', flexShrink: 0, minWidth: '80px' }}>{label}</span>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+    <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>{label}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
       <div style={{ position: 'relative' }}>
         <input
           type="number"
