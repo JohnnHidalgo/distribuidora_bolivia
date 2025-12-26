@@ -877,19 +877,7 @@ const ConsolidationView = ({ theme }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '12px', width: 'fit-content' }}>
-        <button 
-          style={{ 
-            padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold',
-            backgroundColor: 'white',
-            color: theme.primary,
-            display: 'flex', alignItems: 'center', gap: '8px'
-          }}
-        >
-          <ClipboardList size={18} /> Registro de Pedidos
-        </button>
-      </div>
-
+      
       <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
           {/* Formulario */}
           <Card>
@@ -1211,10 +1199,10 @@ const ConsolidationView = ({ theme }) => {
 };
 
 
-const ProductRow = ({ label, code, provider, values, onChange }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-    <span style={{ fontSize: '12px', fontWeight: 'bold', flex: 1 }}>{label}</span>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+const ProductRow = ({ label, code, provider, values, deferredPricing, onChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+    <span style={{ fontSize: '12px', fontWeight: 'bold', flexShrink: 0, minWidth: '80px' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       <div style={{ position: 'relative' }}>
         <input
           type="number"
@@ -1240,7 +1228,7 @@ const ProductRow = ({ label, code, provider, values, onChange }) => (
         <input
           type="checkbox"
           id={`offal-${code}`}
-          checked={values?.hasOffal || false}
+          checked={values?.hasOffal || true}
           onChange={(e) => onChange(code, 'hasOffal', e.target.checked)}
           style={{ width: '16px', height: '16px', cursor: 'pointer' }}
         />
@@ -1251,6 +1239,20 @@ const ProductRow = ({ label, code, provider, values, onChange }) => (
           MENUDENCIA
         </label>
       </div>
+
+      {deferredPricing && (
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={values?.price || ''}
+              onChange={(e) => onChange(code, 'price', e.target.value)}
+              style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none' }}
+            />
+            <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PRECIO</span>
+          </div>
+      )}
     </div>
   </div>
 );
@@ -1302,6 +1304,7 @@ const AssignmentView = ({ theme }) => {
   });
 
   const [assignmentPrice, setAssignmentPrice] = useState(0);
+  const [deferredPricing, setDeferredPricing] = useState(false);
 
   const [history, setHistory] = useState([
     { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5,grossWeight:100.00,netWeight:95.00},107:{boxes:5,units:2,grossWeight:50.00,netWeight:47.50}}, status: 'COMPLETO' },
@@ -1313,7 +1316,16 @@ const AssignmentView = ({ theme }) => {
   };
 
   const getAssignmentTotalCost = () => {
-    return getAssignmentTotalNetWeight() * assignmentPrice;
+    if (deferredPricing) {
+      return providerCategories[selectedProvider].reduce((sum, code) => {
+        const product = selectedProducts[selectedProvider][code];
+        const netWeight = product?.netWeight || 0;
+        const price = product?.price || 0;
+        return sum + (netWeight * price);
+      }, 0);
+    } else {
+      return getAssignmentTotalNetWeight() * assignmentPrice;
+    }
   };
   const matchesFilters = (e) => {
     if (filterProvider !== 'ALL' && e.provider !== filterProvider) return false;
@@ -1391,6 +1403,7 @@ const AssignmentView = ({ theme }) => {
                 code={code}
                 provider={selectedProvider}
                 values={selectedProducts[selectedProvider][code]}
+                deferredPricing={deferredPricing}
                 onChange={(code, field, value) => {
                   setSelectedProducts(prev => ({
                     ...prev,
@@ -1409,15 +1422,30 @@ const AssignmentView = ({ theme }) => {
 
           {/* Precio y Total */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO (Bs./Kg.)</label>
-              <input 
-                type="number" 
-                step="0.01" 
-                value={assignmentPrice || ''} 
-                onChange={(e) => setAssignmentPrice(parseFloat(e.target.value) || 0)}
-                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-              />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO (Bs./Kg.)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={assignmentPrice || ''} 
+                  onChange={(e) => setAssignmentPrice(parseFloat(e.target.value) || 0)}
+                  disabled={deferredPricing}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', opacity: deferredPricing ? 0.5 : 1 }}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', alignSelf: 'flex-end', marginBottom: '6px' }}>
+                <label htmlFor="deferred-pricing" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
+                  Precio diferido
+                </label>
+                <input
+                  type="checkbox"
+                  id="deferred-pricing"
+                  checked={deferredPricing}
+                  onChange={(e) => setDeferredPricing(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+              </div>
             </div>
             <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Total a Pagar: Bs {getAssignmentTotalCost().toFixed(2)}</div>
