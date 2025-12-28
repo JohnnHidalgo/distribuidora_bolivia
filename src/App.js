@@ -34,7 +34,7 @@ import {
   X,
   Menu
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -587,6 +587,16 @@ const InventoryView = ({ theme }) => (
 
 // --- VISTA DE CONSOLIDACIÓN ---
 
+// Componente para manejar clics en el mapa
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      onMapClick(e.latlng);
+    },
+  });
+  return null;
+};
+
 const ConsolidationView = ({ theme }) => {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
@@ -594,6 +604,13 @@ const ConsolidationView = ({ theme }) => {
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  
+  // Estados para el modal de nuevo cliente
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientGroup, setNewClientGroup] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientLocation, setNewClientLocation] = useState({ lat: -16.5000, lng: -68.1500 }); // Coordenadas de La Paz por defecto
   
   // Estados para filtros de solicitudes
   const [filterStartDate, setFilterStartDate] = useState('');
@@ -875,6 +892,39 @@ const ConsolidationView = ({ theme }) => {
     setEditEnabled(false);
   };
 
+  const handleSaveNewClient = () => {
+    if (!newClientName.trim() || !newClientGroup || !newClientPhone.trim()) {
+      alert('Por favor complete todos los campos obligatorios');
+      return;
+    }
+
+    // Agregar el nuevo cliente a la lista de clientes del grupo
+    if (!clientsByGroup[newClientGroup]) {
+      clientsByGroup[newClientGroup] = [];
+    }
+    clientsByGroup[newClientGroup].push(newClientName);
+
+    // Aquí se puede enviar al backend
+    alert(`Cliente "${newClientName}" agregado exitosamente al grupo "${newClientGroup}"`);
+    
+    // Limpiar el formulario y cerrar el modal
+    setNewClientName('');
+    setNewClientPhone('');
+    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
+    setShowNewClientModal(false);
+    
+    // Actualizar el campo de búsqueda con el nuevo cliente
+    setClientSearch(newClientName);
+    setSelectedClient(newClientName);
+  };
+
+  const handleCloseNewClientModal = () => {
+    setNewClientName('');
+    setNewClientPhone('');
+    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
+    setShowNewClientModal(false);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
@@ -925,25 +975,64 @@ const ConsolidationView = ({ theme }) => {
               {/* Selección de Cliente */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE DESTINO</label>
-                <input
-                  type="text"
-                  value={clientSearch}
-                  onChange={(e) => {
-                    setClientSearch(e.target.value);
-                    setShowClientSuggestions(true);
-                  }}
-                  onFocus={() => setShowClientSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
-                  placeholder="Buscar cliente..."
-                  disabled={!selectedGroup}
-                  style={{ 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: '1px solid #e2e8f0', 
-                    outline: 'none',
-                    opacity: selectedGroup ? 1 : 0.5
-                  }}
-                />
+                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={clientSearch}
+                    onChange={(e) => {
+                      setClientSearch(e.target.value);
+                      setShowClientSuggestions(true);
+                    }}
+                    onFocus={() => setShowClientSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                    placeholder="Buscar cliente..."
+                    disabled={!selectedGroup}
+                    style={{ 
+                      flex: '1',
+                      padding: '12px', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e2e8f0', 
+                      outline: 'none',
+                      opacity: selectedGroup ? 1 : 0.5
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewClientGroup(selectedGroup);
+                      setShowNewClientModal(true);
+                    }}
+                    disabled={!selectedGroup}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      backgroundColor: selectedGroup ? theme.primary : '#e2e8f0',
+                      color: selectedGroup ? 'white' : '#94a3b8',
+                      cursor: selectedGroup ? 'pointer' : 'not-allowed',
+                      outline: 'none',
+                      minWidth: '44px',
+                      height: '44px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedGroup) {
+                        e.target.style.backgroundColor = theme.primary;
+                        e.target.style.opacity = '0.9';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedGroup) {
+                        e.target.style.backgroundColor = theme.primary;
+                        e.target.style.opacity = '1';
+                      }
+                    }}
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
                 {showClientSuggestions && selectedGroup && clientSearch && (
                   <div style={{
                     position: 'absolute',
@@ -1216,6 +1305,211 @@ const ConsolidationView = ({ theme }) => {
           ))}
         </div>
       </Card>
+
+      {/* Modal para Nuevo Cliente */}
+      {showNewClientModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}
+        onClick={handleCloseNewClientModal}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Nuevo Cliente</h3>
+              <button
+                onClick={handleCloseNewClientModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '4px',
+                  color: '#64748b'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Nombre del Cliente */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                  NOMBRE DEL CLIENTE *
+                </label>
+                <input
+                  type="text"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="Ingrese el nombre del cliente"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    outline: 'none',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Grupo */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                  GRUPO / RUTA *
+                </label>
+                <select
+                  value={newClientGroup}
+                  onChange={(e) => setNewClientGroup(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    outline: 'none',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Seleccionar Grupo...</option>
+                  <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+                  <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+                  <option value="La Paz - Centro">La Paz - Centro</option>
+                  <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+                </select>
+              </div>
+
+              {/* Teléfono */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                  TELÉFONO *
+                </label>
+                <input
+                  type="tel"
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(e.target.value)}
+                  placeholder="Ej: 70123456"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    outline: 'none',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Ubicación (Mapa) */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                  UBICACIÓN
+                </label>
+                <div style={{
+                  width: '100%',
+                  height: '300px',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: '8px'
+                }}>
+                  <MapContainer
+                    center={[newClientLocation.lat, newClientLocation.lng]}
+                    zoom={13}
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <MapClickHandler 
+                      onMapClick={(latlng) => {
+                        setNewClientLocation({ lat: latlng.lat, lng: latlng.lng });
+                      }}
+                    />
+                    <Marker position={[newClientLocation.lat, newClientLocation.lng]}>
+                      <Popup>
+                        Ubicación del cliente
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
+                  <span>Lat: {newClientLocation.lat.toFixed(4)}</span>
+                  <span>Lng: {newClientLocation.lng.toFixed(4)}</span>
+                </div>
+                <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                  Haga clic en el mapa para seleccionar la ubicación del cliente
+                </p>
+              </div>
+
+              {/* Botones */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button
+                  onClick={handleCloseNewClientModal}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: 'white',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveNewClient}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: theme.primary,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                  onMouseLeave={(e) => e.target.style.opacity = '1'}
+                >
+                  Guardar Cliente
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
