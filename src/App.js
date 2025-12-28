@@ -1036,8 +1036,8 @@ const ConsolidationView = ({ theme }) => {
         
         {/* Filtros */}
         <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
-            <div>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'end', flexWrap: 'nowrap', overflowX: 'auto' }}>
+            <div style={{ flex: '0 0 auto', minWidth: '150px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
                 FECHA INICIO
               </label>
@@ -1049,7 +1049,7 @@ const ConsolidationView = ({ theme }) => {
               />
             </div>
             
-            <div>
+            <div style={{ flex: '0 0 auto', minWidth: '150px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
                 FECHA FIN
               </label>
@@ -1061,7 +1061,7 @@ const ConsolidationView = ({ theme }) => {
               />
             </div>
             
-            <div>
+            <div style={{ flex: '0 0 auto', minWidth: '160px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
                 PROVEEDOR
               </label>
@@ -1075,21 +1075,8 @@ const ConsolidationView = ({ theme }) => {
                 <option value="PIO">PIO</option>
               </select>
             </div>
-            
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                CLIENTE
-              </label>
-              <input
-                type="text"
-                placeholder="Buscar cliente..."
-                value={filterClient}
-                onChange={(e) => setFilterClient(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-              />
-            </div>
-            
-            <div>
+                        
+            <div style={{ flex: '0 0 auto', minWidth: '180px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
                 GRUPO
               </label>
@@ -1105,8 +1092,22 @@ const ConsolidationView = ({ theme }) => {
                 <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
               </select>
             </div>
+
+            <div style={{ flex: '0 0 auto', minWidth: '180px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                CLIENTE
+              </label>
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                value={filterClient}
+                onChange={(e) => setFilterClient(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+              />
+            </div>
+
             
-            <div>
+            <div style={{ flex: '0 0 auto', minWidth: '160px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
                 ESTADO
               </label>
