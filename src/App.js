@@ -1126,68 +1126,89 @@ const ConsolidationView = ({ theme }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {getFilteredRequests().map((request) => (
             <Card key={request.id}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'start' }}>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>FECHA</div>
-                  <div style={{ fontSize: '14px' }}>{new Date(request.date).toLocaleDateString('es-ES')}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>PROVEEDOR</div>
-                  <span style={{
-                    fontSize:'12px', 
-                    fontWeight:'bold', 
-                    background: request.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
-                    color: request.provider === 'SOFIA' ? theme.primary : '#0369a1', 
-                    padding:'4px 8px', 
-                    borderRadius:'6px'
-                  }}>
-                    {request.provider}
-                  </span>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>GRUPO / RUTA</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px' }}>
-                    <MapPin size={14} color="#94a3b8" /> {request.group}
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start' }}>
+                {/* Columna izquierda: FECHA, GRUPO/RUTA, CLIENTE, ESTADO */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: '0 0 auto', minWidth: '250px' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>FECHA</div>
+                    <div style={{ fontSize: '14px' }}>{new Date(request.date).toLocaleDateString('es-ES')}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>GRUPO / RUTA</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px' }}>
+                      <MapPin size={14} color="#94a3b8" /> {request.group}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>CLIENTE</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{request.client}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
+                      color: request.status === 'emitido' ? '#92400e' : '#065f46',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      textTransform: 'capitalize'
+                    }}>
+                      {request.status}
+                    </span>
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>CLIENTE</div>
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>{request.client}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
-                    color: request.status === 'emitido' ? '#92400e' : '#065f46',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    textTransform: 'capitalize'
-                  }}>
-                    {request.status}
-                  </span>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ACCIONES</div>
-                  <Trash2 size={18} color="#cbd5e1" style={{cursor:'pointer'}} />
-                </div>
-              </div>
-              <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '12px' }}>PRODUCTOS SOLICITADOS</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                  {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                    const details = request.products[code] || { boxes: 0, units: 0, hasOffal: false };
-                    return (
-                      <div key={code} style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: '14px', fontWeight: '800', marginBottom: '8px' }}>Código {code}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>{details.boxes} cajas, {details.units} unidades</div>
-                        <div style={{ fontSize: '12px', color: details.hasOffal ? '#059669' : '#dc2626', fontWeight: '600' }}>
-                          {details.hasOffal ? 'Con menudencia' : 'Sin menudencia'}
+
+                {/* Columna derecha: PROVEEDOR y PRODUCTOS SOLICITADOS */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: '1 1 auto' }}>
+                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>PRODUCTOS SOLICITADOS</div>
+                    <div>
+                      <span style={{
+                        fontSize:'12px', 
+                        fontWeight:'bold', 
+                        background: request.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
+                        color: request.provider === 'SOFIA' ? theme.primary : '#0369a1', 
+                        padding:'4px 8px', 
+                        borderRadius:'6px'
+                      }}>
+                        {request.provider}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                    {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                      const details = request.products[code] || { boxes: 0, units: 0, hasOffal: false };
+                      return (
+                        <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                {details.boxes || 0}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                            </div>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                {details.units || 0}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '2px solid', borderColor: details.hasOffal ? '#059669' : '#dc2626', backgroundColor: details.hasOffal ? '#059669' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {details.hasOffal && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
+                              </div>
+                              <label style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', cursor: 'default', userSelect: 'none' }}>
+                                MENUDENCIA
+                              </label>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </Card>
