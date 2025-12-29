@@ -185,7 +185,7 @@ const App = () => {
     contentArea: {
       flex: 1,
       padding: isMobile ? '16px' : '32px',
-      overflowY: 'auto'
+      overflowY: 'auto',
     },
     mobileMenuBtn: {
       display: isMobile ? 'block' : 'none',
@@ -2657,60 +2657,75 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           <button onClick={onBack} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain, fontSize: '12px' }}>← Volver</button>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
         </div>
-        <div style={{ display: 'flex', gap: '24px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
-          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL GENERAL</label>
-            <div style={{ 
-              padding: '8px 16px', 
-              borderRadius: '6px', 
-              backgroundColor: '#f8fafc', 
-              border: '1px solid #e2e8f0',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              color: theme.primary,
-              minWidth: '140px',
-              textAlign: 'center'
-            }}>
-              Bs {getTotalCost().toFixed(2)}
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL GENERAL</label>
+                <div style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: '6px', 
+                  backgroundColor: '#f8fafc', 
+                  border: '1px solid #e2e8f0',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: theme.primary,
+                  minWidth: '140px',
+                  textAlign: 'center'
+                }}>
+                  Bs {getTotalCost().toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+              <button onClick={() => {}} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Truck size={16} /> Registrar Recepción
+              </button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                  const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                  return (
+                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                            {detail.boxes || 0}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                            {detail.units || 0}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                          <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                          <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                          <div style={{ fontWeight: '600', color: '#10b981' }}>{getTotalWeightByCode(code).toFixed(2)} kg Recibidos</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
+      </Card>
 
-        <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px' }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
-          <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
-            {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-              const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
-              return (
-                <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                        {detail.boxes || 0}
-                      </div>
-                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                        {detail.units || 0}
-                      </div>
-                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
-                      <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
-                      <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
-                      <div style={{ fontWeight: '600', color: '#10b981' }}>{getTotalWeightByCode(code).toFixed(2)} kg Recibidos</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+      <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Boletas de Recepción</h4>
           <button onClick={addBoleta} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: theme.primary, color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2883,99 +2898,95 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                           )}
                         </>
                       )}
+                      {hasCode && (
+                        <>
+                          <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Total Pesado: {getBoletaCodeWeight(boleta.id, parseInt(code)).toFixed(2)} kg</span>
+                          </div>
+                            <button onClick={() => addWeighing(boleta.id, parseInt(code))} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>
+                              Agregar Pesaje
+                            </button>
+                          {(() => {
+                            const weighings = boleta.weighings[code] || [];
+                            return weighings.length > 0 ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                                {weighings.map((weighing, index) => (
+                                  <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Pesaje {index + 1}:</span>
+                                      <button onClick={() => removeWeighing(boleta.id, parseInt(code), index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                      <div style={{ position: 'relative' }}>
+                                        <input 
+                                          type="number" 
+                                          placeholder="0" 
+                                          value={weighing.boxes || ''} 
+                                          onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'boxes', e.target.value)}
+                                          style={{ 
+                                            width: '60px', 
+                                            padding: '6px', 
+                                            borderRadius: '4px', 
+                                            border: '1px solid #cbd5e1', 
+                                            outline: 'none',
+                                            fontSize: '12px',
+                                            textAlign: 'center'
+                                          }}
+                                        />
+                                        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                      </div>
+                                      <div style={{ position: 'relative' }}>
+                                        <input 
+                                          type="number" 
+                                          placeholder="0" 
+                                          value={weighing.units || ''} 
+                                          onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'units', e.target.value)}
+                                          style={{ 
+                                            width: '60px', 
+                                            padding: '6px', 
+                                            borderRadius: '4px', 
+                                            border: '1px solid #cbd5e1', 
+                                            outline: 'none',
+                                            fontSize: '12px',
+                                            textAlign: 'center'
+                                          }}
+                                        />
+                                        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                      </div>
+                                      <div style={{ position: 'relative' }}>
+                                        <input 
+                                          type="number" 
+                                          step="0.01"
+                                          placeholder="0.00" 
+                                          value={weighing.weight || ''} 
+                                          onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'weight', e.target.value)}
+                                          style={{ 
+                                            width: '80px', 
+                                            padding: '6px', 
+                                            borderRadius: '4px', 
+                                            border: '1px solid #cbd5e1', 
+                                            outline: 'none',
+                                            fontSize: '12px',
+                                            textAlign: 'center'
+                                          }}
+                                        />
+                                        <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>KG</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null;
+                          })()}
+                        </>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#64748b' }}>Registrar Pesajes por Código</h4>
-              </div>
-              {Object.keys(boleta.codes).map((code) => {
-                const codeData = boleta.codes[code];
-                const weighings = boleta.weighings[code] || [];
-                const totalWeight = getBoletaCodeWeight(boleta.id, parseInt(code));
-                
-                return (
-                  <div key={code} style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                        <span>Total Pesado:</span>
-                        <span style={{ color: '#10b981' }}>{totalWeight.toFixed(2)} kg</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                      {weighings.map((weighing, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '70px' }}>Pesaje {index + 1}:</span>
-                          <input 
-                            type="number" 
-                            placeholder="0" 
-                            value={weighing.boxes || ''} 
-                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'boxes', e.target.value)}
-                            style={{ 
-                              width: '60px', 
-                              padding: '6px', 
-                              borderRadius: '4px', 
-                              border: '1px solid #cbd5e1', 
-                              outline: 'none',
-                              fontSize: '12px',
-                              textAlign: 'center'
-                            }}
-                          />
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
-                          <input 
-                            type="number" 
-                            placeholder="0" 
-                            value={weighing.units || ''} 
-                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'units', e.target.value)}
-                            style={{ 
-                              width: '60px', 
-                              padding: '6px', 
-                              borderRadius: '4px', 
-                              border: '1px solid #cbd5e1', 
-                              outline: 'none',
-                              fontSize: '12px',
-                              textAlign: 'center'
-                            }}
-                          />
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
-                          <input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="0.00" 
-                            value={weighing.weight || ''} 
-                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'weight', e.target.value)}
-                            style={{ 
-                              width: '80px', 
-                              padding: '6px', 
-                              borderRadius: '4px', 
-                              border: '1px solid #cbd5e1', 
-                              outline: 'none',
-                              fontSize: '12px',
-                              textAlign: 'center'
-                            }}
-                          />
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
-                          <button onClick={() => removeWeighing(boleta.id, parseInt(code), index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => addWeighing(boleta.id, parseInt(code))} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>
-                      Agregar Pesaje
-                    </button>
-                  </div>
-                );
-              })}
-              {Object.keys(boleta.codes).length === 0 && (
-                <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  Selecciona códigos en esta boleta para registrar pesajes
-                </div>
-              )}
-            </div>
+
           </Card>
         ))}
 
@@ -2983,12 +2994,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Peso Total General: {getOverallTotalWeight().toFixed(2)} kg</div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-          <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
-          <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <Truck size={16} /> Registrar Recepción
-          </button>
-        </div>
+        
       </Card>
     </div>
   );
