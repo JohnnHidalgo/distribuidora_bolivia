@@ -2478,78 +2478,176 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 };
 
 const ReceiveView = ({ theme, assignment, onBack }) => {
-  const [batches, setBatches] = useState({});
-  const [costPerKg, setCostPerKg] = useState(0);
-  const [deferredPricing, setDeferredPricing] = useState(false);
-  const [pricesPerCode, setPricesPerCode] = useState(() => {
-    const init = {};
+  const [boletas, setBoletas] = useState([]);
+
+  // Agregar nueva boleta
+  const addBoleta = () => {
+    const newBoleta = {
+      id: boletas.length + 1,
+      boletaCode: '',
+      costPerKg: 0,
+      deferredPricing: false,
+      pricesPerCode: {},
+      codes: {},
+      weighings: {}
+    };
     [104, 105, 106, 107, 108, 109, 110].forEach(code => {
-      init[code] = 0;
+      newBoleta.pricesPerCode[code] = 0;
     });
-    return init;
-  });
+    setBoletas(prev => [...prev, newBoleta]);
+  };
 
-  const addBatch = (code) => {
-    setBatches(prev => ({
-      ...prev,
-      [code]: [...(prev[code] || []), { weight: 0, boxes: 20, units: 0 }]
+  // Actualizar código de boleta
+  const updateBoletaCodeNumber = (boletaId, code) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        return { ...boleta, boletaCode: code };
+      }
+      return boleta;
     }));
   };
 
-  const updateBatchBoxes = (code, index, boxes) => {
-    setBatches(prev => ({
-      ...prev,
-      [code]: prev[code].map((batch, i) => i === index ? { ...batch, boxes: parseInt(boxes) || 0 } : batch)
+  // Eliminar boleta
+  const removeBoleta = (boletaId) => {
+    setBoletas(prev => prev.filter(b => b.id !== boletaId).map((b, idx) => ({ ...b, id: idx + 1 })));
+  };
+
+  // Actualizar código en boleta
+  const updateBoletaCode = (boletaId, code, field, value) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        const updatedCodes = {
+          ...boleta.codes,
+          [code]: {
+            ...(boleta.codes[code] || { boxes: 0, units: 0 }),
+            [field]: field === 'hasCode' ? value : (parseFloat(value) || 0)
+          }
+        };
+        return { ...boleta, codes: updatedCodes };
+      }
+      return boleta;
     }));
   };
 
-  const updateBatchUnits = (code, index, units) => {
-    setBatches(prev => ({
-      ...prev,
-      [code]: prev[code].map((batch, i) => i === index ? { ...batch, units: parseInt(units) || 0 } : batch)
+  // Agregar pesaje a un código en una boleta
+  const addWeighing = (boletaId, code) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        const updatedWeighings = {
+          ...boleta.weighings,
+          [code]: [...(boleta.weighings[code] || []), { weight: 0, boxes: 0, units: 0 }]
+        };
+        return { ...boleta, weighings: updatedWeighings };
+      }
+      return boleta;
     }));
   };
 
-  const updateBatchWeight = (code, index, weight) => {
-    setBatches(prev => ({
-      ...prev,
-      [code]: prev[code].map((batch, i) => i === index ? { ...batch, weight: parseFloat(weight) || 0 } : batch)
+  // Actualizar pesaje
+  const updateWeighing = (boletaId, code, index, field, value) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        const updatedWeighings = {
+          ...boleta.weighings,
+          [code]: (boleta.weighings[code] || []).map((w, i) => 
+            i === index ? { ...w, [field]: field === 'weight' ? (parseFloat(value) || 0) : (parseInt(value) || 0) } : w
+          )
+        };
+        return { ...boleta, weighings: updatedWeighings };
+      }
+      return boleta;
     }));
   };
 
-  const removeBatch = (code, index) => {
-    setBatches(prev => ({
-      ...prev,
-      [code]: prev[code].filter((_, i) => i !== index)
+  // Eliminar pesaje
+  const removeWeighing = (boletaId, code, index) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        const updatedWeighings = {
+          ...boleta.weighings,
+          [code]: (boleta.weighings[code] || []).filter((_, i) => i !== index)
+        };
+        return { ...boleta, weighings: updatedWeighings };
+      }
+      return boleta;
     }));
   };
 
-  const getTotalWeight = (code) => {
-    return (batches[code] || []).reduce((sum, batch) => sum + batch.weight, 0);
+  // Obtener total de peso por código en una boleta
+  const getBoletaCodeWeight = (boletaId, code) => {
+    const boleta = boletas.find(b => b.id === boletaId);
+    if (!boleta || !boleta.weighings[code]) return 0;
+    return boleta.weighings[code].reduce((sum, w) => sum + (w.weight || 0), 0);
   };
 
-  const getTotalBoxes = (code) => {
-    return (batches[code] || []).reduce((sum, batch) => sum + batch.boxes, 0);
+  // Obtener total de peso por código en todas las boletas
+  const getTotalWeightByCode = (code) => {
+    return boletas.reduce((sum, boleta) => sum + getBoletaCodeWeight(boleta.id, code), 0);
   };
 
-  const getTotalUnits = (code) => {
-    return (batches[code] || []).reduce((sum, batch) => sum + batch.units, 0);
-  };
-
+  // Obtener peso total general
   const getOverallTotalWeight = () => {
-    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getTotalWeight(code), 0);
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getTotalWeightByCode(code), 0);
   };
 
-  const getTotalCost = () => {
-    if (deferredPricing) {
+  // Actualizar costo por kg de boleta
+  const updateBoletaCostPerKg = (boletaId, cost) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        return { ...boleta, costPerKg: parseFloat(cost) || 0 };
+      }
+      return boleta;
+    }));
+  };
+
+  // Actualizar precio diferido de boleta
+  const updateBoletaDeferredPricing = (boletaId, deferred) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        return { ...boleta, deferredPricing: deferred };
+      }
+      return boleta;
+    }));
+  };
+
+  // Actualizar precio por código en boleta
+  const updateBoletaPricePerCode = (boletaId, code, price) => {
+    setBoletas(prev => prev.map(boleta => {
+      if (boleta.id === boletaId) {
+        return {
+          ...boleta,
+          pricesPerCode: {
+            ...boleta.pricesPerCode,
+            [code]: parseFloat(price) || 0
+          }
+        };
+      }
+      return boleta;
+    }));
+  };
+
+  // Obtener costo de una boleta
+  const getBoletaCost = (boletaId) => {
+    const boleta = boletas.find(b => b.id === boletaId);
+    if (!boleta) return 0;
+
+    if (boleta.deferredPricing) {
       return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => {
-        const weight = getTotalWeight(code);
-        const price = pricesPerCode[code] || 0;
+        const weight = getBoletaCodeWeight(boletaId, code);
+        const price = boleta.pricesPerCode[code] || 0;
         return sum + (weight * price);
       }, 0);
     } else {
-      return getOverallTotalWeight() * costPerKg;
+      const boletaTotalWeight = [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => 
+        sum + getBoletaCodeWeight(boletaId, code), 0
+      );
+      return boletaTotalWeight * (boleta.costPerKg || 0);
     }
+  };
+
+  // Obtener costo total de todas las boletas
+  const getTotalCost = () => {
+    return boletas.reduce((sum, boleta) => sum + getBoletaCost(boleta.id), 0);
   };
 
   return (
@@ -2562,62 +2660,25 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
         <div style={{ display: 'flex', gap: '24px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
           <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG (Bs)</label>
-              <input 
-                type="number" 
-                step="0.01"
-                placeholder="0.00" 
-                value={costPerKg || ''} 
-                onChange={(e) => setCostPerKg(parseFloat(e.target.value) || 0)}
-                disabled={deferredPricing}
-                style={{ 
-                  width: '120px', 
-                  padding: '8px', 
-                  borderRadius: '6px', 
-                  border: '1px solid #e2e8f0', 
-                  outline: 'none',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  opacity: deferredPricing ? 0.5 : 1
-                }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL</label>
-              <div style={{ 
-                padding: '8px 16px', 
-                borderRadius: '6px', 
-                backgroundColor: '#f8fafc', 
-                border: '1px solid #e2e8f0',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                color: theme.primary,
-                minWidth: '140px',
-                textAlign: 'center'
-              }}>
-                Bs {getTotalCost().toFixed(2)}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label htmlFor="deferred-pricing-receive" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
-                  Precio diferido
-                </label>
-                <input
-                  type="checkbox"
-                  id="deferred-pricing-receive"
-                  checked={deferredPricing}
-                  onChange={(e) => setDeferredPricing(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                />
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL GENERAL</label>
+            <div style={{ 
+              padding: '8px 16px', 
+              borderRadius: '6px', 
+              backgroundColor: '#f8fafc', 
+              border: '1px solid #e2e8f0',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              color: theme.primary,
+              minWidth: '140px',
+              textAlign: 'center'
+            }}>
+              Bs {getTotalCost().toFixed(2)}
             </div>
           </div>
         </div>
 
-        <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '8px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px' }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
           <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
             {[104, 105, 106, 107, 108, 109, 110].map((code) => {
@@ -2641,20 +2702,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
                       <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
                       <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
-                      <div style={{ fontWeight: '600', color: '#10b981' }}>{getTotalWeight(code).toFixed(2)} kg Recibidos</div>
-                      {deferredPricing && (
-                        <div style={{ position: 'relative', marginTop: '4px' }}>
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={pricesPerCode[code] || ''}
-                            onChange={(e) => setPricesPerCode(prev => ({ ...prev, [code]: parseFloat(e.target.value) || 0 }))}
-                            style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px', textAlign: 'center' }}
-                          />
-                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PRECIO</span>
-                        </div>
-                      )}
+                      <div style={{ fontWeight: '600', color: '#10b981' }}>{getTotalWeightByCode(code).toFixed(2)} kg Recibidos</div>
                     </div>
                   </div>
                 </div>
@@ -2663,82 +2711,275 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           </div>
         </div>
 
-        <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 'bold' }}>Registrar Peso por Código (Lotes de 20 cajas)</h4>
-        {[104, 105, 106, 107, 108, 109, 110].map((code) => (
-          <div key={code} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                <span>Total:</span>
-                <span>{getTotalBoxes(code)} cajas</span>
-                <span>/</span>
-                <span>{getTotalUnits(code)} unidades</span>
-                <span>/</span>
-                <span>{getTotalWeight(code).toFixed(2)} kg</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Boletas de Recepción</h4>
+          <button onClick={addBoleta} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: theme.primary, color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plus size={14} /> Agregar Boleta
+          </button>
+        </div>
+
+        {boletas.length === 0 && (
+          <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            No hay boletas registradas. Haz clic en "Agregar Boleta" para comenzar.
+          </div>
+        )}
+
+        {boletas.map((boleta) => (
+          <Card key={boleta.id} style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Boleta #{boleta.id}</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>CÓDIGO DE BOLETA</label>
+                  <input
+                    type="text"
+                    placeholder="Ingrese código"
+                    value={boleta.boletaCode || ''}
+                    onChange={(e) => updateBoletaCodeNumber(boleta.id, e.target.value)}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      minWidth: '150px'
+                    }}
+                  />
+                </div>
               </div>
+              <button onClick={() => removeBoleta(boleta.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Eliminar Boleta</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-              {(batches[code] || []).map((batch, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '60px' }}>Pesaje {index + 1}:</span>
-                  <input 
-                    type="number" 
-                    placeholder="20" 
-                    value={batch.boxes || ''} 
-                    onChange={(e) => updateBatchBoxes(code, index, e.target.value)}
-                    style={{ 
-                      width: '60px', 
-                      padding: '6px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #cbd5e1', 
-                      outline: 'none',
-                      fontSize: '12px',
-                      textAlign: 'center'
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
-                  <input 
-                    type="number" 
-                    placeholder="0" 
-                    value={batch.units || ''} 
-                    onChange={(e) => updateBatchUnits(code, index, e.target.value)}
-                    style={{ 
-                      width: '60px', 
-                      padding: '6px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #cbd5e1', 
-                      outline: 'none',
-                      fontSize: '12px',
-                      textAlign: 'center'
-                    }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
+
+            <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG (Bs)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     placeholder="0.00" 
-                    value={batch.weight || ''} 
-                    onChange={(e) => updateBatchWeight(code, index, e.target.value)}
+                    value={boleta.costPerKg || ''} 
+                    onChange={(e) => updateBoletaCostPerKg(boleta.id, e.target.value)}
+                    disabled={boleta.deferredPricing}
                     style={{ 
-                      width: '80px', 
-                      padding: '6px', 
-                      borderRadius: '4px', 
-                      border: '1px solid #cbd5e1', 
+                      width: '120px', 
+                      padding: '8px', 
+                      borderRadius: '6px', 
+                      border: '1px solid #e2e8f0', 
                       outline: 'none',
-                      fontSize: '12px',
-                      textAlign: 'center'
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      opacity: boleta.deferredPricing ? 0.5 : 1
                     }}
                   />
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
-                  <button onClick={() => removeBatch(code, index)} style={{ alignSelf: 'flex-end', padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
                 </div>
-              ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO DE ESTA BOLETA</label>
+                  <div style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '6px', 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e2e8f0',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: theme.primary,
+                    minWidth: '140px',
+                    textAlign: 'center'
+                  }}>
+                    Bs {getBoletaCost(boleta.id).toFixed(2)}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label htmlFor={`deferred-pricing-${boleta.id}`} style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
+                      Precio diferido
+                    </label>
+                    <input
+                      type="checkbox"
+                      id={`deferred-pricing-${boleta.id}`}
+                      checked={boleta.deferredPricing || false}
+                      onChange={(e) => updateBoletaDeferredPricing(boleta.id, e.target.checked)}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 'bold', color: '#64748b' }}>Códigos en esta Boleta</h4>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                  const codeData = boleta.codes[code] || { boxes: 0, units: 0 };
+                  const hasCode = !!boleta.codes[code];
+                  
+                  return (
+                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: hasCode ? '#f8fafc' : '#ffffff', borderRadius: '8px', border: `1px solid ${hasCode ? '#f1f5f9' : '#e2e8f0'}`, minWidth: 'fit-content', opacity: hasCode ? 1 : 0.5 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="checkbox"
+                          checked={hasCode}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setBoletas(prev => prev.map(b => {
+                                if (b.id === boleta.id) {
+                                  return {
+                                    ...b,
+                                    codes: {
+                                      ...b.codes,
+                                      [code]: { boxes: 0, units: 0 }
+                                    }
+                                  };
+                                }
+                                return b;
+                              }));
+                            } else {
+                              setBoletas(prev => prev.map(b => {
+                                if (b.id === boleta.id) {
+                                  const { [code]: removed, ...restCodes } = b.codes;
+                                  const { [code]: removedWeighings, ...restWeighings } = b.weighings;
+                                  return { ...b, codes: restCodes, weighings: restWeighings };
+                                }
+                                return b;
+                              }));
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                      </div>
+                      {hasCode && (
+                        <>
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={codeData.boxes || ''}
+                              onChange={(e) => updateBoletaCode(boleta.id, code, 'boxes', e.target.value)}
+                              style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px', textAlign: 'center' }}
+                            />
+                            <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                          </div>
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={codeData.units || ''}
+                              onChange={(e) => updateBoletaCode(boleta.id, code, 'units', e.target.value)}
+                              style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px', textAlign: 'center' }}
+                            />
+                            <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                          </div>
+                          {boleta.deferredPricing && (
+                            <div style={{ position: 'relative', marginTop: '4px' }}>
+                              <input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={boleta.pricesPerCode[code] || ''}
+                                onChange={(e) => updateBoletaPricePerCode(boleta.id, code, e.target.value)}
+                                style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px', textAlign: 'center' }}
+                              />
+                              <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PRECIO</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <button onClick={() => addBatch(code)} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary }}>Agregar Lote de 20 Cajas</button>
-          </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#64748b' }}>Registrar Pesajes por Código</h4>
+              </div>
+              {Object.keys(boleta.codes).map((code) => {
+                const codeData = boleta.codes[code];
+                const weighings = boleta.weighings[code] || [];
+                const totalWeight = getBoletaCodeWeight(boleta.id, parseInt(code));
+                
+                return (
+                  <div key={code} style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Código {code}</h5>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                        <span>Total Pesado:</span>
+                        <span style={{ color: '#10b981' }}>{totalWeight.toFixed(2)} kg</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {weighings.map((weighing, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '70px' }}>Pesaje {index + 1}:</span>
+                          <input 
+                            type="number" 
+                            placeholder="0" 
+                            value={weighing.boxes || ''} 
+                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'boxes', e.target.value)}
+                            style={{ 
+                              width: '60px', 
+                              padding: '6px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #cbd5e1', 
+                              outline: 'none',
+                              fontSize: '12px',
+                              textAlign: 'center'
+                            }}
+                          />
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>cajas</span>
+                          <input 
+                            type="number" 
+                            placeholder="0" 
+                            value={weighing.units || ''} 
+                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'units', e.target.value)}
+                            style={{ 
+                              width: '60px', 
+                              padding: '6px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #cbd5e1', 
+                              outline: 'none',
+                              fontSize: '12px',
+                              textAlign: 'center'
+                            }}
+                          />
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>unidades</span>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="0.00" 
+                            value={weighing.weight || ''} 
+                            onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'weight', e.target.value)}
+                            style={{ 
+                              width: '80px', 
+                              padding: '6px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #cbd5e1', 
+                              outline: 'none',
+                              fontSize: '12px',
+                              textAlign: 'center'
+                            }}
+                          />
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>kg</span>
+                          <button onClick={() => removeWeighing(boleta.id, parseInt(code), index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => addWeighing(boleta.id, parseInt(code))} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '12px' }}>
+                      Agregar Pesaje
+                    </button>
+                  </div>
+                );
+              })}
+              {Object.keys(boleta.codes).length === 0 && (
+                <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  Selecciona códigos en esta boleta para registrar pesajes
+                </div>
+              )}
+            </div>
+          </Card>
         ))}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Peso Total General: {getOverallTotalWeight().toFixed(2)} kg</div>
         </div>
 
