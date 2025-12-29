@@ -1690,81 +1690,85 @@ const AssignmentView = ({ theme }) => {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <Card>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Plus color={theme.primary} size={20} /> Asignación de Productos
+        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={20} color={theme.primary} /> Asignación de Productos
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Selección de Proveedor */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR</label>
-            <select 
-              value={selectedProvider} 
-              onChange={(e) => setSelectedProvider(e.target.value)}
-              style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-            >
-              <option value="SOFIA">Avícola Sofía</option>
-              <option value="PIO">PIO / IMBA</option>
-            </select>
-          </div>
-
-          {/* Detalle de Códigos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CANTIDADES A ASIGNAR</label>
-            {providerCategories[selectedProvider].map(code => (
-              <ProductRow
-                key={code}
-                label={`Código ${code}`}
-                code={code}
-                provider={selectedProvider}
-                values={selectedProducts[selectedProvider][code]}
-                deferredPricing={deferredPricing}
-                onChange={(code, field, value) => {
-                  setSelectedProducts(prev => ({
-                    ...prev,
-                    [selectedProvider]: {
-                      ...prev[selectedProvider],
-                      [code]: {
-                        ...prev[selectedProvider][code],
-                        [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
-                      }
-                    }
-                  }));
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Precio y Total */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO (Bs./Kg.)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={assignmentPrice || ''} 
-                  onChange={(e) => setAssignmentPrice(parseFloat(e.target.value) || 0)}
-                  disabled={deferredPricing}
-                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', opacity: deferredPricing ? 0.5 : 1 }}
-                />
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start' }}>
+            {/* Columna Izquierda: PROVEEDOR, PRECIO, PRECIO DIFERIDO, TOTAL A PAGAR */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: '0 0 auto', minWidth: '300px' }}>
+              {/* Selección de Proveedor */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR</label>
+                <select 
+                  value={selectedProvider} 
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                >
+                  <option value="SOFIA">Avícola Sofía</option>
+                  <option value="PIO">PIO / IMBA</option>
+                </select>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', alignSelf: 'flex-end', marginBottom: '6px' }}>
-                <label htmlFor="deferred-pricing" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
-                  Precio diferido
-                </label>
-                <input
-                  type="checkbox"
-                  id="deferred-pricing"
-                  checked={deferredPricing}
-                  onChange={(e) => setDeferredPricing(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                />
+
+              {/* Precio y Total */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO (Bs./Kg.)</label>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={assignmentPrice || ''} 
+                    onChange={(e) => setAssignmentPrice(parseFloat(e.target.value) || 0)}
+                    disabled={deferredPricing}
+                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', opacity: deferredPricing ? 0.5 : 1 }}
+                  />
+
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label htmlFor="deferred-pricing" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
+                      Precio diferido
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="deferred-pricing"
+                      checked={deferredPricing}
+                      onChange={(e) => setDeferredPricing(e.target.checked)}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>Total a Pagar: Bs {getAssignmentTotalCost().toFixed(2)}</div>
+
+            {/* Columna Derecha: CANTIDADES A ASIGNAR */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: '1 1 auto' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CANTIDADES A ASIGNAR</label>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+              {providerCategories[selectedProvider].map(code => (
+                <ProductRow
+                  key={code}
+                  label={`Código ${code}`}
+                  code={code}
+                  provider={selectedProvider}
+                  values={selectedProducts[selectedProvider][code]}
+                  deferredPricing={deferredPricing}
+                  onChange={(code, field, value) => {
+                    setSelectedProducts(prev => ({
+                      ...prev,
+                      [selectedProvider]: {
+                        ...prev[selectedProvider],
+                        [code]: {
+                          ...prev[selectedProvider][code],
+                          [field]: field === 'hasOffal' ? value : (parseFloat(value) || 0)
+                        }
+                      }
+                    }));
+                  }}
+                />
+              ))}
+              </div>
             </div>
           </div>
 
