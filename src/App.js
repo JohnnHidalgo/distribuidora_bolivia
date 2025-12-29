@@ -2107,7 +2107,7 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
         </div>
 
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <div style={{ marginBottom: '24px', padding: '16px',  borderRadius: '8px' }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {[104, 105, 106, 107, 108, 109, 110].map((code) => {
@@ -2480,6 +2480,14 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 const ReceiveView = ({ theme, assignment, onBack }) => {
   const [batches, setBatches] = useState({});
   const [costPerKg, setCostPerKg] = useState(0);
+  const [deferredPricing, setDeferredPricing] = useState(false);
+  const [pricesPerCode, setPricesPerCode] = useState(() => {
+    const init = {};
+    [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+      init[code] = 0;
+    });
+    return init;
+  });
 
   const addBatch = (code) => {
     setBatches(prev => ({
@@ -2533,50 +2541,120 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
   };
 
   const getTotalCost = () => {
-    return getOverallTotalWeight() * costPerKg;
+    if (deferredPricing) {
+      return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => {
+        const weight = getTotalWeight(code);
+        const price = pricesPerCode[code] || 0;
+        return sum + (weight * price);
+      }, 0);
+    } else {
+      return getOverallTotalWeight() * costPerKg;
+    }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <button onClick={onBack} style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>← Volver al Historial</button>
-
       <Card>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <button onClick={onBack} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain, fontSize: '12px' }}>← Volver</button>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
+        </div>
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
           <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG (Bs)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                placeholder="0.00" 
+                value={costPerKg || ''} 
+                onChange={(e) => setCostPerKg(parseFloat(e.target.value) || 0)}
+                disabled={deferredPricing}
+                style={{ 
+                  width: '120px', 
+                  padding: '8px', 
+                  borderRadius: '6px', 
+                  border: '1px solid #e2e8f0', 
+                  outline: 'none',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  opacity: deferredPricing ? 0.5 : 1
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL</label>
+              <div style={{ 
+                padding: '8px 16px', 
+                borderRadius: '6px', 
+                backgroundColor: '#f8fafc', 
+                border: '1px solid #e2e8f0',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: theme.primary,
+                minWidth: '140px',
+                textAlign: 'center'
+              }}>
+                Bs {getTotalCost().toFixed(2)}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label htmlFor="deferred-pricing-receive" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
+                  Precio diferido
+                </label>
+                <input
+                  type="checkbox"
+                  id="deferred-pricing-receive"
+                  checked={deferredPricing}
+                  onChange={(e) => setDeferredPricing(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '8px' }}>
           <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
             {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-              const detail = assignment.details[code] || { boxes: 0, units: 0 };
+              const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
               return (
-                <div key={code} style={{ 
-                  padding: '16px', 
-                  backgroundColor: 'white', 
-                  borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                  minWidth: '140px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#0ea5e9' }}>
-                      <Package size={14} />
-                      <span>{detail.boxes} Cajas</span>
+                <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                        {detail.boxes || 0}
+                      </div>
+                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#f97316' }}>
-                      <Box size={14} />
-                      <span>{detail.units} Unidades Asignadas / {getTotalUnits(code)} Recibidas</span>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                        {detail.units || 0}
+                      </div>
+                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
-                      <Truck size={14} />
-                      <span>{getTotalWeight(code).toFixed(2)} kg Recibidos</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                      <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                      <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                      <div style={{ fontWeight: '600', color: '#10b981' }}>{getTotalWeight(code).toFixed(2)} kg Recibidos</div>
+                      {deferredPricing && (
+                        <div style={{ position: 'relative', marginTop: '4px' }}>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={pricesPerCode[code] || ''}
+                            onChange={(e) => setPricesPerCode(prev => ({ ...prev, [code]: parseFloat(e.target.value) || 0 }))}
+                            style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px', textAlign: 'center' }}
+                          />
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PRECIO</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2662,47 +2740,6 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>Peso Total General: {getOverallTotalWeight().toFixed(2)} kg</div>
-        </div>
-
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Cálculo de Costo Total</h4>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG (Bs)</label>
-              <input 
-                type="number" 
-                step="0.01"
-                placeholder="0.00" 
-                value={costPerKg || ''} 
-                onChange={(e) => setCostPerKg(parseFloat(e.target.value) || 0)}
-                style={{ 
-                  width: '120px', 
-                  padding: '10px', 
-                  borderRadius: '6px', 
-                  border: '1px solid #e2e8f0', 
-                  outline: 'none',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO TOTAL</label>
-              <div style={{ 
-                padding: '10px', 
-                borderRadius: '6px', 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                color: theme.primary,
-                minWidth: '140px',
-                textAlign: 'center'
-              }}>
-                Bs {getTotalCost().toFixed(2)}
-              </div>
-            </div>
-          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
