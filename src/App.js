@@ -15,6 +15,8 @@ import {
   ArrowRightLeft,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   UserCircle,
   ClipboardList,
   Layers,
@@ -1580,6 +1582,8 @@ const AssignmentView = ({ theme }) => {
   const [dateTo, setDateTo] = useState('');
   const [distributionMode, setDistributionMode] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [planningMode, setPlanningMode] = useState(false);
+  const [selectedPlanningAssignment, setSelectedPlanningAssignment] = useState(null);
   const [receiveMode, setReceiveMode] = useState(false);
   const [selectedReceiveAssignment, setSelectedReceiveAssignment] = useState(null);
 
@@ -1642,9 +1646,19 @@ const AssignmentView = ({ theme }) => {
     setDistributionMode(true);
   };
 
+  const handlePlan = (assignment) => {
+    setSelectedPlanningAssignment(assignment);
+    setPlanningMode(true);
+  };
+
   const handleBackToHistory = () => {
     setDistributionMode(false);
     setSelectedAssignment(null);
+  };
+
+  const handleBackToHistoryFromPlanning = () => {
+    setPlanningMode(false);
+    setSelectedPlanningAssignment(null);
   };
 
   const handleReceive = (assignment) => {
@@ -1663,6 +1677,10 @@ const AssignmentView = ({ theme }) => {
 
   if (distributionMode && selectedAssignment) {
     return <DistributionView theme={theme} assignment={selectedAssignment} onBack={handleBackToHistory} />;
+  }
+
+  if (planningMode && selectedPlanningAssignment) {
+    return <PlanningView theme={theme} assignment={selectedPlanningAssignment} onBack={handleBackToHistoryFromPlanning} />;
   }
 
   return (
@@ -1817,6 +1835,7 @@ const AssignmentView = ({ theme }) => {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                     <button onClick={() => handleDistribute(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Repartir</button>
+                    <button onClick={() => handlePlan(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Planificar</button>
                     <button onClick={() => handleReceive(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Recibir</button>
                   </div>
                 </div>
@@ -2442,6 +2461,287 @@ const DistributionView = ({ theme, assignment, onBack }) => {
           <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
             <Save size={16} /> Guardar Distribución
           </button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const PlanningView = ({ theme, assignment, onBack }) => {
+  // Solicitudes de clientes de ejemplo (ya registradas)
+  const clientRequests = [
+    { id: 1, clientName: 'Pollería El Rey', group: 'El Alto Norte', requested: {104: 10, 107: 5}, status: 'PENDIENTE' },
+    { id: 2, clientName: 'Feria Sector A', group: 'El Alto Norte', requested: {104: 8, 109: 12}, status: 'PENDIENTE' },
+    { id: 3, clientName: 'Doña Juana', group: 'El Alto Sur', requested: {104: 5, 107: 3}, status: 'PENDIENTE' },
+    { id: 4, clientName: 'Supermercado Central', group: 'La Paz Centro', requested: {105: 15, 108: 7}, status: 'PENDIENTE' }
+  ];
+
+  const groups = [...new Set(clientRequests.map(r => r.group))];
+
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
+
+  const [plannedDistributions, setPlannedDistributions] = useState(() => {
+    const init = {};
+    clientRequests.forEach(request => {
+      init[request.id] = { ...request.requested }; // Inicialmente asignar lo solicitado
+    });
+    return init;
+  });
+
+  const updatePlannedDistribution = (requestId, code, value) => {
+    setPlannedDistributions(prev => ({
+      ...prev,
+      [requestId]: {
+        ...prev[requestId],
+        [code]: Math.max(0, parseInt(value) || 0)
+      }
+    }));
+  };
+
+  const getTotalPlannedByCode = (code) => {
+    return Object.values(plannedDistributions).reduce((sum, dist) => sum + (dist[code] || 0), 0);
+  };
+
+  const toggleGroupExpansion = (group) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(group)) {
+        newSet.delete(group);
+      } else {
+        newSet.add(group);
+      }
+      return newSet;
+    });
+  };
+
+  const getGroupTotals = () => {
+    const groupTotals = {};
+    groups.forEach(group => {
+      groupTotals[group] = { boxes: 0, units: 0, byCode: {} };
+    });
+
+    clientRequests.forEach(request => {
+      const group = request.group;
+      if (groupTotals[group]) {
+        Object.entries(plannedDistributions[request.id] || {}).forEach(([code, quantity]) => {
+          if (quantity > 0) {
+            groupTotals[group].boxes += quantity;
+            groupTotals[group].units += quantity;
+            groupTotals[group].byCode[code] = (groupTotals[group].byCode[code] || 0) + quantity;
+          }
+        });
+      }
+    });
+
+    return groupTotals;
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Planificar Asignación del {assignment.date}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+              <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Planificación</button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <div style={{ padding: '16px', borderRadius: '8px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                  const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                  const totalPlanned = getTotalPlannedByCode(code);
+                  const available = detail.boxes - totalPlanned;
+                  return (
+                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                            {detail.boxes || 0}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>DISPONIBLE</span>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                            {totalPlanned}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PLANIFICADO</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                          <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                          <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                          <div style={{ fontWeight: '600', color: available < 0 ? '#ef4444' : '#10b981' }}>{available} Disponible</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div style={{ marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Totales por Grupo</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {Object.entries(getGroupTotals()).map(([group, totals]) => {
+              const isExpanded = expandedGroups.has(group);
+              return (
+                <div key={group} style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div 
+                    style={{ 
+                      padding: '12px', 
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => toggleGroupExpansion(group)}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, minWidth: '120px' }}>{group}</div>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                          const quantity = totals.byCode[code] || 0;
+                          return (
+                            <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #cbd5e1', minWidth: '70px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div style={{ position: 'relative' }}>
+                                  <div style={{ width: '50px', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                    {quantity}
+                                  </div>
+                                  <span style={{ position: 'absolute', top: '-12px', left: '8px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                  <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                                    {quantity}
+                                  </div>
+                                  <span style={{ position: 'absolute', top: '-12px', left: '10px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px', backgroundColor: '#f59e0b', borderRadius: '6px', border: '1px solid #d97706', minWidth: '80px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: 'white' }}>TOTAL</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                                {totals.boxes}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-12px', left: '10px', fontSize: '7px', backgroundColor: '#f59e0b', padding: '0 2px', fontWeight: 'bold', color: 'white' }}>CAJAS</span>
+                            </div>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                                {totals.units}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-12px', left: '12px', fontSize: '7px', backgroundColor: '#f59e0b', padding: '0 2px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
+                  
+                  {isExpanded && (
+                    <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#64748b' }}>Pedidos de Clientes:</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {clientRequests.filter(request => request.group === group).map((request) => (
+                            <div key={request.id} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <div>
+                                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>{request.clientName}</h4>
+                                  <div style={{ fontSize: '11px', color: '#64748b' }}>Estado: {request.status}</div>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-start' }}>
+                                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                                  const requested = request.requested[code] || 0;
+                                  const planned = plannedDistributions[request.id]?.[code] || 0;
+                                  const assignmentAvailable = assignment.details[code]?.boxes || 0;
+                                  const totalPlannedForCode = getTotalPlannedByCode(code);
+                                  const remaining = assignmentAvailable - totalPlannedForCode + planned;
+                                  return (
+                                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '100px' }}>
+                                      <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</div>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <div style={{ fontSize: '9px', color: '#64748b' }}>Solicitado: {requested}</div>
+                                        <div style={{ position: 'relative' }}>
+                                          <input
+                                            type="number"
+                                            value={planned}
+                                            onChange={(e) => updatePlannedDistribution(request.id, code, e.target.value)}
+                                            min="0"
+                                            max={remaining + planned}
+                                            style={{
+                                              width: '70px',
+                                              padding: '4px',
+                                              borderRadius: '3px',
+                                              border: '1px solid #cbd5e1',
+                                              textAlign: 'center',
+                                              fontSize: '11px',
+                                              fontWeight: 'bold'
+                                            }}
+                                          />
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '70px', padding: '4px', borderRadius: '3px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                            {planned}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                        </div>
+                                        <div style={{ fontSize: '9px', color: planned > remaining ? '#ef4444' : '#10b981' }}>
+                                          Restante: {remaining - planned}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f59e0b', borderRadius: '4px', border: '1px solid #d97706', minWidth: '110px' }}>
+                                  <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: 'white' }}>TOTAL</div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <div style={{ position: 'relative' }}>
+                                      <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                        {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
+                                      </div>
+                                      <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>CAJAS</span>
+                                    </div>
+                                    <div style={{ position: 'relative' }}>
+                                      <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                        {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
+                                      </div>
+                                      <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </Card>
     </div>
