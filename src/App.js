@@ -310,32 +310,6 @@ const App = () => {
 
       {/* Main Content Area */}
       <div style={currentStyles.main}>
-        <header style={currentStyles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button 
-              style={currentStyles.mobileMenuBtn}
-              onClick={() => setSidebarVisible(!sidebarVisible)}
-            >
-              <Menu size={24} />
-            </button>
-            <h1 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: theme.textMain, textTransform: 'capitalize', margin: 0 }}>
-              {activeTab.replace(/([A-Z])/g, ' $1').trim()}
-            </h1>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '24px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 'bold' }}>HORA DE CORTE</div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>10:00 AM</div>
-            </div>
-            <div style={{ width: '1px', height: '32px', backgroundColor: theme.border }}></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '600' }}>Admin_Bolivia</span>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <UserCircle size={24} color={theme.textMuted} />
-              </div>
-            </div>
-          </div>
-        </header>
 
         <div style={currentStyles.contentArea}>
           {renderView()}
@@ -2653,7 +2627,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <Card>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '4px' }}>
           <button onClick={onBack} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain, fontSize: '12px' }}>← Volver</button>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
         </div>
