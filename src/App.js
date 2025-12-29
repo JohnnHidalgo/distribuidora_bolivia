@@ -2072,53 +2072,46 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <button onClick={onBack} style={{ alignSelf: 'flex-start', padding: '8px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>← Volver al Historial</button>
 
-      <Card>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 'bold' }}>Repartir Asignación del {assignment.date}</h2>
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
-          <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
-        </div>
+      <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Repartir Asignación del {assignment.date}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+              <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar</button>
+            </div>
+          </div>
 
-        <div style={{ marginBottom: '24px', padding: '16px',  borderRadius: '8px' }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ padding: '16px', borderRadius: '8px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
+          <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
             {[104, 105, 106, 107, 108, 109, 110].map((code) => {
               const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
               return (
-                <div key={code} style={{ 
-                  padding: '16px', 
-                  backgroundColor: 'white', 
-                  borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                  minWidth: '140px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, textAlign: 'center' }}>Código {code}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#0ea5e9' }}>
-                      <Package size={14} />
-                      <span>{detail.boxes} Cajas</span>
+                <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                        {detail.boxes || 0}
+                      </div>
+                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#f97316' }}>
-                      <Box size={14} />
-                      <span>{detail.units} Unidades</span>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                        {detail.units || 0}
+                      </div>
+                      <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#059669' }}>
-                      <Truck size={14} />
-                      <span>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
-                      <Truck size={14} />
-                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Bruto</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981' }}>
-                      <Truck size={14} />
-                      <span>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                      <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                      <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
                     </div>
                   </div>
                 </div>
@@ -2126,7 +2119,11 @@ const DistributionView = ({ theme, assignment, onBack }) => {
             })}
           </div>
         </div>
+      </div>
+    </div>
+  </Card>
 
+      <Card>
         <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO / RUTA:</label>
