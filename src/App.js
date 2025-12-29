@@ -2626,11 +2626,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <Card>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '4px' }}>
-          <button onClick={onBack} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain, fontSize: '12px' }}>← Volver</button>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Registrar Recepción del {assignment.date}</h2>
-        </div>
+      <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
         <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
@@ -2663,7 +2659,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
           </div>
 
           <div style={{ flex: 1 }}>
-            <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px' }}>
+            <div style={{ padding: '16px', borderRadius: '8px' }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Detalles de la Asignación</h4>
               <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
                 {[104, 105, 106, 107, 108, 109, 110].map((code) => {
@@ -2737,7 +2733,10 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                   />
                 </div>
               </div>
-              <button onClick={() => removeBoleta(boleta.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Eliminar Boleta</button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => {}} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#10b981', color: 'white', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Guardar Boleta</button>
+                <button onClick={() => removeBoleta(boleta.id)} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Eliminar Boleta</button>
+              </div>
             </div>
 
             <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
