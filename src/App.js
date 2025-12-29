@@ -1601,6 +1601,7 @@ const AssignmentView = ({ theme }) => {
 
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
   const [filterProvider, setFilterProvider] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [distributionMode, setDistributionMode] = useState(false);
@@ -1645,6 +1646,7 @@ const AssignmentView = ({ theme }) => {
   };
   const matchesFilters = (e) => {
     if (filterProvider !== 'ALL' && e.provider !== filterProvider) return false;
+    if (filterStatus !== 'ALL' && e.status !== filterStatus) return false;
     if (dateFrom && e.date < dateFrom) return false;
     if (dateTo && e.date > dateTo) return false;
     return true;
@@ -1782,63 +1784,107 @@ const AssignmentView = ({ theme }) => {
         </div>
       </Card>
 
-      <Card style={{ padding: 0 }}>
-        <div style={{ padding: '16px 24px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 'bold' }}>Historial de Asignaciones</span>
+      <Card>
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Historial de Asignaciones</h3>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <select value={filterProvider} onChange={e=>setFilterProvider(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <option value="ALL">Todos los Proveedores</option>
               <option value="SOFIA">SOFIA</option>
               <option value="PIO">PIO / IMBA</option>
             </select>
+            <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <option value="ALL">Todos los Estados</option>
+              <option value="COMPLETO">Completo</option>
+              <option value="PENDIENTE">Pendiente</option>
+            </select>
             <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
             <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
           </div>
         </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', fontSize: '12px', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
-                <th style={{ padding: '12px 16px' }}>FECHA</th>
-                <th style={{ padding: '12px 16px' }}>PROVEEDOR</th>
-                <th style={{ padding: '12px 16px' }}>DETALLE</th>
-                <th style={{ padding: '12px 16px' }}>ESTADO Y ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.map(entry => (
-                <tr key={entry.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '12px 16px' }}>{entry.date}</td>
-                  <td style={{ padding: '12px 16px' }}>{entry.provider}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflowX: 'auto' }}>
-                      {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                        const d = entry.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
-                        return (
-                          <div key={code} style={{ padding: '4px 6px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '120px', flexShrink: 0 }}>
-                            <div style={{ fontSize: '11px', fontWeight: '800' }}>Código {code}</div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.boxes} Cj, {d.units} Unid</div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{d.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {filteredHistory.map((entry) => (
+            <Card key={entry.id}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start' }}>
+                {/* Columna izquierda: FECHA, PROVEEDOR, ESTADO */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: '0 0 auto', minWidth: '250px' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>FECHA</div>
+                    <div style={{ fontSize: '14px' }}>{new Date(entry.date).toLocaleDateString('es-ES')}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>PROVEEDOR</div>
+                    <div>
+                      <span style={{
+                        fontSize:'12px', 
+                        fontWeight:'bold', 
+                        background: entry.provider === 'SOFIA' ? '#fee2e2' : '#e0f2fe', 
+                        color: entry.provider === 'SOFIA' ? theme.primary : '#0369a1', 
+                        padding:'4px 8px', 
+                        borderRadius:'6px'
+                      }}>
+                        {entry.provider}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      background: entry.status === 'COMPLETO' ? '#d1fae5' : '#fee2e2',
+                      color: entry.status === 'COMPLETO' ? '#065f46' : '#991b1b',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      textTransform: 'uppercase'
+                    }}>
+                      {entry.status}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                    <button onClick={() => handleDistribute(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Repartir</button>
+                    <button onClick={() => handleReceive(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Recibir</button>
+                  </div>
+                </div>
+
+                {/* Columna derecha: DETALLE DE PRODUCTOS */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: '1 1 auto' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>DETALLE DE PRODUCTOS</div>
+                  <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
+                    {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                      const d = entry.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+                      return (
+                        <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                {d.boxes || 0}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                            </div>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                {d.units || 0}
+                              </div>
+                              <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                              <div style={{ fontWeight: '600' }}>{d.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
+                              <div style={{ fontWeight: '600' }}>{d.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', backgroundColor: entry.status === 'COMPLETO' ? '#dcfce7' : '#fee2e2', color: entry.status === 'COMPLETO' ? '#166534' : '#991b1b' }}>{entry.status}</span>
-                      <button onClick={() => handleDistribute(entry)} style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer' }}>Repartir</button>
-                      <button onClick={() => handleReceive(entry)} style={{ padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}>Recibir</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredHistory.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: '16px', color: '#64748b' }}>No hay registros que coincidan con los filtros.</td></tr>
-              )}
-            </tbody>
-          </table>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {filteredHistory.length === 0 && (
+            <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>No hay registros que coincidan con los filtros.</div>
+          )}
         </div>
       </Card>
     </div>
