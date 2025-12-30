@@ -2449,27 +2449,6 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
           </div>
         ))}
 
-        <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Resumen de Distribución</h4>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {[104, 105, 106, 107, 108, 109, 110].map((code) => (
-              <div key={code} style={{ 
-                padding: '12px', 
-                backgroundColor: 'white', 
-                borderRadius: '8px', 
-                border: '1px solid #e2e8f0',
-                minWidth: '120px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>Código {code}</div>
-                <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{getTotalDistributed(code)} / {getTotalAssigned(code)}</div>
-                <div style={{ fontSize: '11px', color: getTotalDistributed(code) > getTotalAssigned(code) ? '#ef4444' : '#10b981' }}>
-                  {getTotalDistributed(code) > getTotalAssigned(code) ? 'Excede' : 'OK'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
           <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
