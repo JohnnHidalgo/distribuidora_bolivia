@@ -1586,6 +1586,7 @@ const AssignmentView = ({ theme }) => {
   const [selectedPlanningAssignment, setSelectedPlanningAssignment] = useState(null);
   const [receiveMode, setReceiveMode] = useState(false);
   const [selectedReceiveAssignment, setSelectedReceiveAssignment] = useState(null);
+  const [currentPlanning, setCurrentPlanning] = useState({});
 
   const [selectedProducts, setSelectedProducts] = useState(() => {
     const init = {};
@@ -1602,8 +1603,8 @@ const AssignmentView = ({ theme }) => {
   const [deferredPricing, setDeferredPricing] = useState(false);
 
   const [history, setHistory] = useState([
-    { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', details: {104:{boxes:10,units:5,grossWeight:100.00,netWeight:95.00},107:{boxes:5,units:2,grossWeight:50.00,netWeight:47.50}}, status: 'COMPLETO' },
-    { id: 2, date: '2025-12-05', provider: 'PIO', client: 'Feria Sector A', details: {109:{boxes:5,units:10,grossWeight:75.00,netWeight:70.00},104:{boxes:2,units:3,grossWeight:25.00,netWeight:23.00}}, status: 'PENDIENTE' }
+    { id: 1, date: '2025-12-01', provider: 'SOFIA', client: 'Pollería El Rey', costPerKg: 10.00, deferredPricing: false, details: {104:{boxes:10,units:5,grossWeight:100.00,netWeight:95.00},107:{boxes:5,units:2,grossWeight:50.00,netWeight:47.50}}, status: 'COMPLETO' },
+    { id: 2, date: '2025-12-05', provider: 'PIO', client: 'Feria Sector A', costPerKg: 12.00, deferredPricing: true, pricesPerCode: {109: 12.00, 104: 11.50}, details: {109:{boxes:5,units:10,grossWeight:75.00,netWeight:70.00},104:{boxes:2,units:3,grossWeight:25.00,netWeight:23.00}}, status: 'PENDIENTE' }
   ]);
 
   const getAssignmentTotalNetWeight = () => {
@@ -1676,11 +1677,11 @@ const AssignmentView = ({ theme }) => {
   }
 
   if (distributionMode && selectedAssignment) {
-    return <DistributionView theme={theme} assignment={selectedAssignment} onBack={handleBackToHistory} />;
+    return <DistributionView theme={theme} assignment={selectedAssignment} planning={currentPlanning} onBack={handleBackToHistory} />;
   }
 
   if (planningMode && selectedPlanningAssignment) {
-    return <PlanningView theme={theme} assignment={selectedPlanningAssignment} onBack={handleBackToHistoryFromPlanning} />;
+    return <PlanningView theme={theme} assignment={selectedPlanningAssignment} onBack={handleBackToHistoryFromPlanning} onSavePlanning={setCurrentPlanning} />;
   }
 
   return (
@@ -1884,7 +1885,7 @@ const AssignmentView = ({ theme }) => {
   );
 };
 
-const DistributionView = ({ theme, assignment, onBack }) => {
+const DistributionView = ({ theme, assignment, planning, onBack }) => {
   // Clientes de ejemplo con sus solicitudes
   const clients = [
     { id: 1, name: 'Pollería El Rey', group: 'El Alto Norte', orders: {104: 10, 107: 5} },
@@ -1900,7 +1901,16 @@ const DistributionView = ({ theme, assignment, onBack }) => {
   const [deliveries, setDeliveries] = useState(() => {
     const init = {};
     clients.forEach(client => {
-      init[client.id] = [{104: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 105: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 106: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 107: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 108: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 109: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}, 110: {boxes: 0, units: 0, grossWeight: 0, netWeight: 0}}];
+      const planned = planning[client.id] || {};
+      init[client.id] = [{
+        104: {boxes: planned[104] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        105: {boxes: planned[105] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        106: {boxes: planned[106] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        107: {boxes: planned[107] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        108: {boxes: planned[108] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        109: {boxes: planned[109] || 0, units: 0, grossWeight: 0, netWeight: 0},
+        110: {boxes: planned[110] || 0, units: 0, grossWeight: 0, netWeight: 0}
+      }];
     });
     return init;
   });
@@ -1991,6 +2001,10 @@ const DistributionView = ({ theme, assignment, onBack }) => {
 
   const getTotalDistributed = (code) => {
     return clients.reduce((sum, client) => sum + getClientTotal(client.id, code, 'boxes'), 0);
+  };
+
+  const getTotalDistributedUnits = (code) => {
+    return clients.reduce((sum, client) => sum + getClientTotal(client.id, code, 'units'), 0);
   };
 
   const getTotalAssigned = (code) => {
@@ -2099,6 +2113,8 @@ const DistributionView = ({ theme, assignment, onBack }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Bs {assignment.costPerKg?.toFixed(2) || 'N/A'}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO DIFERIDO:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.deferredPricing ? 'Sí' : 'No'}</span></div>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
@@ -2118,21 +2134,20 @@ const DistributionView = ({ theme, assignment, onBack }) => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
                     <div style={{ position: 'relative' }}>
                       <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                        {detail.boxes || 0}
+                        {(detail.boxes || 0) - getTotalDistributed(code)}/{detail.boxes || 0}
                       </div>
                       <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                     </div>
                     <div style={{ position: 'relative' }}>
                       <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                        {detail.units || 0}
+                        {(detail.units || 0) - getTotalDistributedUnits(code)}/{detail.units || 0}
                       </div>
                       <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
-                      <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
-                      <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
+                      <div style={{ fontWeight: '600' }}>Costo: Bs {(assignment.deferredPricing ? (assignment.pricesPerCode?.[code] || 0) : assignment.costPerKg || 0).toFixed(2)}/kg</div>
                     </div>
-                  </div>
+                </div>
                 </div>
               );
             })}
@@ -2467,7 +2482,7 @@ const DistributionView = ({ theme, assignment, onBack }) => {
   );
 };
 
-const PlanningView = ({ theme, assignment, onBack }) => {
+const PlanningView = ({ theme, assignment, onBack, onSavePlanning }) => {
   // Solicitudes de clientes de ejemplo (ya registradas)
   const clientRequests = [
     { id: 1, clientName: 'Pollería El Rey', group: 'El Alto Norte', requested: {104: 10, 107: 5}, status: 'PENDIENTE' },
@@ -2559,7 +2574,7 @@ const PlanningView = ({ theme, assignment, onBack }) => {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
-              <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Planificación</button>
+              <button onClick={() => { onSavePlanning(plannedDistributions); alert('Planificación guardada'); }} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Planificación</button>
             </div>
           </div>
 
