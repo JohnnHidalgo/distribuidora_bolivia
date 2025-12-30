@@ -2488,6 +2488,18 @@ const PlanningView = ({ theme, assignment, onBack }) => {
     return init;
   });
 
+  // Estado para marcar grupos guardados
+  const [savedGroups, setSavedGroups] = useState(() => {
+    const init = {};
+    groups.forEach(g => { init[g] = false; });
+    return init;
+  });
+
+  const handleSaveGroup = (group) => {
+    setSavedGroups(prev => ({ ...prev, [group]: true }));
+    alert(`Grupo ${group} guardado`);
+  };
+
   const updatePlannedDistribution = (requestId, code, value) => {
     setPlannedDistributions(prev => ({
       ...prev,
@@ -2541,7 +2553,6 @@ const PlanningView = ({ theme, assignment, onBack }) => {
       <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
         <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Planificar Asignación del {assignment.date}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
@@ -2566,21 +2577,17 @@ const PlanningView = ({ theme, assignment, onBack }) => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
                         <div style={{ position: 'relative' }}>
                           <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                            {detail.boxes || 0}
+                            {available}/{detail.boxes || 0}
                           </div>
-                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>DISPONIBLE</span>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                         </div>
                         <div style={{ position: 'relative' }}>
                           <div style={{ width: '60px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
-                            {totalPlanned}
+                            {(detail.units || 0) - totalPlanned}/{detail.units || 0}
                           </div>
-                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>PLANIFICADO</span>
+                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
-                          <div style={{ fontWeight: '600' }}>{detail.grossWeight?.toFixed(2) || '0.00'} kg Bruto</div>
-                          <div style={{ fontWeight: '600' }}>{detail.netWeight?.toFixed(2) || '0.00'} kg Neto</div>
-                          <div style={{ fontWeight: '600', color: available < 0 ? '#ef4444' : '#10b981' }}>{available} Disponible</div>
-                        </div>
+                        
                       </div>
                     </div>
                   );
@@ -2599,17 +2606,8 @@ const PlanningView = ({ theme, assignment, onBack }) => {
               const isExpanded = expandedGroups.has(group);
               return (
                 <div key={group} style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <div 
-                    style={{ 
-                      padding: '12px', 
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                    onClick={() => toggleGroupExpansion(group)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div onClick={() => toggleGroupExpansion(group)} style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}>
                       <div style={{ fontSize: '14px', fontWeight: 'bold', color: theme.primary, minWidth: '120px' }}>{group}</div>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                         {[104, 105, 106, 107, 108, 109, 110].map((code) => {
@@ -2646,14 +2644,19 @@ const PlanningView = ({ theme, assignment, onBack }) => {
                             <div style={{ position: 'relative' }}>
                               <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
                                 {totals.units}
-                              </div>
+                              </div>b
                               <span style={{ position: 'absolute', top: '-12px', left: '12px', fontSize: '7px', backgroundColor: '#f59e0b', padding: '0 2px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button onClick={(e)=>{e.stopPropagation(); handleSaveGroup(group)}} disabled={savedGroups[group]} style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', backgroundColor: savedGroups[group] ? '#10b981' : theme.primary, color: 'white', fontWeight: '700', cursor: savedGroups[group] ? 'not-allowed' : 'pointer' }}>
+                        {savedGroups[group] ? 'Guardado' : 'Guardar Grupo'}
+                      </button>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
                   </div>
                   
                   {isExpanded && (
@@ -2663,71 +2666,84 @@ const PlanningView = ({ theme, assignment, onBack }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {clientRequests.filter(request => request.group === group).map((request) => (
                             <div key={request.id} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                <div>
-                                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: theme.primary }}>{request.clientName}</h4>
-                                  <div style={{ fontSize: '11px', color: '#64748b' }}>Estado: {request.status}</div>
+                              <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                                <div style={{ flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: theme.primary }}>{request.clientName}</h4>
+                                  <div style={{ fontSize: '12px', color: '#64748b' }}>Estado:
+                                    <span style={{
+                                      marginLeft: '8px',
+                                      fontWeight: '700',
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      background: request.status && request.status.toLowerCase() === 'emitido' ? '#fef3c7' : '#d1fae5',
+                                      color: request.status && request.status.toLowerCase() === 'emitido' ? '#92400e' : '#065f46',
+                                      textTransform: 'capitalize',
+                                      display: 'inline-block'
+                                    }}>{request.status}</span>
+                                  </div>
                                 </div>
-                              </div>
 
-                              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-start' }}>
-                                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
-                                  const requested = request.requested[code] || 0;
-                                  const planned = plannedDistributions[request.id]?.[code] || 0;
-                                  const assignmentAvailable = assignment.details[code]?.boxes || 0;
-                                  const totalPlannedForCode = getTotalPlannedByCode(code);
-                                  const remaining = assignmentAvailable - totalPlannedForCode + planned;
-                                  return (
-                                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '100px' }}>
-                                      <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</div>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        <div style={{ fontSize: '9px', color: '#64748b' }}>Solicitado: {requested}</div>
-                                        <div style={{ position: 'relative' }}>
-                                          <input
-                                            type="number"
-                                            value={planned}
-                                            onChange={(e) => updatePlannedDistribution(request.id, code, e.target.value)}
-                                            min="0"
-                                            max={remaining + planned}
-                                            style={{
-                                              width: '70px',
-                                              padding: '4px',
-                                              borderRadius: '3px',
-                                              border: '1px solid #cbd5e1',
-                                              textAlign: 'center',
-                                              fontSize: '11px',
-                                              fontWeight: 'bold'
-                                            }}
-                                          />
-                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
-                                        </div>
-                                        <div style={{ position: 'relative' }}>
-                                          <div style={{ width: '70px', padding: '4px', borderRadius: '3px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
-                                            {planned}
+                                <div style={{ flex: '1 1 auto' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-start' }}>
+                                    {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                                      const requested = request.requested[code] || 0;
+                                      const planned = plannedDistributions[request.id]?.[code] || 0;
+                                      const assignmentAvailable = assignment.details[code]?.boxes || 0;
+                                      const totalPlannedForCode = getTotalPlannedByCode(code);
+                                      const remaining = assignmentAvailable - totalPlannedForCode + planned;
+                                      return (
+                                        <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '100px' }}>
+                                          <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</div>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <div style={{ fontSize: '9px', color: '#64748b' }}>Solicitado: {requested}</div>
+                                            <div style={{ position: 'relative' }}>
+                                              <input
+                                                type="number"
+                                                value={planned}
+                                                onChange={(e) => updatePlannedDistribution(request.id, code, e.target.value)}
+                                                min="0"
+                                                max={remaining + planned}
+                                                style={{
+                                                  width: '70px',
+                                                  padding: '4px',
+                                                  borderRadius: '3px',
+                                                  border: '1px solid #cbd5e1',
+                                                  textAlign: 'center',
+                                                  fontSize: '11px',
+                                                  fontWeight: 'bold'
+                                                }}
+                                              />
+                                              <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                            </div>
+                                            <div style={{ position: 'relative' }}>
+                                              <div style={{ width: '70px', padding: '4px', borderRadius: '3px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                                {planned}
+                                              </div>
+                                              <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                            </div>
+                                            <div style={{ fontSize: '9px', color: planned > remaining ? '#ef4444' : '#10b981' }}>
+                                              Restante: {remaining - planned}
+                                            </div>
                                           </div>
-                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f8fafc', padding: '0 1px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
                                         </div>
-                                        <div style={{ fontSize: '9px', color: planned > remaining ? '#ef4444' : '#10b981' }}>
-                                          Restante: {remaining - planned}
+                                      );
+                                    })}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f59e0b', borderRadius: '4px', border: '1px solid #d97706', minWidth: '110px' }}>
+                                      <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: 'white' }}>TOTAL</div>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                            {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>CAJAS</span>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                            {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
                                         </div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f59e0b', borderRadius: '4px', border: '1px solid #d97706', minWidth: '110px' }}>
-                                  <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: 'white' }}>TOTAL</div>
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                    <div style={{ position: 'relative' }}>
-                                      <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
-                                        {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
-                                      </div>
-                                      <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>CAJAS</span>
-                                    </div>
-                                    <div style={{ position: 'relative' }}>
-                                      <div style={{ width: '80px', padding: '4px', borderRadius: '3px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
-                                        {Object.values(plannedDistributions[request.id] || {}).reduce((sum, qty) => sum + qty, 0)}
-                                      </div>
-                                      <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '6px', backgroundColor: '#f59e0b', padding: '0 1px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
                                     </div>
                                   </div>
                                 </div>

@@ -1,0 +1,6 @@
+Patch plan:
+1) Add savedGroups state and handleSaveGroup() in PlanningView
+2) Replace group header block to include 'Guardar Grupo' button and chevron in right side
+3) Ensure button stops propagation so it doesn't toggle expansion
+
+Applied on src/App.js
