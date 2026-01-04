@@ -3005,6 +3005,8 @@ const PlanningView = ({ theme, assignment, onBack, onSavePlanning }) => {
 
 const ReceiveView = ({ theme, assignment, onBack }) => {
   const [boletas, setBoletas] = useState([]);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   // Agregar nueva boleta
   const addBoleta = () => {
@@ -3097,6 +3099,67 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
       }
       return boleta;
     }));
+  };
+
+  // Guardar boleta y mostrar resumen
+  const saveBoleta = () => {
+    // Calcular totales recibidos por código
+    const receivedByCode = {};
+    [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+      receivedByCode[code] = { units: 0, netWeight: 0 };
+    });
+
+    boletas.forEach(boleta => {
+      Object.entries(boleta.weighings).forEach(([code, weighings]) => {
+        weighings.forEach(w => {
+          receivedByCode[code].units += w.units || 0;
+          receivedByCode[code].netWeight += w.weight || 0;
+        });
+      });
+    });
+
+    // Calcular totales de asignación por código
+    const assignmentByCode = {};
+    [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+      const detail = assignment.details[code] || { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 };
+      assignmentByCode[code] = {
+        boxes: detail.boxes || 0,
+        units: detail.units || 0,
+        grossWeight: detail.grossWeight || 0,
+        netWeight: detail.netWeight || 0
+      };
+    });
+
+    // Calcular totales generales
+    const receivedTotals = { units: 0, netWeight: 0 };
+    const assignmentTotals = { units: 0, netWeight: 0 };
+
+    Object.values(receivedByCode).forEach(codeData => {
+      receivedTotals.units += codeData.units;
+      receivedTotals.netWeight += codeData.netWeight;
+    });
+
+    Object.values(assignmentByCode).forEach(codeData => {
+      assignmentTotals.units += codeData.units;
+      assignmentTotals.netWeight += codeData.netWeight;
+    });
+
+    // Preparar datos para el diálogo
+    const summary = {
+      assignment: assignmentTotals,
+      received: receivedTotals,
+      difference: {
+        units: receivedTotals.units - assignmentTotals.units,
+        netWeight: receivedTotals.netWeight - assignmentTotals.netWeight
+      },
+      byCode: {
+        assignment: assignmentByCode,
+        received: receivedByCode
+      }
+    };
+
+    setSummaryData(summary);
+    setShowSummaryDialog(true);
   };
 
   // Obtener total de peso por código en una boleta
@@ -3204,7 +3267,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
-              <button onClick={() => {}} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={saveBoleta} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <Truck size={16} /> Registrar Recepción
               </button>
             </div>
@@ -3461,7 +3524,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                                         />
                                         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                                       </div>
-                                      <div style={{ position: 'relative' }}>
+                                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <input 
                                           type="number" 
                                           placeholder="0" 
@@ -3478,6 +3541,22 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                                           }}
                                         />
                                         <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                        
+                                        <button 
+                                          onClick={() => {/* función para seleccionar contenedor */}}
+                                            style={{ 
+                                              padding: '6px', 
+                                              borderRadius: '4px', 
+                                              border: '1px solid #cbd5e1', 
+                                              backgroundColor: 'white', 
+                                              cursor: 'pointer', 
+                                              display: 'flex', 
+                                              alignItems: 'center', 
+                                              justifyContent: 'center'
+                                            }}
+                                        >
+                                          <Package size={14} color={theme.primary} />
+                                        </button>
                                       </div>
                                       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <input 
@@ -3487,7 +3566,7 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
                                           value={weighing.weight || ''} 
                                           onChange={(e) => updateWeighing(boleta.id, parseInt(code), index, 'weight', e.target.value)}
                                           style={{ 
-                                            width: '80px', 
+                                            width: '60px', 
                                             padding: '6px', 
                                             borderRadius: '4px', 
                                             border: '1px solid #cbd5e1', 
@@ -3537,6 +3616,140 @@ const ReceiveView = ({ theme, assignment, onBack }) => {
 
         
       </Card>
+
+      {/* Diálogo de resumen de recepción */}
+      {showSummaryDialog && summaryData && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '900px',
+            width: '95%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <Truck size={24} color={theme.primary} />
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: theme.textMain }}>Resumen de Recepción</h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>Resumen por Código</h4>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
+                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                  const assignmentDetail = summaryData.byCode.assignment[code];
+                  const receivedDetail = summaryData.byCode.received[code];
+                  return (
+                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                      
+                      {/* Asignación */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b', marginBottom: '4px' }}>ASIGNACIÓN</div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                            {assignmentDetail.boxes}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                            {assignmentDetail.units}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                        </div>
+                      </div>
+
+                      {/* Recibido */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #10b981' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#10b981', marginBottom: '4px' }}>RECIBIDO</div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                            0
+                          </div>
+                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                          <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                            {receivedDetail.units}
+                          </div>
+                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#10b981', textAlign: 'center', fontWeight: '600' }}>
+                          <div>{receivedDetail.netWeight.toFixed(2)} kg Bruto</div>
+                          <div>{receivedDetail.netWeight.toFixed(2)} kg Neto</div>
+                        </div>
+                      </div>
+
+                      {/* Diferencia */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b' }}>DIFERENCIA</div>
+                        <div style={{ fontSize: '10px', fontWeight: '600', color: (0 - assignmentDetail.boxes) >= 0 ? '#10b981' : '#ef4444' }}>
+                          {(0 - assignmentDetail.boxes) >= 0 ? '+' : ''}{0 - assignmentDetail.boxes} cajas
+                        </div>
+                        <div style={{ fontSize: '10px', fontWeight: '600', color: (receivedDetail.units - assignmentDetail.units) >= 0 ? '#10b981' : '#ef4444' }}>
+                          {(receivedDetail.units - assignmentDetail.units) >= 0 ? '+' : ''}{receivedDetail.units - assignmentDetail.units} unid.
+                        </div>
+                        <div style={{ fontSize: '10px', fontWeight: '600', color: (receivedDetail.netWeight - assignmentDetail.netWeight) >= 0 ? '#10b981' : '#ef4444' }}>
+                          {(receivedDetail.netWeight - assignmentDetail.netWeight) >= 0 ? '+' : ''}{(receivedDetail.netWeight - assignmentDetail.netWeight).toFixed(2)} kg
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <button 
+                onClick={() => setShowSummaryDialog(false)}
+                style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e2e8f0', 
+                  backgroundColor: '#f8fafc', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  color: theme.textMain 
+                }}
+              >
+                Cerrar
+              </button>
+              <button 
+                onClick={() => {
+                  // Aquí iría la lógica para guardar definitivamente
+                  setShowSummaryDialog(false);
+                  alert('Recepción registrada exitosamente');
+                }}
+                style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '8px', 
+                  backgroundColor: '#10b981', 
+                  color: 'white', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold' 
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
