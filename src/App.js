@@ -5767,23 +5767,104 @@ const BasketsSettings = ({ theme }) => {
 
 const UsersSettings = ({ theme }) => {
   const [users, setUsers] = useState([
-    { id: 1, name: 'Admin Bolivia', email: 'admin@distribuidora.com', role: 'Administrador', active: true },
-    { id: 2, name: 'Operador 1', email: 'operador1@distribuidora.com', role: 'Operador', active: true },
+    { id: 1, firstName: 'Admin', lastName: 'Bolivia', ci: '12345678', role: 'admin', active: true },
+    { id: 2, firstName: 'Operador', lastName: 'Uno', ci: '87654321', role: 'despachador 1', active: true },
   ]);
+  const [editing, setEditing] = useState(null);
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', ci: '', role: '' });
+
+  const roles = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'gerente', label: 'Gerente' },
+    { value: 'despachador 1', label: 'Despachador 1' },
+    { value: 'despachador 2', label: 'Despachador 2' },
+    { value: 'contador', label: 'Contador' },
+    { value: 'encargado de ruta', label: 'Encargado de Ruta' },
+    { value: 'preventista', label: 'Preventista' },
+  ];
+
+  const handleSave = () => {
+    if (editing) {
+      setUsers(users.map(u => u.id === editing ? { ...u, ...formData } : u));
+    } else {
+      const newId = Math.max(...users.map(u => u.id)) + 1;
+      setUsers([...users, { id: newId, ...formData, active: true }]);
+    }
+    setEditing(null);
+    setFormData({ firstName: '', lastName: '', ci: '', role: '' });
+  };
 
   return (
     <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Usuarios</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button
+          onClick={() => setEditing('new')}
+          style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
           <Plus size={16} /> Nuevo Usuario
         </button>
       </div>
+      {(editing === 'new' || editing) && (
+        <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE</label>
+              <input 
+                type="text" 
+                value={formData.firstName} 
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>APELLIDO</label>
+              <input 
+                type="text" 
+                value={formData.lastName} 
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CI</label>
+              <input 
+                type="text" 
+                value={formData.ci} 
+                onChange={(e) => setFormData({...formData, ci: e.target.value})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>ROL</label>
+              <select 
+                value={formData.role} 
+                onChange={(e) => setFormData({...formData, role: e.target.value})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }}
+              >
+                <option value="">Seleccionar rol...</option>
+                {roles.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleSave} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <Save size={14} /> Guardar
+            </button>
+            <button onClick={() => { setEditing(null); setFormData({ firstName: '', lastName: '', ci: '', role: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
             <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Apellido</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>CI</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Rol</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
@@ -5792,19 +5873,20 @@ const UsersSettings = ({ theme }) => {
         <tbody>
           {users.map(u => (
             <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{u.name}</td>
-              <td style={{ padding: '12px' }}>{u.email}</td>
-              <td style={{ padding: '12px' }}>{u.role}</td>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{u.firstName}</td>
+              <td style={{ padding: '12px' }}>{u.lastName}</td>
+              <td style={{ padding: '12px' }}>{u.ci}</td>
+              <td style={{ padding: '12px' }}>{roles.find(r => r.value === u.role)?.label || u.role}</td>
               <td style={{ padding: '12px' }}>
                 <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: u.active ? '#dcfce7' : '#fee2e2', color: u.active ? '#166534' : '#991b1b' }}>
                   {u.active ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
               <td style={{ padding: '12px' }}>
-                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                <button onClick={() => { setEditing(u.id); setFormData({ firstName: u.firstName, lastName: u.lastName, ci: u.ci, role: u.role }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
                   <Edit size={14} />
                 </button>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                <button onClick={() => setUsers(users.filter(user => user.id !== u.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
                   <Trash2 size={14} />
                 </button>
               </td>
