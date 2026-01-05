@@ -56,6 +56,21 @@ const App = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Estados para el modal de nuevo cliente
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientGroup, setNewClientGroup] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientLocation, setNewClientLocation] = useState({ lat: -16.5000, lng: -68.1500 }); // Coordenadas de La Paz por defecto
+
+  // Datos de clientes por grupo
+  const [clientsByGroup, setClientsByGroup] = useState({
+    'El Alto - Zona Norte': ['Pollería El Rey', 'Feria Sector A'],
+    'El Alto - Zona Sur': ['Doña Juana', 'Supermercado Central'],
+    'La Paz - Centro': ['Mercado Camacho', 'Tienda El Sol'],
+    'La Paz - Zona Norte': ['Pollería Los Pinos', 'Feria 16 de Julio']
+  });
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -93,6 +108,36 @@ const App = () => {
     if (isMobile) {
       setSidebarVisible(false);
     }
+  };
+
+  // Funciones para el modal de nuevo cliente
+  const handleSaveNewClient = () => {
+    if (!newClientName.trim() || !newClientGroup || !newClientPhone.trim()) {
+      alert('Por favor complete todos los campos obligatorios');
+      return;
+    }
+
+    // Agregar el nuevo cliente a la lista de clientes del grupo
+    setClientsByGroup(prev => ({
+      ...prev,
+      [newClientGroup]: [...(prev[newClientGroup] || []), newClientName]
+    }));
+
+    // Aquí se puede enviar al backend
+    alert(`Cliente "${newClientName}" agregado exitosamente al grupo "${newClientGroup}"`);
+    
+    // Limpiar el formulario y cerrar el modal
+    setNewClientName('');
+    setNewClientPhone('');
+    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
+    setShowNewClientModal(false);
+  };
+
+  const handleCloseNewClientModal = () => {
+    setNewClientName('');
+    setNewClientPhone('');
+    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
+    setShowNewClientModal(false);
   };
 
   const theme = {
@@ -216,14 +261,57 @@ const App = () => {
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': return <DashboardView theme={theme} />;
-      case 'orders': return <ConsolidationView theme={theme} />;
-      case 'assignments': return <AssignmentView theme={theme} />;
+      case 'orders': return <ConsolidationView 
+        theme={theme}
+        showNewClientModal={showNewClientModal}
+        setShowNewClientModal={setShowNewClientModal}
+        newClientName={newClientName}
+        setNewClientName={setNewClientName}
+        newClientGroup={newClientGroup}
+        setNewClientGroup={setNewClientGroup}
+        newClientPhone={newClientPhone}
+        setNewClientPhone={setNewClientPhone}
+        newClientLocation={newClientLocation}
+        setNewClientLocation={setNewClientLocation}
+        handleSaveNewClient={handleSaveNewClient}
+        handleCloseNewClientModal={handleCloseNewClientModal}
+      />;
+      case 'assignments': return <AssignmentView 
+        theme={theme} 
+        showNewClientModal={showNewClientModal}
+        setShowNewClientModal={setShowNewClientModal}
+        newClientName={newClientName}
+        setNewClientName={setNewClientName}
+        newClientGroup={newClientGroup}
+        setNewClientGroup={setNewClientGroup}
+        newClientPhone={newClientPhone}
+        setNewClientPhone={setNewClientPhone}
+        newClientLocation={newClientLocation}
+        setNewClientLocation={setNewClientLocation}
+        handleSaveNewClient={handleSaveNewClient}
+        handleCloseNewClientModal={handleCloseNewClientModal}
+      />;
       case 'tracking': return <TrackingView theme={theme} />;
       case 'driverApp': return <DriverAppView theme={theme} />;
       case 'clientApp': return <ClientAppView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
       case 'reports': return <ReportsView theme={theme} />;
-      case 'settings': return <SettingsView theme={theme} />;
+      case 'settings': return <SettingsView 
+        theme={theme} 
+        showNewClientModal={showNewClientModal}
+        setShowNewClientModal={setShowNewClientModal}
+        newClientName={newClientName}
+        setNewClientName={setNewClientName}
+        newClientGroup={newClientGroup}
+        setNewClientGroup={setNewClientGroup}
+        newClientPhone={newClientPhone}
+        setNewClientPhone={setNewClientPhone}
+        newClientLocation={newClientLocation}
+        setNewClientLocation={setNewClientLocation}
+        handleSaveNewClient={handleSaveNewClient}
+        handleCloseNewClientModal={handleCloseNewClientModal}
+        clientsByGroup={clientsByGroup}
+      />;
       default: return <DashboardView theme={theme} />;
     }
   };
@@ -317,6 +405,211 @@ const App = () => {
         <div style={currentStyles.contentArea}>
           {renderView()}
         </div>
+
+        {/* Modal para Nuevo Cliente */}
+        {showNewClientModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '20px'
+          }}
+          onClick={handleCloseNewClientModal}
+          >
+            <div 
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                width: '100%',
+                maxWidth: '600px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Nuevo Cliente</h3>
+                <button
+                  onClick={handleCloseNewClientModal}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '4px',
+                    color: '#64748b'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Nombre del Cliente */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    NOMBRE DEL CLIENTE *
+                  </label>
+                  <input
+                    type="text"
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    placeholder="Ingrese el nombre del cliente"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Grupo */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    GRUPO / RUTA *
+                  </label>
+                  <select
+                    value={newClientGroup}
+                    onChange={(e) => setNewClientGroup(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Seleccionar Grupo...</option>
+                    <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+                    <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+                    <option value="La Paz - Centro">La Paz - Centro</option>
+                    <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+                  </select>
+                </div>
+
+                {/* Teléfono */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    TELÉFONO *
+                  </label>
+                  <input
+                    type="tel"
+                    value={newClientPhone}
+                    onChange={(e) => setNewClientPhone(e.target.value)}
+                    placeholder="Ej: 70123456"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Ubicación (Mapa) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                    UBICACIÓN
+                  </label>
+                  <div style={{
+                    width: '100%',
+                    height: '300px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid #e2e8f0',
+                    marginBottom: '8px'
+                  }}>
+                    <MapContainer
+                      center={[newClientLocation.lat, newClientLocation.lng]}
+                      zoom={13}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <MapClickHandler 
+                        onMapClick={(latlng) => {
+                          setNewClientLocation({ lat: latlng.lat, lng: latlng.lng });
+                        }}
+                      />
+                      <Marker position={[newClientLocation.lat, newClientLocation.lng]}>
+                        <Popup>
+                          Ubicación del cliente
+                        </Popup>
+                      </Marker>
+                    </MapContainer>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
+                    <span>Lat: {newClientLocation.lat.toFixed(4)}</span>
+                    <span>Lng: {newClientLocation.lng.toFixed(4)}</span>
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                    Haga clic en el mapa para seleccionar la ubicación del cliente
+                  </p>
+                </div>
+
+                {/* Botones */}
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                  <button
+                    onClick={handleCloseNewClientModal}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      backgroundColor: 'white',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveNewClient}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: theme.primary,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.target.style.opacity = '1'}
+                  >
+                    Guardar Cliente
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -574,20 +867,27 @@ const MapClickHandler = ({ onMapClick }) => {
   return null;
 };
 
-const ConsolidationView = ({ theme }) => {
+const ConsolidationView = ({ 
+  theme,
+  showNewClientModal,
+  setShowNewClientModal,
+  newClientName,
+  setNewClientName,
+  newClientGroup,
+  setNewClientGroup,
+  newClientPhone,
+  setNewClientPhone,
+  newClientLocation,
+  setNewClientLocation,
+  handleSaveNewClient,
+  handleCloseNewClientModal
+}) => {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
-  
-  // Estados para el modal de nuevo cliente
-  const [showNewClientModal, setShowNewClientModal] = useState(false);
-  const [newClientName, setNewClientName] = useState('');
-  const [newClientGroup, setNewClientGroup] = useState('');
-  const [newClientPhone, setNewClientPhone] = useState('');
-  const [newClientLocation, setNewClientLocation] = useState({ lat: -16.5000, lng: -68.1500 }); // Coordenadas de La Paz por defecto
   
   // Estados para filtros de solicitudes
   const [filterStartDate, setFilterStartDate] = useState('');
@@ -867,39 +1167,6 @@ const ConsolidationView = ({ theme }) => {
     // Aquí en el futuro se puede enviar clientOrders al backend
     alert('Cambios de consolidación guardados (mock).');
     setEditEnabled(false);
-  };
-
-  const handleSaveNewClient = () => {
-    if (!newClientName.trim() || !newClientGroup || !newClientPhone.trim()) {
-      alert('Por favor complete todos los campos obligatorios');
-      return;
-    }
-
-    // Agregar el nuevo cliente a la lista de clientes del grupo
-    if (!clientsByGroup[newClientGroup]) {
-      clientsByGroup[newClientGroup] = [];
-    }
-    clientsByGroup[newClientGroup].push(newClientName);
-
-    // Aquí se puede enviar al backend
-    alert(`Cliente "${newClientName}" agregado exitosamente al grupo "${newClientGroup}"`);
-    
-    // Limpiar el formulario y cerrar el modal
-    setNewClientName('');
-    setNewClientPhone('');
-    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
-    setShowNewClientModal(false);
-    
-    // Actualizar el campo de búsqueda con el nuevo cliente
-    setClientSearch(newClientName);
-    setSelectedClient(newClientName);
-  };
-
-  const handleCloseNewClientModal = () => {
-    setNewClientName('');
-    setNewClientPhone('');
-    setNewClientLocation({ lat: -16.5000, lng: -68.1500 });
-    setShowNewClientModal(false);
   };
 
   return (
@@ -1282,211 +1549,6 @@ const ConsolidationView = ({ theme }) => {
           ))}
         </div>
       </Card>
-
-      {/* Modal para Nuevo Cliente */}
-      {showNewClientModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 10000,
-          padding: '20px'
-        }}
-        onClick={handleCloseNewClientModal}
-        >
-          <div 
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '24px',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Nuevo Cliente</h3>
-              <button
-                onClick={handleCloseNewClientModal}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '4px',
-                  color: '#64748b'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Nombre del Cliente */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                  NOMBRE DEL CLIENTE *
-                </label>
-                <input
-                  type="text"
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                  placeholder="Ingrese el nombre del cliente"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    outline: 'none',
-                    fontSize: '14px'
-                  }}
-                />
-              </div>
-
-              {/* Grupo */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                  GRUPO / RUTA *
-                </label>
-                <select
-                  value={newClientGroup}
-                  onChange={(e) => setNewClientGroup(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    outline: 'none',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Seleccionar Grupo...</option>
-                  <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
-                  <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
-                  <option value="La Paz - Centro">La Paz - Centro</option>
-                  <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
-                </select>
-              </div>
-
-              {/* Teléfono */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                  TELÉFONO *
-                </label>
-                <input
-                  type="tel"
-                  value={newClientPhone}
-                  onChange={(e) => setNewClientPhone(e.target.value)}
-                  placeholder="Ej: 70123456"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    outline: 'none',
-                    fontSize: '14px'
-                  }}
-                />
-              </div>
-
-              {/* Ubicación (Mapa) */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
-                  UBICACIÓN
-                </label>
-                <div style={{
-                  width: '100%',
-                  height: '300px',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  marginBottom: '8px'
-                }}>
-                  <MapContainer
-                    center={[newClientLocation.lat, newClientLocation.lng]}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <MapClickHandler 
-                      onMapClick={(latlng) => {
-                        setNewClientLocation({ lat: latlng.lat, lng: latlng.lng });
-                      }}
-                    />
-                    <Marker position={[newClientLocation.lat, newClientLocation.lng]}>
-                      <Popup>
-                        Ubicación del cliente
-                      </Popup>
-                    </Marker>
-                  </MapContainer>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
-                  <span>Lat: {newClientLocation.lat.toFixed(4)}</span>
-                  <span>Lng: {newClientLocation.lng.toFixed(4)}</span>
-                </div>
-                <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                  Haga clic en el mapa para seleccionar la ubicación del cliente
-                </p>
-              </div>
-
-              {/* Botones */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button
-                  onClick={handleCloseNewClientModal}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: 'white',
-                    color: '#64748b',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '14px'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveNewClient}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: theme.primary,
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '14px'
-                  }}
-                  onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-                  onMouseLeave={(e) => e.target.style.opacity = '1'}
-                >
-                  Guardar Cliente
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -1569,7 +1631,21 @@ const ConsolidatedBox = ({ title, color, totals }) => (
   </Card>
 );
 
-const AssignmentView = ({ theme }) => {
+const AssignmentView = ({ 
+  theme,
+  showNewClientModal,
+  setShowNewClientModal,
+  newClientName,
+  setNewClientName,
+  newClientGroup,
+  setNewClientGroup,
+  newClientPhone,
+  setNewClientPhone,
+  newClientLocation,
+  setNewClientLocation,
+  handleSaveNewClient,
+  handleCloseNewClientModal
+}) => {
   // Categorías por proveedor
   const providerCategories = {
     SOFIA: [104, 105, 106, 107, 108, 109, 110],
@@ -4649,7 +4725,22 @@ const TableRow = ({ client, req, asig, status }) => (
 );
 
 // Vista de Configuración
-const SettingsView = ({ theme }) => {
+const SettingsView = ({ 
+  theme,
+  showNewClientModal,
+  setShowNewClientModal,
+  newClientName,
+  setNewClientName,
+  newClientGroup,
+  setNewClientGroup,
+  newClientPhone,
+  setNewClientPhone,
+  newClientLocation,
+  setNewClientLocation,
+  handleSaveNewClient,
+  handleCloseNewClientModal,
+  clientsByGroup
+}) => {
   const [activeSection, setActiveSection] = useState('providers');
   
   const sections = [
@@ -4699,7 +4790,12 @@ const SettingsView = ({ theme }) => {
 
       {activeSection === 'providers' && <ProvidersSettings theme={theme} />}
       {activeSection === 'products' && <ProductsSettings theme={theme} />}
-      {activeSection === 'clients' && <ClientsSettings theme={theme} />}
+      {activeSection === 'clients' && <ClientsSettings 
+        theme={theme}
+        showNewClientModal={showNewClientModal}
+        setShowNewClientModal={setShowNewClientModal}
+        clientsByGroup={clientsByGroup}
+      />}
       {activeSection === 'routes' && <RoutesSettings theme={theme} />}
       {activeSection === 'vehicles' && <VehiclesSettings theme={theme} />}
       {activeSection === 'drivers' && <DriversSettings theme={theme} />}
@@ -4716,7 +4812,7 @@ const ProvidersSettings = ({ theme }) => {
     { id: 2, name: 'PIO / IMBA', code: 'PIO', contact: 'contacto@pio.com', phone: '+591 2 7654321', active: true },
   ]);
   const [editing, setEditing] = useState(null);
-  const [formData, setFormData] = useState({ name: '', code: '', contact: '', phone: '' });
+  const [formData, setFormData] = useState({ name: '', classification: '' });
 
   const handleSave = () => {
     if (editing) {
@@ -4725,7 +4821,7 @@ const ProvidersSettings = ({ theme }) => {
       setProviders([...providers, { id: Date.now(), ...formData, active: true }]);
     }
     setEditing(null);
-    setFormData({ name: '', code: '', contact: '', phone: '' });
+    setFormData({ name: '', classification: '' });
   };
 
   return (
@@ -4747,23 +4843,19 @@ const ProvidersSettings = ({ theme }) => {
               <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
             </div>
             <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CÓDIGO</label>
-              <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CONTACTO</label>
-              <input type="email" value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>TELÉFONO</label>
-              <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLASIFICACIÓN DE PRODUCTOS</label>
+              <select value={formData.classification} onChange={(e) => setFormData({...formData, classification: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }}>
+                <option value="">Seleccionar clasificación...</option>
+                <option value="numbers">Codificación por números (104 al 109)</option>
+                <option value="colors">Codificación por colores (rojo, amarillo, verde, negro, blanco, azul)</option>
+              </select>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={handleSave} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
               <Save size={14} /> Guardar
             </button>
-            <button onClick={() => { setEditing(null); setFormData({ name: '', code: '', contact: '', phone: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+            <button onClick={() => { setEditing(null); setFormData({ name: '', classification: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
               Cancelar
             </button>
           </div>
@@ -4773,9 +4865,7 @@ const ProvidersSettings = ({ theme }) => {
         <thead>
           <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
             <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Contacto</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Clasificación de Productos</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
           </tr>
@@ -4784,16 +4874,14 @@ const ProvidersSettings = ({ theme }) => {
           {providers.map(p => (
             <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
               <td style={{ padding: '12px', fontWeight: '600' }}>{p.name}</td>
-              <td style={{ padding: '12px' }}>{p.code}</td>
-              <td style={{ padding: '12px' }}>{p.contact}</td>
-              <td style={{ padding: '12px' }}>{p.phone}</td>
+              <td style={{ padding: '12px' }}>{p.classification || 'No especificada'}</td>
               <td style={{ padding: '12px' }}>
                 <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
                   {p.active ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
               <td style={{ padding: '12px' }}>
-                <button onClick={() => { setEditing(p.id); setFormData({ name: p.name, code: p.code, contact: p.contact, phone: p.phone }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                <button onClick={() => { setEditing(p.id); setFormData({ name: p.name, classification: p.classification || '' }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
                   <Edit size={14} />
                 </button>
                 <button onClick={() => setProviders(providers.filter(pr => pr.id !== p.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
@@ -4858,56 +4946,240 @@ const ProductsSettings = ({ theme }) => {
   );
 };
 
-const ClientsSettings = ({ theme }) => {
+const ClientsSettings = ({ 
+  theme,
+  showNewClientModal,
+  setShowNewClientModal,
+  clientsByGroup
+}) => {
   const [clients, setClients] = useState([
-    { id: 1, name: 'Pollería El Rey', route: 'El Alto Norte', contact: 'rey@email.com', phone: '+591 71234567', active: true },
-    { id: 2, name: 'Doña Juana', route: 'El Alto Sur', contact: 'juana@email.com', phone: '+591 71234568', active: true },
-    { id: 3, name: 'Mercado Central - Puesto 4', route: 'La Paz Centro', contact: 'mercado@email.com', phone: '+591 71234569', active: true },
+    { id: 1, name: 'Pollería El Rey', route: 'El Alto Norte', group: 'Grupo A', contact: 'rey@email.com', phone: '+591 71234567', active: true },
+    { id: 2, name: 'Doña Juana', route: 'El Alto Sur', group: 'Grupo B', contact: 'juana@email.com', phone: '+591 71234568', active: true },
+    { id: 3, name: 'Mercado Central - Puesto 4', route: 'La Paz Centro', group: 'Grupo A', contact: 'mercado@email.com', phone: '+591 71234569', active: true },
   ]);
+  const [groups, setGroups] = useState([
+    { id: 1, name: 'Grupo A', description: 'Clientes principales del norte', active: true },
+    { id: 2, name: 'Grupo B', description: 'Clientes del sur', active: true },
+  ]);
+  const [activeTab, setActiveTab] = useState('clients');
+  const [showNewGroupForm, setShowNewGroupForm] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupRoute, setNewGroupRoute] = useState('');
 
   return (
     <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Clientes</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={16} /> Nuevo Cliente
+        <button onClick={() => activeTab === 'clients' ? setShowNewClientModal(true) : setShowNewGroupForm(true)} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> {activeTab === 'clients' ? 'Nuevo Cliente' : 'Nuevo Grupo'}
         </button>
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Ruta</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Contacto</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map(c => (
-            <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{c.name}</td>
-              <td style={{ padding: '12px' }}>{c.route}</td>
-              <td style={{ padding: '12px' }}>{c.contact}</td>
-              <td style={{ padding: '12px' }}>{c.phone}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: c.active ? '#dcfce7' : '#fee2e2', color: c.active ? '#166534' : '#991b1b' }}>
-                  {c.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
-                  <Trash2 size={14} />
-                </button>
-              </td>
+
+      {/* Pestañas */}
+      <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
+        <button 
+          onClick={() => setActiveTab('clients')}
+          style={{ 
+            padding: '10px 20px', 
+            border: 'none', 
+            backgroundColor: activeTab === 'clients' ? theme.primary : 'transparent', 
+            color: activeTab === 'clients' ? 'white' : theme.textMain, 
+            borderRadius: '6px 6px 0 0', 
+            fontWeight: 'bold', 
+            cursor: 'pointer' 
+          }}
+        >
+          Clientes
+        </button>
+        <button 
+          onClick={() => setActiveTab('groups')}
+          style={{ 
+            padding: '10px 20px', 
+            border: 'none', 
+            backgroundColor: activeTab === 'groups' ? theme.primary : 'transparent', 
+            color: activeTab === 'groups' ? 'white' : theme.textMain, 
+            borderRadius: '6px 6px 0 0', 
+            fontWeight: 'bold', 
+            cursor: 'pointer' 
+          }}
+        >
+          Grupos
+        </button>
+      </div>
+
+      {/* Tabla de Clientes */}
+      {activeTab === 'clients' && (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Ruta</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {clients.map(c => (
+              <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '12px', fontWeight: '600' }}>{c.name}</td>
+                <td style={{ padding: '12px' }}>{c.route}</td>
+                <td style={{ padding: '12px' }}>{c.phone}</td>
+                <td style={{ padding: '12px' }}>
+                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: c.active ? '#dcfce7' : '#fee2e2', color: c.active ? '#166534' : '#991b1b' }}>
+                    {c.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px' }}>
+                  <button onClick={() => alert('Funcionalidad próximamente')} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                    <Edit size={14} />
+                  </button>
+                  <button onClick={() => setClients(clients.filter(cl => cl.id !== c.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Formulario de Nuevo Grupo */}
+      {activeTab === 'groups' && showNewGroupForm && (
+        <Card style={{ marginBottom: '20px', padding: '20px' }}>
+          <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Nuevo Grupo</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                NOMBRE DEL GRUPO *
+              </label>
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Ingrese el nombre del grupo"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                RUTA *
+              </label>
+              <select
+                value={newGroupRoute}
+                onChange={(e) => setNewGroupRoute(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="">Seleccionar Ruta...</option>
+                <option value="El Alto - Zona Norte">El Alto - Zona Norte</option>
+                <option value="El Alto - Zona Sur">El Alto - Zona Sur</option>
+                <option value="La Paz - Centro">La Paz - Centro</option>
+                <option value="La Paz - Zona Norte">La Paz - Zona Norte</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNewGroupForm(false);
+                  setNewGroupName('');
+                  setNewGroupRoute('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'white',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (!newGroupName.trim() || !newGroupRoute) {
+                    alert('Por favor complete todos los campos obligatorios');
+                    return;
+                  }
+                  setGroups([...groups, { 
+                    id: Date.now(), 
+                    name: newGroupName, 
+                    description: `Grupo de ${newGroupRoute}`, 
+                    active: true 
+                  }]);
+                  setShowNewGroupForm(false);
+                  setNewGroupName('');
+                  setNewGroupRoute('');
+                  alert(`Grupo "${newGroupName}" creado exitosamente`);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: theme.primary,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Crear Grupo
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Tabla de Grupos */}
+      {activeTab === 'groups' && (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Descripción</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map(g => (
+              <tr key={g.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '12px', fontWeight: '600' }}>{g.name}</td>
+                <td style={{ padding: '12px' }}>{g.description}</td>
+                <td style={{ padding: '12px' }}>
+                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: g.active ? '#dcfce7' : '#fee2e2', color: g.active ? '#166534' : '#991b1b' }}>
+                    {g.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px' }}>
+                  <button onClick={() => alert('Funcionalidad próximamente')} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                    <Edit size={14} />
+                  </button>
+                  <button onClick={() => setGroups(groups.filter(gr => gr.id !== g.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </Card>
   );
 };
