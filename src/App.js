@@ -4748,10 +4748,7 @@ const SettingsView = ({
     { id: 'products', label: 'Productos', icon: Box },
     { id: 'clients', label: 'Clientes', icon: UserCircle },
     { id: 'vehicles', label: 'Vehículos', icon: Truck },
-    { id: 'drivers', label: 'Choferes', icon: Users },
-    { id: 'warehouses', label: 'Almacenes', icon: Building2 },
-    { id: 'prices', label: 'Precios', icon: DollarSign },
-    { id: 'baskets', label: 'Canastos', icon: Archive },
+    { id: 'baskets', label: 'Contenedores', icon: Archive },
     { id: 'users', label: 'Usuarios', icon: UserCircle },
   ];
 
@@ -4796,9 +4793,6 @@ const SettingsView = ({
         clientsByGroup={clientsByGroup}
       />}
       {activeSection === 'vehicles' && <VehiclesSettings theme={theme} />}
-      {activeSection === 'drivers' && <DriversSettings theme={theme} />}
-      {activeSection === 'warehouses' && <WarehousesSettings theme={theme} />}
-      {activeSection === 'prices' && <PricesSettings theme={theme} />}
       {activeSection === 'baskets' && <BasketsSettings theme={theme} />}
       {activeSection === 'users' && <UsersSettings theme={theme} />}
     </div>
@@ -4895,51 +4889,332 @@ const ProvidersSettings = ({ theme }) => {
 };
 
 const ProductsSettings = ({ theme }) => {
-  const [products, setProducts] = useState([
-    { code: 104, name: 'Rojo', color: '#ef4444', active: true },
-    { code: 105, name: 'Blanco', color: '#ffffff', active: true },
-    { code: 106, name: 'Amarillo', color: '#facc15', active: true },
-    { code: 107, name: 'Verde', color: '#22c55e', active: true },
-    { code: 108, name: 'Azul', color: '#3b82f6', active: true },
-    { code: 109, name: 'Negro', color: '#000000', active: true },
-    { code: 110, name: 'Menudencia', color: '#8b5cf6', active: true },
+  const [productCategories, setProductCategories] = useState([
+    
+    {
+      id: 5,
+      name: 'POLLO SOFIA',
+      products: [
+        '104',
+        '105',
+        '106',
+        '107',
+        '108',
+        '109',
+        'menudencia'
+      ]
+    },
+    {
+      id: 6,
+      name: 'POLLO AVC',
+      products: [
+        'cinta',
+        'verde',
+        'amarilla Segunda',
+        'azul',
+        'negro',
+        'blanco',
+        'rojo',
+        'menudencia'
+      ]
+    },
+    {
+      id: 1,
+      name: 'OTROS SOFIA',
+      products: [
+        'pechuga',
+        'filete de Pollo',
+        'pierna muslo',
+        'ala',
+        'trozado mix',
+        'patitas',
+        'higado'
+      ]
+    },
+    {
+      id: 8,
+      name: 'OTROS AVC',
+      products: [
+        'ala',
+        'pierna muslo',
+        'pechuga',
+        'cazuela',
+        'cuello',
+        'higado',
+        'alas Segunda'
+      ]
+    },
+    {
+      id: 2,
+      name: 'PROCESADOS',
+      products: [
+        'chorizo',
+        'salchicha bonnisima',
+        'mortadela primavera',
+        'nuggets de Pollo',
+        'milanesa americana',
+        'hambuerguesas'
+      ]
+    },
+    {
+      id: 3,
+      name: 'HUEVO',
+      products: [
+        'extracto',
+        'primera',
+        'Segunda',
+        'Terceracuarta',
+        'quinta'
+      ]
+    },
+    {
+      id: 4,
+      name: 'CERDO',
+      products: [
+        'cerdo entero',
+        'chuletas de cerdo'
+      ]
+    },
+    {
+      id: 7,
+      name: 'POLLO CONGELADO',
+      products: [
+        '500117',
+        '500116',
+        '500114'
+      ]
+    }
   ]);
+
+  // Estados para formularios
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+  const [showNewProductForm, setShowNewProductForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newProductName, setNewProductName] = useState('');
+  const [selectedCategoryForProduct, setSelectedCategoryForProduct] = useState('');
 
   return (
     <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Productos / Categorías</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Color</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.code} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: 'bold' }}>{p.code}</td>
-              <td style={{ padding: '12px' }}>{p.name}</td>
-              <td style={{ padding: '12px' }}>
-                <div style={{ width: '40px', height: '16px', backgroundColor: p.color, borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
-                  {p.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Productos</h3>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => setShowNewProductForm(true)}
+            style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={16} /> Nuevo Producto
+          </button>
+          <button 
+            onClick={() => setShowNewCategoryForm(true)}
+            style={{ backgroundColor: '#6b7280', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={16} /> Nueva Categoría
+          </button>
+        </div>
+      </div>
+
+      {/* Formulario de Nueva Categoría */}
+      {showNewCategoryForm && (
+        <Card style={{ marginBottom: '20px', padding: '20px' }}>
+          <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Nueva Categoría</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                NOMBRE DE LA CATEGORÍA *
+              </label>
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Ingrese el nombre de la categoría"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNewCategoryForm(false);
+                  setNewCategoryName('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'white',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (!newCategoryName.trim()) {
+                    alert('Por favor ingrese el nombre de la categoría');
+                    return;
+                  }
+                  const newId = Math.max(...productCategories.map(c => c.id)) + 1;
+                  setProductCategories([...productCategories, { 
+                    id: newId, 
+                    name: newCategoryName.toUpperCase(), 
+                    products: [] 
+                  }]);
+                  setShowNewCategoryForm(false);
+                  setNewCategoryName('');
+                  alert(`Categoría "${newCategoryName}" creada exitosamente`);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Crear Categoría
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Formulario de Nuevo Producto */}
+      {showNewProductForm && (
+        <Card style={{ marginBottom: '20px', padding: '20px' }}>
+          <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Nuevo Producto</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                CATEGORÍA *
+              </label>
+              <select
+                value={selectedCategoryForProduct}
+                onChange={(e) => setSelectedCategoryForProduct(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="">Seleccionar Categoría...</option>
+                {productCategories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                NOMBRE DEL PRODUCTO *
+              </label>
+              <input
+                type="text"
+                value={newProductName}
+                onChange={(e) => setNewProductName(e.target.value)}
+                placeholder="Ingrese el nombre del producto"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNewProductForm(false);
+                  setNewProductName('');
+                  setSelectedCategoryForProduct('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'white',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedCategoryForProduct || !newProductName.trim()) {
+                    alert('Por favor complete todos los campos obligatorios');
+                    return;
+                  }
+                  setProductCategories(productCategories.map(category => 
+                    category.id === parseInt(selectedCategoryForProduct)
+                      ? { ...category, products: [...category.products, newProductName] }
+                      : category
+                  ));
+                  setShowNewProductForm(false);
+                  setNewProductName('');
+                  setSelectedCategoryForProduct('');
+                  alert(`Producto "${newProductName}" agregado exitosamente`);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: theme.primary,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Crear Producto
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {productCategories.map(category => (
+          <div key={category.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.primary }}>{category.name}</h4>
+            </div>
+            <div style={{ padding: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                {category.products.map((product, index) => (
+                  <div key={index} style={{ 
+                    padding: '12px', 
+                    backgroundColor: '#f8fafc', 
+                    borderRadius: '6px', 
+                    border: '1px solid #e2e8f0',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    {product}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 };
@@ -5368,153 +5643,6 @@ const VehiclesSettings = ({ theme }) => {
   );
 };
 
-const DriversSettings = ({ theme }) => {
-  const [drivers, setDrivers] = useState([
-    { id: 1, name: 'Juan Pérez', license: 'ABC123', phone: '+591 71234567', active: true },
-    { id: 2, name: 'María González', license: 'DEF456', phone: '+591 71234568', active: true },
-    { id: 3, name: 'Carlos Ramírez', license: 'GHI789', phone: '+591 71234569', active: true },
-  ]);
-
-  return (
-    <Card>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Choferes</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={16} /> Nuevo Chofer
-        </button>
-      </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Licencia</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Teléfono</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {drivers.map(d => (
-            <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{d.name}</td>
-              <td style={{ padding: '12px' }}>{d.license}</td>
-              <td style={{ padding: '12px' }}>{d.phone}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: d.active ? '#dcfce7' : '#fee2e2', color: d.active ? '#166534' : '#991b1b' }}>
-                  {d.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
-                  <Trash2 size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
-  );
-};
-
-const WarehousesSettings = ({ theme }) => {
-  const [warehouses, setWarehouses] = useState([
-    { id: 1, name: 'Almacén Central La Paz', section: 'Zona A', address: 'Av. Principal 123', active: true },
-    { id: 2, name: 'Depósito El Alto', section: 'Zona Frío', address: 'Calle Comercio 456', active: true },
-    { id: 3, name: 'Depósito Viacha', section: 'Principal', address: 'Carretera Viacha Km 5', active: true },
-  ]);
-
-  return (
-    <Card>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Almacenes / Depósitos</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={16} /> Nuevo Almacén
-        </button>
-      </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Sector</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Dirección</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {warehouses.map(w => (
-            <tr key={w.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{w.name}</td>
-              <td style={{ padding: '12px' }}>{w.section}</td>
-              <td style={{ padding: '12px' }}>{w.address}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: w.active ? '#dcfce7' : '#fee2e2', color: w.active ? '#166534' : '#991b1b' }}>
-                  {w.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
-                  <Trash2 size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
-  );
-};
-
-const PricesSettings = ({ theme }) => {
-  const [prices, setPrices] = useState([
-    { provider: 'SOFIA', code: 104, basePrice: 12.50, active: true },
-    { provider: 'SOFIA', code: 107, basePrice: 13.00, active: true },
-    { provider: 'PIO', code: 104, basePrice: 12.00, active: true },
-  ]);
-
-  return (
-    <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Precios</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Proveedor</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Código</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Precio Base (Bs/kg)</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {prices.map((p, idx) => (
-            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{p.provider}</td>
-              <td style={{ padding: '12px' }}>{p.code}</td>
-              <td style={{ padding: '12px' }}>Bs {p.basePrice.toFixed(2)}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
-                  {p.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
-  );
-};
 
 const BasketsSettings = ({ theme }) => {
   const [basketConfig, setBasketConfig] = useState({
@@ -5525,7 +5653,7 @@ const BasketsSettings = ({ theme }) => {
 
   return (
     <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Canastos</h3>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Contenedores</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>TOTAL DE CANASTOS EN INVENTARIO</label>
