@@ -4747,7 +4747,6 @@ const SettingsView = ({
     { id: 'providers', label: 'Proveedores', icon: Package },
     { id: 'products', label: 'Productos', icon: Box },
     { id: 'clients', label: 'Clientes', icon: UserCircle },
-    { id: 'routes', label: 'Rutas', icon: MapPin },
     { id: 'vehicles', label: 'Vehículos', icon: Truck },
     { id: 'drivers', label: 'Choferes', icon: Users },
     { id: 'warehouses', label: 'Almacenes', icon: Building2 },
@@ -4796,7 +4795,6 @@ const SettingsView = ({
         setShowNewClientModal={setShowNewClientModal}
         clientsByGroup={clientsByGroup}
       />}
-      {activeSection === 'routes' && <RoutesSettings theme={theme} />}
       {activeSection === 'vehicles' && <VehiclesSettings theme={theme} />}
       {activeSection === 'drivers' && <DriversSettings theme={theme} />}
       {activeSection === 'warehouses' && <WarehousesSettings theme={theme} />}
@@ -5184,77 +5182,161 @@ const ClientsSettings = ({
   );
 };
 
-const RoutesSettings = ({ theme }) => {
-  const [routes, setRoutes] = useState([
-    { id: 1, name: 'El Alto Norte', description: 'Zona norte de El Alto', active: true },
-    { id: 2, name: 'El Alto Sur', description: 'Zona sur de El Alto', active: true },
-    { id: 3, name: 'La Paz Centro', description: 'Centro de La Paz', active: true },
-  ]);
 
-  return (
-    <Card>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Rutas / Grupos</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={16} /> Nueva Ruta
-        </button>
-      </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Descripción</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {routes.map(r => (
-            <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '12px', fontWeight: '600' }}>{r.name}</td>
-              <td style={{ padding: '12px' }}>{r.description}</td>
-              <td style={{ padding: '12px' }}>
-                <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: r.active ? '#dcfce7' : '#fee2e2', color: r.active ? '#166534' : '#991b1b' }}>
-                  {r.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td style={{ padding: '12px' }}>
-                <button style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
-                  <Edit size={14} />
-                </button>
-                <button style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
-                  <Trash2 size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
-  );
-};
 
 const VehiclesSettings = ({ theme }) => {
   const [vehicles, setVehicles] = useState([
-    { id: 'VH-01', plate: '1234-ABC', capacity: '5000 kg', status: 'Activo', active: true },
-    { id: 'VH-02', plate: '5678-DEF', capacity: '4500 kg', status: 'Activo', active: true },
-    { id: 'VH-03', plate: '9999-XYZ', capacity: '6000 kg', status: 'Mantenimiento', active: false },
+    { id: 'VH-01', plate: '1234-ABC', capacity: '1234-ABC', status: 'Activo', active: true },
+    { id: 'VH-02', plate: '5678-DEF', capacity: '5678-DEF', status: 'Activo', active: true },
+    { id: 'VH-03', plate: '9999-XYZ', capacity: '9999-XYZ', status: 'Mantenimiento', active: false },
   ]);
+  const [showNewVehicleForm, setShowNewVehicleForm] = useState(false);
+  const [newVehicleName, setNewVehicleName] = useState('');
+  const [newVehiclePlate, setNewVehiclePlate] = useState('');
+  const [newVehicleCapacity, setNewVehicleCapacity] = useState('');
 
   return (
     <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Vehículos</h3>
-        <button style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button onClick={() => setShowNewVehicleForm(true)} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Plus size={16} /> Nuevo Vehículo
         </button>
       </div>
+
+      {/* Formulario de Nuevo Vehículo */}
+      {showNewVehicleForm && (
+        <Card style={{ marginBottom: '20px', padding: '20px' }}>
+          <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Nuevo Vehículo</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                NOMBRE DEL VEHÍCULO *
+              </label>
+              <input
+                type="text"
+                value={newVehicleName}
+                onChange={(e) => setNewVehicleName(e.target.value)}
+                placeholder="Ingrese el nombre del vehículo"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                PLACA *
+              </label>
+              <input
+                type="text"
+                value={newVehiclePlate}
+                onChange={(e) => setNewVehiclePlate(e.target.value)}
+                placeholder="Ingrese la placa del vehículo"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>
+                Monnet *
+              </label>
+              <select
+                value={newVehicleCapacity}
+                onChange={(e) => setNewVehicleCapacity(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="">Sincronizar con monnet</option>
+                <option value="1111ABC">1111ABC</option>
+                <option value="2222ABC">2222ABC</option>
+                <option value="3333ABC">3333ABC</option>
+                <option value="4444ABC">4444ABC</option>
+                <option value="5555ABC">5555ABC</option>
+                <option value="6666ABC">6666ABC</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowNewVehicleForm(false);
+                  setNewVehicleName('');
+                  setNewVehiclePlate('');
+                  setNewVehicleCapacity('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'white',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (!newVehicleName.trim() || !newVehiclePlate.trim() || !newVehicleCapacity) {
+                    alert('Por favor complete todos los campos obligatorios');
+                    return;
+                  }
+                  const newId = `VH-${String(vehicles.length + 1).padStart(2, '0')}`;
+                  setVehicles([...vehicles, { 
+                    id: newId, 
+                    plate: newVehiclePlate, 
+                    capacity: newVehicleCapacity, 
+                    status: 'Activo',
+                    active: true 
+                  }]);
+                  setShowNewVehicleForm(false);
+                  setNewVehicleName('');
+                  setNewVehiclePlate('');
+                  setNewVehicleCapacity('');
+                  alert(`Vehículo "${newVehicleName}" creado exitosamente`);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: theme.primary,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                Crear Vehículo
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
             <th style={{ padding: '12px', textAlign: 'left' }}>ID</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Placa</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Capacidad</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>monnet</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
           </tr>
