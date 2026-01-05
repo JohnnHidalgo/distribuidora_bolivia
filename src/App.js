@@ -2212,9 +2212,11 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             h1 { color: #e11d48; }
+            h2 { color: #1f2937; margin-top: 30px; }
             .details { margin: 20px 0; }
-            .codes { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
-            .code { border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 120px; }
+            .codes-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .codes-table th, .codes-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            .codes-table th { background-color: #f3f4f6; font-weight: bold; }
             .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
           </style>
         </head>
@@ -2223,27 +2225,60 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
           <div class="details">
             <p><strong>Cliente:</strong> ${client.name}</p>
             <p><strong>Grupo:</strong> ${client.group}</p>
-            <p><strong>Asignación:</strong> ${assignment.date} - ${assignment.provider}</p>
-            <p><strong>Precio de Venta:</strong> Bs ${sellingPrice.toFixed(2)} / kg</p>
+            <p><strong>Encargado:</strong> Juan Perez</p>
           </div>
           <h2>Productos Entregados</h2>
-          <div class="codes">
-            ${[104, 105, 106, 107, 108, 109, 110].map(code => `
-              <div class="code">
-                <div><strong>Código ${code}</strong></div>
-                <div>Cajas: ${getClientTotal(client.id, code, 'boxes')}</div>
-                <div>Unidades: ${getClientTotal(client.id, code, 'units')}</div>
-                <div>Peso Bruto: ${getClientTotal(client.id, code, 'grossWeight').toFixed(2)} kg</div>
-                <div>Peso Neto: ${getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg</div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="total">
-            <p>Total Cajas: ${totalBoxes}</p>
-            <p>Total Unidades: ${totalUnits}</p>
-            <p>Total Peso Bruto: ${totalGrossWeight.toFixed(2)} kg</p>
-            <p>Total Peso Neto: ${totalNetWeight.toFixed(2)} kg</p>
-            <p>Total Precio de Venta: Bs ${totalSelling.toFixed(2)}</p>
+          <table class="codes-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cajas</th>
+                <th>Unidades</th>
+                <th>Peso Bruto (kg)</th>
+                <th>Peso Neto (kg)</th>
+                <th>Total BS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[104, 105, 106, 107, 108, 109, 110].map(code => {
+                const netWeight = getClientTotal(client.id, code, 'netWeight');
+                const codePrice = deferredPrices[client.id]?.[code] || sellingPrice;
+                const codeTotal = netWeight * codePrice;
+                return `
+                  <tr>
+                    <td><strong>${code}</strong></td>
+                    <td>${getClientTotal(client.id, code, 'boxes')}</td>
+                    <td>${getClientTotal(client.id, code, 'units')}</td>
+                    <td>${getClientTotal(client.id, code, 'grossWeight').toFixed(2)}</td>
+                    <td>${netWeight.toFixed(2)}</td>
+                    <td>Bs ${codeTotal.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+              <tr style="font-weight: bold; background-color: #f3f4f6;">
+                <td><strong>TOTAL</strong></td>
+                <td>${totalBoxes}</td>
+                <td>${totalUnits}</td>
+                <td>${totalGrossWeight.toFixed(2)}</td>
+                <td>${totalNetWeight.toFixed(2)}</td>
+                <td>Bs ${totalSelling.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-weight: bold; color: #495057;">Total cajas deuda:</span>
+              <span style="font-weight: bold; color: #dc3545;">${totalBoxes}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+              <span style="font-weight: bold; color: #495057;">Total deuda:</span>
+              <span style="font-weight: bold; color: #dc3545;">Bs ${totalSelling.toFixed(2)}</span>
+            </div>
+            <div style="text-align: center;">
+              <p style="margin: 10px 0; font-size: 14px; color: #6c757d;">Puedes pagar por este medio:</p>
+              <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=puedes+pagar+por+este+medio" alt="Código QR para pago" style="border: 2px solid #dee2e6; border-radius: 8px;" />
+            </div>
           </div>
         </body>
       </html>
@@ -4615,10 +4650,9 @@ const TableRow = ({ client, req, asig, status }) => (
 
 // Vista de Configuración
 const SettingsView = ({ theme }) => {
-  const [activeSection, setActiveSection] = useState('general');
+  const [activeSection, setActiveSection] = useState('providers');
   
   const sections = [
-    { id: 'general', label: 'General', icon: Settings },
     { id: 'providers', label: 'Proveedores', icon: Package },
     { id: 'products', label: 'Productos', icon: Box },
     { id: 'clients', label: 'Clientes', icon: UserCircle },
@@ -4663,7 +4697,6 @@ const SettingsView = ({ theme }) => {
         })}
       </div>
 
-      {activeSection === 'general' && <GeneralSettings theme={theme} />}
       {activeSection === 'providers' && <ProvidersSettings theme={theme} />}
       {activeSection === 'products' && <ProductsSettings theme={theme} />}
       {activeSection === 'clients' && <ClientsSettings theme={theme} />}
@@ -4677,54 +4710,6 @@ const SettingsView = ({ theme }) => {
     </div>
   );
 };
-
-// Componentes de cada sección de configuración
-const GeneralSettings = ({ theme }) => {
-  const [cutoffTime, setCutoffTime] = useState('10:00');
-  const [companyName, setCompanyName] = useState('Distribuidora Bolivia');
-  const [timezone, setTimezone] = useState('America/La_Paz');
-
-  return (
-    <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración General</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE DE LA EMPRESA</label>
-          <input
-            type="text"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>HORA DE CORTE</label>
-          <input
-            type="time"
-            value={cutoffTime}
-            onChange={(e) => setCutoffTime(e.target.value)}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '200px' }}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>ZONA HORARIA</label>
-          <select
-            value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
-          >
-            <option value="America/La_Paz">America/La_Paz (GMT-4)</option>
-            <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
-          </select>
-        </div>
-        <button style={{ alignSelf: 'flex-start', backgroundColor: theme.primary, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Save size={16} /> Guardar Configuración
-        </button>
-      </div>
-    </Card>
-  );
-};
-
 const ProvidersSettings = ({ theme }) => {
   const [providers, setProviders] = useState([
     { id: 1, name: 'Avícola Sofía', code: 'SOFIA', contact: 'contacto@sofia.com', phone: '+591 2 1234567', active: true },
