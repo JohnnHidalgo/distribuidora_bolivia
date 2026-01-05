@@ -5645,48 +5645,122 @@ const VehiclesSettings = ({ theme }) => {
 
 
 const BasketsSettings = ({ theme }) => {
-  const [basketConfig, setBasketConfig] = useState({
-    totalBaskets: 2200,
-    costPerBasket: 25.00,
-    maxDaysInClient: 7,
-  });
+  const [baskets, setBaskets] = useState([
+    { id: 1, name: 'Canasto Grande', weight: 2.5, isDefault: true },
+    { id: 2, name: 'Canasto Pequeño', weight: 1.0, isDefault: false },
+    { id: 3, name: 'Caja Mediana', weight: 1.8, isDefault: false },
+  ]);
+  const [editing, setEditing] = useState(null);
+  const [formData, setFormData] = useState({ name: '', weight: '', isDefault: false });
+
+  const handleSave = () => {
+    if (editing) {
+      if (formData.isDefault) {
+        setBaskets(baskets.map(b => ({ ...b, isDefault: b.id === editing })));
+      }
+      setBaskets(baskets.map(b => b.id === editing ? { ...b, ...formData } : b));
+    } else {
+      const newId = Math.max(...baskets.map(b => b.id)) + 1;
+      if (formData.isDefault) {
+        setBaskets([...baskets.map(b => ({ ...b, isDefault: false })), { id: newId, ...formData }]);
+      } else {
+        setBaskets([...baskets, { id: newId, ...formData }]);
+      }
+    }
+    setEditing(null);
+    setFormData({ name: '', weight: '', isDefault: false });
+  };
 
   return (
     <Card>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Configuración de Contenedores</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>TOTAL DE CANASTOS EN INVENTARIO</label>
-          <input
-            type="number"
-            value={basketConfig.totalBaskets}
-            onChange={(e) => setBasketConfig({...basketConfig, totalBaskets: parseInt(e.target.value) || 0})}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR CANASTO (Bs)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={basketConfig.costPerBasket}
-            onChange={(e) => setBasketConfig({...basketConfig, costPerBasket: parseFloat(e.target.value) || 0})}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>DÍAS MÁXIMOS EN CLIENTE (ANTES DE MORA)</label>
-          <input
-            type="number"
-            value={basketConfig.maxDaysInClient}
-            onChange={(e) => setBasketConfig({...basketConfig, maxDaysInClient: parseInt(e.target.value) || 0})}
-            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', width: '300px' }}
-          />
-        </div>
-        <button style={{ alignSelf: 'flex-start', backgroundColor: theme.primary, color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Save size={16} /> Guardar Configuración
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Contenedores</h3>
+        <button
+          onClick={() => setEditing('new')}
+          style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Plus size={16} /> Agregar Contenedor
         </button>
       </div>
+      {(editing === 'new' || editing) && (
+        <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE</label>
+              <input 
+                type="text" 
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PESO (DESTARE) KG</label>
+              <input 
+                type="number" 
+                step="0.1"
+                value={formData.weight} 
+                onChange={(e) => setFormData({...formData, weight: parseFloat(e.target.value) || 0})} 
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input 
+                type="checkbox" 
+                checked={formData.isDefault} 
+                onChange={(e) => setFormData({...formData, isDefault: e.target.checked})} 
+                style={{ width: '16px', height: '16px' }} 
+              />
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CONTENEDOR POR DEFECTO</label>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleSave} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <Save size={14} /> Guardar
+            </button>
+            <button onClick={() => { setEditing(null); setFormData({ name: '', weight: '', isDefault: false }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Peso (Destare)</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Por Defecto</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {baskets.map(b => (
+            <tr key={b.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <td style={{ padding: '12px', fontWeight: '600' }}>{b.name}</td>
+              <td style={{ padding: '12px' }}>{b.weight} kg</td>
+              <td style={{ padding: '12px' }}>
+                {b.isDefault ? (
+                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#166534' }}>
+                    Sí
+                  </span>
+                ) : (
+                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                    No
+                  </span>
+                )}
+              </td>
+              <td style={{ padding: '12px' }}>
+                <button onClick={() => { setEditing(b.id); setFormData({ name: b.name, weight: b.weight, isDefault: b.isDefault }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                  <Edit size={14} />
+                </button>
+                <button onClick={() => setBaskets(baskets.filter(basket => basket.id !== b.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Card>
   );
 };
