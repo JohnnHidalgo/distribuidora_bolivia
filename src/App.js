@@ -2580,26 +2580,31 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
                                 {[104, 105, 106, 107, 108, 109, 110].map((code) => {
                                   const hasWeighings = (deliveries[client.id]?.[code] || []).length > 0;
                                   return (
-                                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', minWidth: '100px' }}>
-                                      <div style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</div>
+                                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                                      </div>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                          <div style={{ flex: 1, padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 'bold', color: '#64748b', marginBottom: '2px' }}>CAJAS</div>
-                                            <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>{getClientTotal(client.id, code, 'boxes')}</div>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                                            {getClientTotal(client.id, code, 'boxes')}
                                           </div>
-                                          <div style={{ flex: 1, padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 'bold', color: '#64748b', marginBottom: '2px' }}>UNIDADES</div>
-                                            <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.primary }}>{getClientTotal(client.id, code, 'units')}</div>
-                                          </div>
+                                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
                                         </div>
-                                        <div style={{ fontSize: '9px', color: '#64748b', textAlign: 'center', padding: '4px', backgroundColor: '#f1f5f9', borderRadius: '3px' }}>
-                                          Peso Neto: {getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                                            {getClientTotal(client.id, code, 'units')}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                                          <div style={{ fontWeight: '600' }}>{(assignment.details[code]?.grossWeight || 0).toFixed(2)} kg Bruto</div>
+                                          <div style={{ fontWeight: '600' }}>{getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg Neto</div>
                                         </div>
                                       </div>
                                       {deferredPricing[client.id] && (
-                                        <div style={{ marginTop: '4px' }}>
-                                          <div style={{ fontSize: '8px', fontWeight: 'bold', color: '#92400e', textAlign: 'center', marginBottom: '2px' }}>PRECIO DIFERIDO</div>
+                                        <div style={{ position: 'relative', marginTop: '4px' }}>
                                           <input
                                             type="number"
                                             step="0.01"
@@ -2607,7 +2612,7 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
                                             value={(deferredPrices[client.id]?.[code] || '')}
                                             onChange={(e) => updateDeferredPrice(client.id, code, e.target.value)}
                                             style={{
-                                              width: '100%',
+                                              width: '60px',
                                               padding: '3px',
                                               borderRadius: '3px',
                                               border: '1px solid #d97706',
@@ -2617,6 +2622,7 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
                                               backgroundColor: 'white'
                                             }}
                                           />
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#92400e' }}>PRECIO</span>
                                         </div>
                                       )}
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
@@ -2634,45 +2640,113 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
                                           MENUDENCIA
                                         </label>
                                       </div>
-                                      {hasWeighings && (
-                                        <div style={{ marginTop: '4px', fontSize: '9px', fontWeight: 'bold', color: theme.primary }}>
-                                          Total Pesado: {getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg
-                                        </div>
-                                      )}
                                       <button onClick={() => addWeighing(client.id, code)} style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '10px' }}>
                                         Agregar Pesaje
                                       </button>
                                       {hasWeighings && (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                                           {(deliveries[client.id][code] || []).map((weighing, index) => (
-                                            <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '4px', backgroundColor: 'white', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                                            <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '9px', fontWeight: 'bold' }}>Pesaje {index + 1}:</span>
-                                                <button onClick={() => removeWeighing(client.id, code, index)} style={{ padding: '1px 4px', borderRadius: '2px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '8px' }}>×</button>
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Pesaje {index + 1}:</span>
+                                                <button onClick={() => removeWeighing(client.id, code, index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
                                               </div>
-                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                <input
-                                                  type="number"
-                                                  placeholder="Cajas"
-                                                  value={weighing.boxes || ''}
-                                                  onChange={(e) => updateWeighing(client.id, code, index, 'boxes', e.target.value)}
-                                                  style={{ width: '100%', padding: '2px', borderRadius: '2px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '9px', textAlign: 'center' }}
-                                                />
-                                                <input
-                                                  type="number"
-                                                  placeholder="Unidades"
-                                                  value={weighing.units || ''}
-                                                  onChange={(e) => updateWeighing(client.id, code, index, 'units', e.target.value)}
-                                                  style={{ width: '100%', padding: '2px', borderRadius: '2px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '9px', textAlign: 'center' }}
-                                                />
-                                                <input
-                                                  type="number"
-                                                  step="0.01"
-                                                  placeholder="Peso Neto"
-                                                  value={weighing.netWeight || ''}
-                                                  onChange={(e) => updateWeighing(client.id, code, index, 'netWeight', e.target.value)}
-                                                  style={{ width: '100%', padding: '2px', borderRadius: '2px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '9px', textAlign: 'center' }}
-                                                />
+                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <div style={{ position: 'relative' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={weighing.boxes || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'boxes', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                                
+                                                    <input
+                                                      type="checkbox"
+                                                      id={`offal-${client.id}-${code}`}
+                                                      checked={hasOffal[client.id]?.[code] || false}
+                                                      onChange={(e) => updateHasOffal(client.id, code, e.target.checked)}
+                                                      style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                    />
+                                                </div>
+
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={weighing.units || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'units', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                                  
+                                                  <button 
+                                                    onClick={() => {/* función para seleccionar contenedor */}}
+                                                      style={{ 
+                                                        padding: '6px', 
+                                                        borderRadius: '4px', 
+                                                        border: '1px solid #cbd5e1', 
+                                                        backgroundColor: 'white', 
+                                                        cursor: 'pointer', 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        justifyContent: 'center'
+                                                      }}
+                                                  >
+                                                    <Package size={14} color={theme.primary} />
+                                                  </button>
+                                                </div>
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    step="0.01"
+                                                    placeholder="0.00" 
+                                                    value={weighing.weight || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'weight', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <button 
+                                                    onClick={() => {/* función para conectar */}}
+                                                    style={{ 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      backgroundColor: 'white', 
+                                                      cursor: 'pointer', 
+                                                      display: 'flex', 
+                                                      alignItems: 'center', 
+                                                      justifyContent: 'center'
+                                                    }}
+                                                  >
+                                                    <Scale size={14} color={theme.primary} />
+                                                  </button>
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>KG</span>
+                                                </div>
                                               </div>
                                             </div>
                                           ))}
@@ -2883,7 +2957,7 @@ const PlanningView = ({ theme, assignment, onBack, onSavePlanning }) => {
                             <div style={{ position: 'relative' }}>
                               <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #d97706', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
                                 {totals.units}
-                              </div>b
+                              </div>
                               <span style={{ position: 'absolute', top: '-12px', left: '12px', fontSize: '7px', backgroundColor: '#f59e0b', padding: '0 2px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
                             </div>
                           </div>
