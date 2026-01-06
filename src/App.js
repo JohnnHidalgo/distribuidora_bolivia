@@ -35,7 +35,12 @@ import {
   Edit,
   X,
   Menu,
-  Scale
+  Scale,
+  FileText,
+  Calendar,
+  MessageSquare,
+  Paperclip,
+  CheckCircle
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -48,6 +53,419 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Simple in-memory store to share data between mockup components
+const ERPStore = {
+  accounts: [
+    { id: 1, code: '1.1', name: 'Caja', type: 'Activo', center: 'General', currency: 'BOB', active: true },
+    { id: 2, code: '4.1', name: 'Ventas', type: 'Ingreso', center: null, currency: 'BOB', active: true },
+    { id: 3, code: '5.1', name: 'Costos de Ventas', type: 'Gasto', center: 'Producción', currency: 'BOB', active: true },
+    { id: 4, code: '2.1', name: 'Proveedores', type: 'Pasivo', center: null, currency: 'BOB', active: true },
+    { id: 5, code: '3.1', name: 'Capital', type: 'Patrimonio', center: null, currency: 'BOB', active: true },
+    { id: 6, code: '6.1', name: 'Sueldos y Salarios', type: 'Gasto', center: 'General', currency: 'BOB', active: true }
+  ],
+  asientos: [
+    {
+      id: 1000,
+      fecha: '2025-11-15',
+      tipo: 'Factura',
+      glosa: 'Venta noviembre',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 4000, credito: 0 },
+        { cuenta: '4.1', centro: '', debito: 0, credito: 4000 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2025-11-15T10:00:00Z'
+    },
+    {
+      id: 1001,
+      fecha: '2025-12-01',
+      tipo: 'Factura',
+      glosa: 'Venta de productos',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 5000, credito: 0 },
+        { cuenta: '4.1', centro: '', debito: 0, credito: 5000 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2025-12-01T10:00:00Z'
+    },
+    {
+      id: 1002,
+      fecha: '2025-12-05',
+      tipo: 'Recibo',
+      glosa: 'Pago a proveedores',
+      lines: [
+        { cuenta: '5.1', centro: 'Producción', debito: 2000, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 2000 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2025-12-05T14:30:00Z'
+    },
+    {
+      id: 1003,
+      fecha: '2025-12-10',
+      tipo: 'Factura',
+      glosa: 'Compra de insumos',
+      lines: [
+        { cuenta: '2.1', centro: '', debito: 1500, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 1500 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2025-12-10T09:15:00Z'
+    },
+    {
+      id: 1004,
+      fecha: '2025-12-15',
+      tipo: 'Planilla',
+      glosa: 'Pago de planilla diciembre',
+      lines: [
+        { cuenta: '6.1', centro: 'General', debito: 3500, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 3500 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2025-12-15T16:00:00Z'
+    },
+    {
+      id: 1005,
+      fecha: '2026-01-02',
+      tipo: 'Factura',
+      glosa: 'Venta enero',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 3000, credito: 0 },
+        { cuenta: '4.1', centro: '', debito: 0, credito: 3000 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-02T11:00:00Z'
+    },
+    {
+      id: 1006,
+      fecha: '2026-01-10',
+      tipo: 'Recibo',
+      glosa: 'Ingreso capital',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 10000, credito: 0 },
+        { cuenta: '3.1', centro: '', debito: 0, credito: 10000 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2026-01-10T12:00:00Z'
+    },
+    {
+      id: 1007,
+      fecha: '2026-01-05',
+      tipo: 'Factura',
+      glosa: 'Compra de equipos',
+      lines: [
+        { cuenta: '2.1', centro: '', debito: 2500, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 2500 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-05T09:00:00Z'
+    },
+    {
+      id: 1008,
+      fecha: '2026-01-08',
+      tipo: 'Recibo',
+      glosa: 'Pago servicios',
+      lines: [
+        { cuenta: '5.1', centro: 'General', debito: 800, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 800 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-08T14:00:00Z'
+    },
+    {
+      id: 1009,
+      fecha: '2026-01-12',
+      tipo: 'Factura',
+      glosa: 'Venta adicional',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 4500, credito: 0 },
+        { cuenta: '4.1', centro: '', debito: 0, credito: 4500 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-12T10:30:00Z'
+    },
+    {
+      id: 1010,
+      fecha: '2026-01-15',
+      tipo: 'Recibo',
+      glosa: 'Pago alquiler oficina',
+      lines: [
+        { cuenta: '5.1', centro: 'Administrativo', debito: 1200, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 1200 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2026-01-15T09:00:00Z'
+    },
+    {
+      id: 1011,
+      fecha: '2026-01-18',
+      tipo: 'Factura',
+      glosa: 'Compra materia prima',
+      lines: [
+        { cuenta: '2.1', centro: '', debito: 3200, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 3200 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-18T14:20:00Z'
+    },
+    {
+      id: 1012,
+      fecha: '2026-01-20',
+      tipo: 'Recibo',
+      glosa: 'Venta mayorista',
+      lines: [
+        { cuenta: '1.1', centro: 'General', debito: 7500, credito: 0 },
+        { cuenta: '4.1', centro: '', debito: 0, credito: 7500 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2026-01-20T11:45:00Z'
+    },
+    {
+      id: 1013,
+      fecha: '2026-01-22',
+      tipo: 'Factura',
+      glosa: 'Gastos de transporte',
+      lines: [
+        { cuenta: '5.1', centro: 'Logística', debito: 950, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 950 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-22T16:10:00Z'
+    },
+    {
+      id: 1014,
+      fecha: '2026-01-25',
+      tipo: 'Recibo',
+      glosa: 'Pago dividendos',
+      lines: [
+        { cuenta: '3.1', centro: '', debito: 2000, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 2000 }
+      ],
+      estado: 'aprobado',
+      createdAt: '2026-01-25T13:30:00Z'
+    },
+    {
+      id: 1015,
+      fecha: '2026-01-28',
+      tipo: 'Factura',
+      glosa: 'Compra equipos oficina',
+      lines: [
+        { cuenta: '2.1', centro: '', debito: 1800, credito: 0 },
+        { cuenta: '1.1', centro: 'General', debito: 0, credito: 1800 }
+      ],
+      estado: 'borrador',
+      createdAt: '2026-01-28T10:15:00Z'
+    }
+  ],
+  employees: [
+    { id: 1, name: 'Juan Pérez', dni: '1234567', cargo: 'Vendedor', estado: 'Activo', sueldo: 3500 }
+  ],
+  bitacora: [],
+  closedPeriods: ['2025-11', '2025-12'],
+  cierreHistory: [
+    {
+      period: '2025-11',
+      when: '2025-12-01T08:00:00Z',
+      by: 'contador',
+      totalAsientos: 2,
+      balance: {
+        ingresos: 12500,
+        gastos: 4200,
+        resultado: 8300
+      },
+      asientosProcesados: [
+        {
+          id: 1000,
+          fecha: '2025-11-15',
+          tipo: 'Factura',
+          glosa: 'Venta noviembre',
+          total: 8000
+        },
+        {
+          id: 1001,
+          fecha: '2025-11-20',
+          tipo: 'Recibo',
+          glosa: 'Cobro venta',
+          total: 4500
+        }
+      ]
+    },
+    {
+      period: '2025-12',
+      when: '2026-01-02T10:30:00Z',
+      by: 'auditor',
+      totalAsientos: 4,
+      balance: {
+        ingresos: 19000,
+        gastos: 8200,
+        resultado: 10800
+      },
+      asientosProcesados: [
+        {
+          id: 1001,
+          fecha: '2025-12-01',
+          tipo: 'Factura',
+          glosa: 'Venta de productos',
+          total: 10000
+        },
+        {
+          id: 1002,
+          fecha: '2025-12-05',
+          tipo: 'Recibo',
+          glosa: 'Pago a proveedores',
+          total: 4000
+        },
+        {
+          id: 1003,
+          fecha: '2025-12-10',
+          tipo: 'Factura',
+          glosa: 'Compra de insumos',
+          total: 3000
+        },
+        {
+          id: 1004,
+          fecha: '2025-12-15',
+          tipo: 'Planilla',
+          glosa: 'Pago de planilla diciembre',
+          total: 7000
+        }
+      ]
+    }
+  ]
+};
+
+const ERP = {
+  addAccount(acc) {
+    const id = Date.now();
+    const newAcc = { id, ...acc };
+    ERPStore.accounts.push(newAcc);
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'create_account', before: null, after: newAcc });
+    return newAcc;
+  },
+  updateAccount(id, patch) {
+    const idx = ERPStore.accounts.findIndex(a => a.id === id);
+    if (idx === -1) return null;
+    const before = { ...ERPStore.accounts[idx] };
+    ERPStore.accounts[idx] = { ...ERPStore.accounts[idx], ...patch };
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'update_account', before, after: ERPStore.accounts[idx] });
+    return ERPStore.accounts[idx];
+  },
+  toggleAccount(id) {
+    const idx = ERPStore.accounts.findIndex(a => a.id === id);
+    if (idx === -1) return null;
+    const before = { ...ERPStore.accounts[idx] };
+    ERPStore.accounts[idx].active = !ERPStore.accounts[idx].active;
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'toggle_account', before, after: ERPStore.accounts[idx] });
+    return ERPStore.accounts[idx];
+  },
+  addAsiento(asiento) {
+    const id = Date.now();
+    const newAs = { id, createdAt: new Date().toISOString(), status: 'borrador', ...asiento };
+    ERPStore.asientos.push(newAs);
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'create_asiento', before: null, after: newAs });
+    return newAs;
+  },
+  approveAsiento(id, user='system') {
+    const a = ERPStore.asientos.find(x => x.id === id);
+    if (!a) return null;
+    const before = { ...a };
+    a.status = 'aprobado';
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: user, action: 'approve_asiento', before, after: a });
+    return a;
+  },
+  addEmployee(emp) {
+    const id = Date.now();
+    const newE = { id, ...emp };
+    ERPStore.employees.push(newE);
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'create_employee', before: null, after: newE });
+    return newE;
+  },
+  updateEmployee(id, patch) {
+    const idx = ERPStore.employees.findIndex(e => e.id === id);
+    if (idx === -1) return null;
+    const before = { ...ERPStore.employees[idx] };
+    ERPStore.employees[idx] = { ...ERPStore.employees[idx], ...patch };
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: 'system', action: 'update_employee', before, after: ERPStore.employees[idx] });
+    return ERPStore.employees[idx];
+  },
+  calculatePayroll(period, type='mensual') {
+    // Simple payroll calculation: base - 12% descuentos - 18% aportes patronales (demo)
+    return ERPStore.employees.map(e => {
+      const bruto = e.sueldo || 0;
+      const descuentos = parseFloat((bruto * 0.12).toFixed(2));
+      const aportes = parseFloat((bruto * 0.18).toFixed(2));
+      const neto = parseFloat((bruto - descuentos).toFixed(2));
+      return { employeeId: e.id, name: e.name, bruto, descuentos, aportes, neto };
+    });
+  },
+  generateBankFile(payroll) {
+    // Simple CSV bank file with employee and amount
+    const rows = [['employeeId','name','amount']];
+    payroll.forEach(p => rows.push([p.employeeId, p.name, p.neto]));
+    return rows.map(r => r.join(',')).join('\n');
+  },
+  closePeriod(period, user='system'){
+    // period format YYYY-MM
+    // validations: no asientos in period with status != aprobado
+    const asientos = ERPStore.asientos.filter(a => a.fecha && a.fecha.startsWith(period));
+    const pending = asientos.filter(a => a.estado !== 'aprobado');
+    if (pending.length > 0) return { ok:false, msg: `Existen ${pending.length} asientos sin aprobar` };
+    if (ERPStore.closedPeriods.includes(period)) return { ok:false, msg: 'Período ya cerrado' };
+    
+    // Calculate balance for the period
+    const approvedAsientos = asientos.filter(a => a.estado === 'aprobado');
+    let totalIngresos = 0, totalGastos = 0;
+    approvedAsientos.forEach(a => {
+      a.lines.forEach(l => {
+        const account = ERPStore.accounts.find(acc => acc.code === l.cuenta);
+        if (account) {
+          if (account.type === 'Ingreso') totalIngresos += l.credito - l.debito;
+          else if (account.type === 'Gasto') totalGastos += l.debito - l.credito;
+        }
+      });
+    });
+    
+    ERPStore.closedPeriods.push(period);
+    const rec = { 
+      period, 
+      when: new Date().toISOString(), 
+      by: user,
+      totalAsientos: approvedAsientos.length,
+      balance: {
+        ingresos: totalIngresos,
+        gastos: totalGastos,
+        resultado: totalIngresos - totalGastos
+      },
+      asientosProcesados: approvedAsientos.map(a => ({
+        id: a.id,
+        fecha: a.fecha,
+        tipo: a.tipo,
+        glosa: a.glosa,
+        total: a.lines.reduce((sum, l) => sum + Math.abs(l.debito) + Math.abs(l.credito), 0)
+      }))
+    };
+    ERPStore.cierreHistory.push(rec);
+    ERPStore.bitacora.push({ when: new Date().toISOString(), who: user, action: 'close_period', before: null, after: rec });
+    return { ok:true, rec };
+  },
+  isPeriodClosed(period){
+    return ERPStore.closedPeriods.includes(period);
+  },
+  calculateBalance(period) {
+    // Simple balance calculation for demo
+    const asientos = ERPStore.asientos.filter(a => a.fecha && a.fecha.startsWith(period) && a.estado === 'aprobado');
+    let ingresos = 0, gastos = 0;
+    asientos.forEach(a => {
+      a.lines.forEach(l => {
+        const acc = ERPStore.accounts.find(ac => ac.code === l.cuenta);
+        if (acc && acc.type === 'Ingreso') ingresos += l.credito || 0;
+        if (acc && acc.type === 'Gasto') gastos += l.debito || 0;
+      });
+    });
+    return { ingresos, gastos, resultado: ingresos - gastos };
+  }
+};
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('orders');
@@ -96,6 +514,12 @@ const App = () => {
         return ['driverApp'];
       case 'operador':
         return ['dashboard', 'orders', 'assignments', 'tracking', 'baskets', 'reports', 'settings'];
+      case 'contador':
+        return [
+          'contabilidad', 'planCuentas', 'registroAsientos', 'libro', 'cierre', 'reportesFinancieros',
+          'rrhh', 'gestionEmpleados', 'contratos', 'asistencia', 'calculoPlanillas', 'boletas', 'aportes',
+          'asientosAutom', 'pagosSueldos', 'roles', 'bitacora', 
+        ];
       default:
         return [];
     }
@@ -292,6 +716,23 @@ const App = () => {
         handleCloseNewClientModal={handleCloseNewClientModal}
       />;
       case 'tracking': return <TrackingView theme={theme} />;
+      case 'contabilidad': return <ContabilidadDashboard theme={theme} handleTabChange={handleTabChange} />;
+      case 'planCuentas': return <PlanDeCuentas theme={theme} />;
+      case 'registroAsientos': return <RegistroAsientos theme={theme} />;
+      case 'libro': return <LibroDiarioMayor theme={theme} />;
+      case 'cierre': return <CierreContable theme={theme} />;
+      case 'reportesFinancieros': return <ReportesFinancieros theme={theme} />;
+      case 'rrhh': return <RRHHDashboard theme={theme} handleTabChange={handleTabChange} />;
+      case 'gestionEmpleados': return <GestionEmpleados theme={theme} />;
+      case 'contratos': return <ContratosSalarios theme={theme} />;
+      case 'asistencia': return <ControlAsistencia theme={theme} />;
+      case 'calculoPlanillas': return <CalculoPlanillas theme={theme} />;
+      case 'boletas': return <BoletasPago theme={theme} />;
+      case 'aportes': return <AportesImpuestos theme={theme} />;
+      case 'asientosAutom': return <AsientosAutomaticos theme={theme} />;
+      case 'pagosSueldos': return <PagosSueldos theme={theme} />;
+      case 'roles': return <RolesPermisos theme={theme} />;
+      case 'bitacora': return <Bitacora theme={theme} />;
       case 'driverApp': return <DriverAppView theme={theme} />;
       case 'clientApp': return <ClientAppView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
@@ -373,6 +814,7 @@ const App = () => {
             <option value="cliente">Cliente</option>
             <option value="chofer">Chofer</option>
             <option value="operador">Operador</option>
+            <option value="contador">Contador</option>
           </select>
         </div>
         
@@ -385,6 +827,8 @@ const App = () => {
           {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('contabilidad') && <SidebarBtn id="contabilidad" icon={Scale} label="Contabilidad" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('rrhh') && <SidebarBtn id="rrhh" icon={Users} label="RRHH / Planillas" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
         </nav>
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
@@ -6615,6 +7059,1739 @@ const ReportsView = ({ theme }) => {
         <p style={{ textAlign: 'center', color: theme.textMuted }}>
           Módulo de reportes en desarrollo...
         </p>
+      </Card>
+    </div>
+  );
+};
+
+// ----------------------
+// MOCKUPS: Contabilidad
+// ----------------------
+
+const ContabilidadDashboard = ({ theme, handleTabChange }) => {
+  // Simulated data for charts
+  const ingresos = 1250000;
+  const gastos = 820000;
+  const maxValue = Math.max(ingresos, gastos);
+
+  const monthlyData = [
+    { month: 'Ene', ingresos: 1100000, gastos: 750000 },
+    { month: 'Feb', ingresos: 1200000, gastos: 800000 },
+    { month: 'Mar', ingresos: 1300000, gastos: 850000 },
+    { month: 'Abr', ingresos: 1250000, gastos: 820000 },
+  ];
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: theme.primary }}>Dashboard Contable</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginTop: '16px' }}>
+        <Card><h4>Ingresos del mes</h4><div style={{fontSize:22,fontWeight:800}}>Bs 1,250,000</div></Card>
+        <Card><h4>Gastos del mes</h4><div style={{fontSize:22,fontWeight:800}}>Bs 820,000</div></Card>
+        <Card><h4>Resultado</h4><div style={{fontSize:22,fontWeight:800}}>Bs 430,000</div></Card>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' }}>
+        <Card>
+          <h3>Ingresos vs Gastos</h3>
+          <div style={{ height: 220, display: 'flex', alignItems: 'end', gap: 20, padding: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ height: (ingresos / maxValue) * 150, width: 40, background: '#10b981', borderRadius: 4 }}></div>
+              <span style={{ marginTop: 8 }}>Ingresos</span>
+              <span>Bs {ingresos.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ height: (gastos / maxValue) * 150, width: 40, background: '#ef4444', borderRadius: 4 }}></div>
+              <span style={{ marginTop: 8 }}>Gastos</span>
+              <span>Bs {gastos.toLocaleString()}</span>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <h3>Evolución Mensual</h3>
+          <div style={{ height: 220, display: 'flex', alignItems: 'end', gap: 10, padding: 20 }}>
+            {monthlyData.map((d, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <div style={{ position: 'relative', height: 150, width: '100%', display: 'flex', alignItems: 'end' }}>
+                  <div style={{ height: (d.ingresos / 1500000) * 150, width: '45%', background: '#10b981', borderRadius: 2, marginRight: 2 }}></div>
+                  <div style={{ height: (d.gastos / 1500000) * 150, width: '45%', background: '#ef4444', borderRadius: 2 }}></div>
+                </div>
+                <span style={{ marginTop: 8, fontSize: 12 }}>{d.month}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, background: '#10b981' }}></div>
+              <span style={{ fontSize: 12 }}>Ingresos</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 10, height: 10, background: '#ef4444' }}></div>
+              <span style={{ fontSize: 12 }}>Gastos</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div style={{ marginTop: '20px' }}>
+        <Card>
+          <h3>Accesos rápidos</h3>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <button onClick={() => handleTabChange('registroAsientos')} style={{ padding:10, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Nuevo asiento</button>
+            <button onClick={() => handleTabChange('cierre')} style={{ padding:10, background:'#f97316', color:'white', border:'none', borderRadius:6 }}>Cierre de período</button>
+            <button onClick={() => handleTabChange('reportesFinancieros')} style={{ padding:10, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Reportes financieros</button>
+            <button onClick={() => handleTabChange('planCuentas')} style={{ padding:10, background:'#8b5cf6', color:'white', border:'none', borderRadius:6 }}>Plan de Cuentas</button>
+            <button onClick={() => handleTabChange('libro')} style={{ padding:10, background:'#06b6d4', color:'white', border:'none', borderRadius:6 }}>Libro Diario / Mayor</button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const PlanDeCuentas = ({ theme }) => {
+  const [accounts, setAccounts] = useState([...ERPStore.accounts]);
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [type, setType] = useState('Activo');
+  const [center, setCenter] = useState('General');
+  const [currency, setCurrency] = useState('BOB');
+  const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterCenter, setFilterCenter] = useState('');
+
+  const refresh = () => setAccounts([...ERPStore.accounts]);
+
+  const filteredAccounts = accounts.filter(a => {
+    const matchesSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.code.includes(search);
+    const matchesType = !filterType || a.type === filterType;
+    const matchesCenter = !filterCenter || a.center === filterCenter;
+    return matchesSearch && matchesType && matchesCenter && a.active;
+  });
+
+  const groupedAccounts = filteredAccounts.reduce((acc, a) => {
+    if (!acc[a.type]) acc[a.type] = [];
+    acc[a.type].push(a);
+    return acc;
+  }, {});
+
+  const handleCreate = () => {
+    if (!code || !name) return alert('Código y nombre requeridos');
+    ERP.addAccount({ code, name, type, center, currency, active: true });
+    setCode(''); setName(''); setType('Activo'); setCenter('General'); setCurrency('BOB');
+    refresh();
+  };
+
+  const handleToggle = (id) => {
+    ERP.toggleAccount(id);
+    refresh();
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: theme.primary }}>Plan de Cuentas</h1>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <input placeholder="Buscar por nombre o código" value={search} onChange={e=>setSearch(e.target.value)} style={{ padding:8, borderRadius:6, border:'1px solid #e2e8f0', flex:1 }} />
+        <select value={filterType} onChange={e=>setFilterType(e.target.value)} style={{ padding:8, borderRadius:6, border:'1px solid #e2e8f0' }}>
+          <option value="">Todos los tipos</option>
+          <option>Activo</option><option>Pasivo</option><option>Patrimonio</option><option>Ingreso</option><option>Gasto</option>
+        </select>
+        <select value={filterCenter} onChange={e=>setFilterCenter(e.target.value)} style={{ padding:8, borderRadius:6, border:'1px solid #e2e8f0' }}>
+          <option value="">Todos los centros</option>
+          <option>General</option><option>Ventas</option><option>Producción</option>
+        </select>
+      </div>
+      <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
+        <Card style={{ flex: 1 }}>
+          <h4>Árbol jerárquico de cuentas</h4>
+          <div style={{ height: 420, overflow: 'auto', background: '#fff' }}>
+            {Object.keys(groupedAccounts).map(type => (
+              <div key={type}>
+                <h5 style={{ margin: '12px 0 8px 0', color: theme.primary }}>{type}</h5>
+                <ul style={{ paddingLeft: 12, listStyle: 'none' }}>
+                  {groupedAccounts[type].sort((a,b)=>a.code.localeCompare(b.code)).map(a => {
+                    const level = a.code.split('.').length - 1;
+                    return (
+                      <li key={a.id} style={{ marginBottom:6, marginLeft: level * 20 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                          <div>
+                            <strong>{a.code}</strong> - {a.name}
+                            <div style={{ fontSize:12, color: '#64748b' }}>{a.currency} · {a.center || '-'}</div>
+                          </div>
+                          <div style={{ display:'flex', gap:8 }}>
+                            <button onClick={() => { const newName = prompt('Editar nombre', a.name); if (newName) { ERP.updateAccount(a.id,{name:newName}); refresh(); } }} style={{ padding:4, fontSize:12 }}>Editar</button>
+                            <button onClick={() => handleToggle(a.id)} style={{ padding:4, fontSize:12, background:'#ef4444', color:'white', border:'none', borderRadius:4 }}>Desactivar</button>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card style={{ width: 420 }}>
+          <h4>Crear / Editar Cuenta</h4>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <input placeholder="Código (ej. 1.1.01)" value={code} onChange={e=>setCode(e.target.value)} />
+            <input placeholder="Nombre de cuenta" value={name} onChange={e=>setName(e.target.value)} />
+            <select value={type} onChange={e=>setType(e.target.value)}>
+              <option>Activo</option><option>Pasivo</option><option>Patrimonio</option><option>Ingreso</option><option>Gasto</option>
+            </select>
+            <input placeholder="Centro de costo" value={center} onChange={e=>setCenter(e.target.value)} />
+            <select value={currency} onChange={e=>setCurrency(e.target.value)}>
+              <option>BOB</option><option>USD</option><option>EUR</option>
+            </select>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={handleCreate} style={{ padding:8, background:theme.primary, color:'white', border:'none' }}>Guardar</button>
+              <button onClick={() => { setCode(''); setName(''); setType('Activo'); setCenter('General'); setCurrency('BOB'); }} style={{ padding:8, background:'#ef4444', color:'white', border:'none' }}>Limpiar</button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const RegistroAsientos = ({ theme }) => {
+  const [activeTab, setActiveTab] = useState('create');
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0,10));
+  const [tipo, setTipo] = useState('Factura');
+  const [glosa, setGlosa] = useState('');
+  const [lines, setLines] = useState([
+    { cuenta: '1.1', centro: 'Ventas', debito: 1000, credito: 0 },
+    { cuenta: '4.1', centro: '', debito: 0, credito: 1000 }
+  ]);
+  const [attachments, setAttachments] = useState([]);
+
+  const totalDebito = lines.reduce((s,l)=>s+Number(l.debito||0),0);
+  const totalCredito = lines.reduce((s,l)=>s+Number(l.credito||0),0);
+  const isBalanced = totalDebito === totalCredito && totalDebito > 0;
+
+  const addLine = () => setLines(prev=>[...prev,{ cuenta:'', centro:'', debito:0, credito:0 }]);
+  const updateLine = (idx, patch) => setLines(prev=>prev.map((l,i)=>i===idx?{...l,...patch}:l));
+  const removeLine = (idx) => setLines(prev=>prev.filter((_,i)=>i!==idx));
+
+  const handleFiles = (e) => setAttachments(Array.from(e.target.files));
+
+  const handleSave = () => {
+    if (!isBalanced) return alert('Asiento no balancea o está vacío');
+    const asiento = { fecha, tipo, glosa, lines, attachments: attachments.map(f=>f.name), estado: 'borrador' };
+    const saved = ERP.addAsiento(asiento);
+    alert('Asiento guardado id: ' + saved.id);
+    // reset
+    setGlosa(''); setLines([{ cuenta: '', centro: '', debito: 0, credito: 0 }]); setAttachments([]);
+  };
+
+  const handleApprove = () => {
+    if (!isBalanced) return alert('Asiento no balancea o está vacío');
+    const asiento = ERP.addAsiento({ fecha, tipo, glosa, lines, attachments: attachments.map(f=>f.name), estado: 'aprobado' });
+    ERP.approveAsiento(asiento.id);
+    alert('Asiento aprobado id: ' + asiento.id);
+    setGlosa(''); setLines([{ cuenta: '', centro: '', debito: 0, credito: 0 }]); setAttachments([]);
+  };
+
+  const approveDraft = (id) => {
+    ERP.approveAsiento(id);
+    alert('Asiento aprobado');
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+        <FileText size={32} style={{ color: theme.primary, marginRight: '12px' }} />
+        <h1 style={{ color: theme.primary, margin: 0 }}>Registro de Asientos</h1>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
+        <button
+          onClick={() => setActiveTab('create')}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeTab === 'create' ? theme.primary : 'transparent',
+            color: activeTab === 'create' ? 'white' : theme.text,
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          <Plus size={16} style={{ marginRight: '8px' }} />
+          Nuevo Asiento
+        </button>
+        <button
+          onClick={() => setActiveTab('drafts')}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeTab === 'drafts' ? theme.primary : 'transparent',
+            color: activeTab === 'drafts' ? 'white' : theme.text,
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          <Clock size={16} style={{ marginRight: '8px' }} />
+          Asientos en Borrador ({ERPStore.asientos.filter(a => a.estado === 'borrador').length})
+        </button>
+      </div>
+
+      {activeTab === 'create' && (
+        <Card>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '16px', marginBottom: '24px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
+                <Calendar size={14} style={{ marginRight: '4px' }} />
+                Fecha
+              </label>
+              <input
+                type="date"
+                value={fecha}
+                onChange={e=>setFecha(e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
+                <FileText size={14} style={{ marginRight: '4px' }} />
+                Tipo de comprobante
+              </label>
+              <select
+                value={tipo}
+                onChange={e=>setTipo(e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              >
+                <option>Factura</option>
+                <option>Recibo</option>
+                <option>Nota de Crédito</option>
+                <option>Nota de Débito</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
+                <MessageSquare size={14} style={{ marginRight: '4px' }} />
+                Glosa / Descripción
+              </label>
+              <input
+                value={glosa}
+                onChange={e=>setGlosa(e.target.value)}
+                placeholder="Descripción del asiento contable"
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ color: theme.primary, margin: 0 }}>Líneas del Asiento</h3>
+              <button
+                onClick={addLine}
+                style={{
+                  padding: '8px 16px',
+                  background: theme.secondary,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={14} />
+                Añadir Línea
+              </button>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <thead style={{ background: '#f8fafc' }}>
+                  <tr>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Cuenta</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Centro Costo</th>
+                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Débito (BOB)</th>
+                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Crédito (BOB)</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: theme.text }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lines.map((l, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '12px' }}>
+                        <input
+                          list="accounts"
+                          value={l.cuenta}
+                          onChange={e=>updateLine(idx,{cuenta:e.target.value})}
+                          placeholder="Código cuenta"
+                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <input
+                          value={l.centro}
+                          onChange={e=>updateLine(idx,{centro:e.target.value})}
+                          placeholder="Centro de costo"
+                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <input
+                          type="number"
+                          value={l.debito}
+                          onChange={e=>updateLine(idx,{debito: Number(e.target.value)})}
+                          min="0"
+                          step="0.01"
+                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
+                        />
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <input
+                          type="number"
+                          value={l.credito}
+                          onChange={e=>updateLine(idx,{credito: Number(e.target.value)})}
+                          min="0"
+                          step="0.01"
+                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
+                        />
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <button
+                          onClick={()=>removeLine(idx)}
+                          style={{
+                            padding: '6px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <datalist id="accounts">
+            {ERPStore.accounts.filter(a => a.active).map(a => (
+              <option key={a.id} value={a.code}>{a.name}</option>
+            ))}
+          </datalist>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
+                <Paperclip size={14} style={{ marginRight: '4px' }} />
+                Adjuntos
+              </label>
+              <input
+                type="file"
+                multiple
+                onChange={handleFiles}
+                style={{ padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              />
+              <div style={{ fontSize: '12px', color: theme.textMuted, marginTop: '4px' }}>
+                {attachments.length} archivo(s) adjunto(s)
+              </div>
+            </div>
+
+            <div style={{
+              padding: '16px',
+              background: isBalanced ? '#dcfce7' : '#fef2f2',
+              border: `1px solid ${isBalanced ? '#16a34a' : '#dc2626'}`,
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: isBalanced ? '#16a34a' : '#dc2626' }}>
+                {isBalanced ? '✓ Asiento Balanceado' : '✗ Asiento Desbalanceado'}
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: theme.primary }}>
+                Débito: {totalDebito.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})} |
+                Crédito: {totalCredito.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button
+              onClick={handleSave}
+              disabled={!isBalanced}
+              style={{
+                padding: '12px 24px',
+                background: isBalanced ? '#64748b' : '#94a3b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isBalanced ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500'
+              }}
+            >
+              <Save size={16} />
+              Guardar como Borrador
+            </button>
+            <button
+              onClick={handleApprove}
+              disabled={!isBalanced}
+              style={{
+                padding: '12px 24px',
+                background: isBalanced ? theme.primary : '#94a3b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isBalanced ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500'
+              }}
+            >
+              <CheckCircle size={16} />
+              Guardar y Aprobar
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {activeTab === 'drafts' && (
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+            <Clock size={20} style={{ color: theme.primary, marginRight: '8px' }} />
+            <h3 style={{ color: theme.primary, margin: 0 }}>Asientos en Borrador</h3>
+          </div>
+
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            {ERPStore.asientos.filter(a => a.estado === 'borrador').map(asiento => (
+              <div key={asiento.id} style={{
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+                background: 'white',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{
+                        background: '#fef3c7',
+                        color: '#92400e',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>
+                        {asiento.tipo}
+                      </span>
+                      <span style={{ fontSize: '14px', color: theme.textMuted }}>
+                        ID: {asiento.id}
+                      </span>
+                    </div>
+                    <h4 style={{ margin: '0 0 8px 0', color: theme.primary }}>{asiento.glosa}</h4>
+                    <div style={{ fontSize: '14px', color: theme.textMuted, marginBottom: '12px' }}>
+                      <Calendar size={14} style={{ marginRight: '4px' }} />
+                      {new Date(asiento.fecha).toLocaleDateString('es-BO')}
+                    </div>
+
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: theme.text, marginBottom: '8px' }}>
+                        Líneas del asiento:
+                      </div>
+                      {asiento.lines.map((l, idx) => (
+                        <div key={idx} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          padding: '4px 0',
+                          fontSize: '13px'
+                        }}>
+                          <span>{l.cuenta} {l.centro && `(${l.centro})`}</span>
+                          <div>
+                            {l.debito > 0 && <span style={{ color: '#dc2626' }}>Débito: {l.debito.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>}
+                            {l.credito > 0 && <span style={{ color: '#16a34a' }}>Crédito: {l.credito.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginLeft: '16px' }}>
+                    <button
+                      onClick={() => approveDraft(asiento.id)}
+                      style={{
+                        padding: '10px 16px',
+                        background: theme.primary,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      <CheckCircle size={16} />
+                      Aprobar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {ERPStore.asientos.filter(a => a.estado === 'borrador').length === 0 && (
+              <div style={{
+                textAlign: 'center',
+                color: theme.textMuted,
+                padding: '40px',
+                background: '#f8fafc',
+                borderRadius: '12px'
+              }}>
+                <FileText size={48} style={{ color: '#cbd5e1', marginBottom: '16px' }} />
+                <div style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px' }}>
+                  No hay asientos en borrador
+                </div>
+                <div style={{ fontSize: '14px' }}>
+                  Todos los asientos han sido procesados
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+const LibroDiarioMayor = ({ theme }) => {
+  const [asientos, setAsientos] = useState([...ERPStore.asientos]);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [filterCuenta, setFilterCuenta] = useState('');
+  const [filterCentro, setFilterCentro] = useState('');
+  const [currentPeriod, setCurrentPeriod] = useState(new Date().toISOString().slice(0,7)); // YYYY-MM
+
+  const refresh = () => setAsientos([...ERPStore.asientos]);
+
+  useEffect(()=>{ refresh(); }, []);
+
+  const exportCSV = () => {
+    const rows = [['Fecha','Cuenta','Centro','Débito','Crédito','Estado']];
+    filtered.forEach(a => {
+      a.lines.forEach(l => rows.push([a.fecha, l.cuenta, l.centro || '-', l.debito || 0, l.credito || 0, a.estado]));
+    });
+    const csv = rows.map(r=>r.join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'libro_diario.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    // Simular export PDF
+    alert('Exportando Libro Diario como PDF');
+  };
+
+  const navigatePeriod = (direction) => {
+    const [year, month] = currentPeriod.split('-').map(Number);
+    let newMonth = month + direction;
+    let newYear = year;
+    if (newMonth > 12) { newMonth = 1; newYear++; }
+    if (newMonth < 1) { newMonth = 12; newYear--; }
+    const newPeriod = `${newYear}-${String(newMonth).padStart(2,'0')}`;
+    setCurrentPeriod(newPeriod);
+    setFrom(`${newPeriod}-01`);
+    setTo(`${newPeriod}-${new Date(newYear, newMonth, 0).getDate()}`);
+  };
+
+  const filtered = asientos.filter(a => {
+    if (from && a.fecha < from) return false;
+    if (to && a.fecha > to) return false;
+    if (filterCuenta && !a.lines.some(l => l.cuenta.includes(filterCuenta))) return false;
+    if (filterCentro && !a.lines.some(l => l.centro && l.centro.includes(filterCentro))) return false;
+    return true;
+  });
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: theme.primary }}>Libro Diario / Mayor</h1>
+      <Card>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, flexWrap:'wrap', gap:8 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <button onClick={()=>navigatePeriod(-1)} style={{ padding:6, background:'#e2e8f0', border:'none', borderRadius:4 }}>◀</button>
+            <span>{currentPeriod}</span>
+            <button onClick={()=>navigatePeriod(1)} style={{ padding:6, background:'#e2e8f0', border:'none', borderRadius:4 }}>▶</button>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <input type="date" value={from} onChange={e=>setFrom(e.target.value)} placeholder="Desde" />
+            <input type="date" value={to} onChange={e=>setTo(e.target.value)} placeholder="Hasta" />
+            <input placeholder="Cuenta" value={filterCuenta} onChange={e=>setFilterCuenta(e.target.value)} />
+            <input placeholder="Centro" value={filterCentro} onChange={e=>setFilterCentro(e.target.value)} />
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={exportCSV} style={{ padding:8, background:theme.primary, color:'white', border:'none' }}>Exportar CSV</button>
+            <button onClick={exportPDF} style={{ padding:8, background:'#10b981', color:'white', border:'none' }}>Exportar PDF</button>
+          </div>
+        </div>
+        <div style={{ height:420, overflow:'auto', background:'#f8fafc' }}>
+          <table style={{ width:'100%' }}>
+            <thead><tr><th>Fecha</th><th>Asiento</th><th>Cuenta</th><th>Centro</th><th>Débito</th><th>Crédito</th><th>Estado</th></tr></thead>
+            <tbody>
+              {filtered.map(a=> (
+                a.lines.map((l, idx) => (
+                  <tr key={`${a.id}-${idx}`}>
+                    {idx === 0 ? <td rowSpan={a.lines.length}>{a.fecha}</td> : null}
+                    {idx === 0 ? <td rowSpan={a.lines.length}>{a.id} - {a.glosa}</td> : null}
+                    <td>{l.cuenta}</td>
+                    <td>{l.centro || '-'}</td>
+                    <td>{l.debito || 0}</td>
+                    <td>{l.credito || 0}</td>
+                    {idx === 0 ? <td rowSpan={a.lines.length}>{a.estado}</td> : null}
+                  </tr>
+                ))
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const CierreContable = ({ theme }) => {
+  const [period, setPeriod] = useState('2025-12');
+  const [validations, setValidations] = useState(null);
+  const [selectedCierre, setSelectedCierre] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const runValidations = () => {
+    const asientos = ERPStore.asientos.filter(a => a.fecha && a.fecha.startsWith(period));
+    const pending = asientos.filter(a => a.estado !== 'aprobado');
+    const isClosed = ERP.isPeriodClosed(period);
+    setValidations({
+      pendingCount: pending.length,
+      isClosed,
+      msg: pending.length > 0 ? `Existen ${pending.length} asientos sin aprobar` : isClosed ? 'Período ya cerrado' : 'Listo para cerrar'
+    });
+  };
+
+  const closePeriod = () => {
+    const res = ERP.closePeriod(period, 'contador');
+    if (res.ok) {
+      alert('Período cerrado exitosamente');
+      runValidations();
+    } else {
+      alert(res.msg);
+    }
+  };
+
+  const viewCierreDetails = (cierre) => {
+    setSelectedCierre(cierre);
+    setShowDetailsModal(true);
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: theme.primary }}>Cierre Contable</h1>
+      <Card>
+        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+          <select value={period} onChange={e=>setPeriod(e.target.value)}>
+            <option>2025-12</option>
+            <option>2026-01</option>
+          </select>
+          <button onClick={runValidations} style={{ padding:8, background:'#f97316', color:'white', border:'none' }}>Iniciar validaciones</button>
+          {validations && !validations.isClosed && validations.pendingCount === 0 && (
+            <button onClick={closePeriod} style={{ padding:8, background:'#10b981', color:'white', border:'none' }}>Cerrar período</button>
+          )}
+        </div>
+        {validations && (
+          <div style={{ marginTop:12 }}>
+            <div style={{ color: validations.pendingCount > 0 ? '#f59e0b' : validations.isClosed ? '#10b981' : '#64748b' }}>
+              {validations.msg}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Card style={{ marginTop: 20 }}>
+        <h4>Historial de Cierres</h4>
+        <div style={{ height: 300, overflow: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc' }}>
+                <th style={{ padding: 8, textAlign: 'left' }}>Período</th>
+                <th style={{ padding: 8, textAlign: 'left' }}>Fecha de Cierre</th>
+                <th style={{ padding: 8, textAlign: 'left' }}>Cerrado por</th>
+                <th style={{ padding: 8, textAlign: 'left' }}>Asientos</th>
+                <th style={{ padding: 8, textAlign: 'left' }}>Resultado</th>
+                <th style={{ padding: 8, textAlign: 'center' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ERPStore.cierreHistory.map((h, idx) => (
+                <tr key={idx} style={{ cursor: 'pointer', ':hover': { background: '#f8fafc' } }}>
+                  <td style={{ padding: 8 }}>{h.period}</td>
+                  <td style={{ padding: 8 }}>{new Date(h.when).toLocaleString()}</td>
+                  <td style={{ padding: 8 }}>{h.by}</td>
+                  <td style={{ padding: 8 }}>{h.totalAsientos || 'N/A'}</td>
+                  <td style={{ padding: 8 }}>
+                    {h.balance ? (
+                      <span style={{ color: h.balance.resultado >= 0 ? '#10b981' : '#ef4444' }}>
+                        {h.balance.resultado.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                      </span>
+                    ) : 'N/A'}
+                  </td>
+                  <td style={{ padding: 8, textAlign: 'center' }}>
+                    <button 
+                      onClick={() => viewCierreDetails(h)}
+                      style={{ padding: '4px 8px', background: theme.primary, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                      Ver Detalles
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Modal de Detalles del Cierre */}
+      {showDetailsModal && selectedCierre && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '800px',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            width: '90%'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: theme.primary, margin: 0 }}>Detalles del Cierre - {selectedCierre.period}</h3>
+              <button 
+                onClick={() => setShowDetailsModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+                <h4 style={{ margin: '0 0 12px 0', color: theme.primary }}>Información General</h4>
+                <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                  <div><strong>Período:</strong> {selectedCierre.period}</div>
+                  <div><strong>Fecha de Cierre:</strong> {new Date(selectedCierre.when).toLocaleString()}</div>
+                  <div><strong>Cerrado por:</strong> {selectedCierre.by}</div>
+                  <div><strong>Total de Asientos:</strong> {selectedCierre.totalAsientos}</div>
+                </div>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+                <h4 style={{ margin: '0 0 12px 0', color: theme.primary }}>Balance del Período</h4>
+                <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+                  <div><strong>Total Ingresos:</strong> {selectedCierre.balance?.ingresos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'}) || 'N/A'}</div>
+                  <div><strong>Total Gastos:</strong> {selectedCierre.balance?.gastos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'}) || 'N/A'}</div>
+                  <div style={{ 
+                    fontWeight: 'bold',
+                    color: selectedCierre.balance?.resultado >= 0 ? '#10b981' : '#ef4444'
+                  }}>
+                    <strong>Resultado:</strong> {selectedCierre.balance?.resultado.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'}) || 'N/A'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ color: theme.primary, marginBottom: '12px' }}>Asientos Procesados</h4>
+              <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc' }}>
+                      <th style={{ padding: '8px', textAlign: 'left' }}>ID</th>
+                      <th style={{ padding: '8px', textAlign: 'left' }}>Fecha</th>
+                      <th style={{ padding: '8px', textAlign: 'left' }}>Tipo</th>
+                      <th style={{ padding: '8px', textAlign: 'left' }}>Glosa</th>
+                      <th style={{ padding: '8px', textAlign: 'right' }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedCierre.asientosProcesados?.map((asiento, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '8px' }}>{asiento.id}</td>
+                        <td style={{ padding: '8px' }}>{asiento.fecha}</td>
+                        <td style={{ padding: '8px' }}>{asiento.tipo}</td>
+                        <td style={{ padding: '8px' }}>{asiento.glosa}</td>
+                        <td style={{ padding: '8px', textAlign: 'right' }}>
+                          {asiento.total.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                        </td>
+                      </tr>
+                    )) || (
+                      <tr>
+                        <td colSpan="5" style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>
+                          No hay información detallada disponible para este cierre
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+              <button 
+                onClick={() => setShowDetailsModal(false)}
+                style={{ padding: '8px 16px', background: '#64748b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ReportesFinancieros = ({ theme }) => {
+  const [period, setPeriod] = useState('2025-12');
+  const [activeReport, setActiveReport] = useState('balance');
+  const balance = ERP.calculateBalance(period);
+
+  // Datos de prueba para reportes financieros
+  const financialData = {
+    balanceGeneral: {
+      activos: {
+        corriente: {
+          caja: 25000,
+          bancos: 150000,
+          cuentasPorCobrar: 45000,
+          inventario: 80000
+        },
+        noCorriente: {
+          propiedades: 200000,
+          equipos: 120000,
+          depreciacionAcumulada: -30000
+        }
+      },
+      pasivos: {
+        corriente: {
+          proveedores: 35000,
+          prestamosBancarios: 50000,
+          impuestosPorPagar: 12000
+        },
+        noCorriente: {
+          prestamosLargoPlazo: 80000
+        }
+      },
+      patrimonio: {
+        capitalSocial: 150000,
+        reservas: 25000,
+        resultadoAcumulado: balance.resultado
+      }
+    },
+    estadoResultados: {
+      ingresos: {
+        ventasProductos: 185000,
+        servicios: 25000,
+        otrosIngresos: 5000
+      },
+      gastos: {
+        costoVentas: 95000,
+        gastosAdministrativos: 35000,
+        gastosVentas: 28000,
+        gastosFinancieros: 8000,
+        depreciacion: 5000
+      }
+    },
+    flujoCaja: {
+      operativo: {
+        resultadoNeto: balance.resultado,
+        depreciacion: 5000,
+        cambiosCuentasPorCobrar: -5000,
+        cambiosInventario: -10000,
+        cambiosProveedores: 8000
+      },
+      inversion: {
+        compraEquipos: -25000,
+        ventaActivos: 5000
+      },
+      financiamiento: {
+        prestamosObtenidos: 30000,
+        dividendosPagados: -15000
+      }
+    },
+    comparativos: [
+      { mes: 'Oct-25', ingresos: 165000, gastos: 142000, resultado: 23000 },
+      { mes: 'Nov-25', ingresos: 178000, gastos: 148000, resultado: 30000 },
+      { mes: 'Dic-25', ingresos: 210000, gastos: 158000, resultado: 52000 },
+      { mes: 'Ene-26', ingresos: 195000, gastos: 152000, resultado: 43000 }
+    ]
+  };
+
+  const calculateTotal = (obj) => Object.values(obj).reduce((sum, val) => typeof val === 'object' ? sum + calculateTotal(val) : sum + val, 0);
+
+  const exportPDF = (type) => {
+    alert(`Exportando ${type} para ${period} como PDF`);
+  };
+
+  const renderBalanceGeneral = () => {
+    const totalActivos = calculateTotal(financialData.balanceGeneral.activos);
+    const totalPasivos = calculateTotal(financialData.balanceGeneral.pasivos);
+    const totalPatrimonio = calculateTotal(financialData.balanceGeneral.patrimonio);
+
+    return (
+      <div style={{ padding: '20px' }}>
+        <h3 style={{ color: theme.primary, marginBottom: '20px' }}>Balance General - {period}</h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+          {/* Activos */}
+          <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+            <h4 style={{ color: '#16a34a', marginBottom: '12px' }}>ACTIVOS</h4>
+            <div style={{ marginBottom: '16px' }}>
+              <h5 style={{ marginBottom: '8px' }}>Corriente</h5>
+              {Object.entries(financialData.balanceGeneral.activos.corriente).map(([key, value]) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{key.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                  <span>{value.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px', fontWeight: 'bold' }}>
+                Subtotal Corriente: {calculateTotal(financialData.balanceGeneral.activos.corriente).toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+              </div>
+            </div>
+
+            <div>
+              <h5 style={{ marginBottom: '8px' }}>No Corriente</h5>
+              {Object.entries(financialData.balanceGeneral.activos.noCorriente).map(([key, value]) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{key.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                  <span style={{ color: value < 0 ? '#dc2626' : 'inherit' }}>
+                    {value.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                  </span>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px', fontWeight: 'bold' }}>
+                Subtotal No Corriente: {calculateTotal(financialData.balanceGeneral.activos.noCorriente).toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+              </div>
+            </div>
+
+            <div style={{ borderTop: '2px solid #16a34a', marginTop: '16px', paddingTop: '8px', fontWeight: 'bold', fontSize: '18px', color: '#16a34a' }}>
+              TOTAL ACTIVOS: {totalActivos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+            </div>
+          </div>
+
+          {/* Pasivos */}
+          <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+            <h4 style={{ color: '#dc2626', marginBottom: '12px' }}>PASIVOS</h4>
+            <div style={{ marginBottom: '16px' }}>
+              <h5 style={{ marginBottom: '8px' }}>Corriente</h5>
+              {Object.entries(financialData.balanceGeneral.pasivos.corriente).map(([key, value]) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{key.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                  <span>{value.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px', fontWeight: 'bold' }}>
+                Subtotal Corriente: {calculateTotal(financialData.balanceGeneral.pasivos.corriente).toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+              </div>
+            </div>
+
+            <div>
+              <h5 style={{ marginBottom: '8px' }}>No Corriente</h5>
+              {Object.entries(financialData.balanceGeneral.pasivos.noCorriente).map(([key, value]) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{key.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                  <span>{value.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px', fontWeight: 'bold' }}>
+                Subtotal No Corriente: {calculateTotal(financialData.balanceGeneral.pasivos.noCorriente).toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+              </div>
+            </div>
+
+            <div style={{ borderTop: '2px solid #dc2626', marginTop: '16px', paddingTop: '8px', fontWeight: 'bold', fontSize: '18px', color: '#dc2626' }}>
+              TOTAL PASIVOS: {totalPasivos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+            </div>
+          </div>
+
+          {/* Patrimonio */}
+          <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+            <h4 style={{ color: '#7c3aed', marginBottom: '12px' }}>PATRIMONIO</h4>
+            {Object.entries(financialData.balanceGeneral.patrimonio).map(([key, value]) => (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                <span>{key.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+                <span>{value.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}</span>
+              </div>
+            ))}
+
+            <div style={{ borderTop: '2px solid #7c3aed', marginTop: '16px', paddingTop: '8px', fontWeight: 'bold', fontSize: '18px', color: '#7c3aed' }}>
+              TOTAL PATRIMONIO: {totalPatrimonio.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+            </div>
+
+            <div style={{
+              borderTop: '2px solid #374151',
+              marginTop: '16px',
+              paddingTop: '8px',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              color: totalActivos === (totalPasivos + totalPatrimonio) ? '#10b981' : '#dc2626'
+            }}>
+              VERIFICACIÓN: {(totalPasivos + totalPatrimonio).toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <button
+            onClick={() => exportPDF('Balance General')}
+            style={{ padding: '12px 24px', background: theme.primary, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Exportar Balance General PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+
+  const renderComparativos = () => {
+    return (
+      <div style={{ padding: '20px' }}>
+        <h3 style={{ color: theme.primary, marginBottom: '20px' }}>Comparativos Mensuales</h3>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <thead style={{ background: '#f8fafc' }}>
+              <tr>
+                <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.primary }}>Mes</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.primary }}>Ingresos</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.primary }}>Gastos</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.primary }}>Resultado</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.primary }}>Margen (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {financialData.comparativos.map((item, idx) => {
+                const margen = ((item.resultado / item.ingresos) * 100).toFixed(1);
+                return (
+                  <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '12px', fontWeight: '500' }}>{item.mes}</td>
+                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                      {item.ingresos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                      {item.gastos.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: '500', color: item.resultado >= 0 ? '#16a34a' : '#dc2626' }}>
+                      {item.resultado.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: '500', color: margen >= 0 ? '#16a34a' : '#dc2626' }}>
+                      {margen}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Gráfico simple de tendencias */}
+        <div style={{ marginTop: '30px', background: '#f8fafc', padding: '20px', borderRadius: '8px' }}>
+          <h4 style={{ color: theme.primary, marginBottom: '16px' }}>Tendencia de Resultados</h4>
+          <div style={{ display: 'flex', alignItems: 'end', gap: '8px', height: '200px' }}>
+            {financialData.comparativos.map((item, idx) => {
+              const maxResultado = Math.max(...financialData.comparativos.map(d => d.resultado));
+              const height = (item.resultado / maxResultado) * 150;
+              return (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <div
+                    style={{
+                      width: '100%',
+                      maxWidth: '40px',
+                      height: `${height}px`,
+                      background: item.resultado >= 0 ? '#16a34a' : '#dc2626',
+                      borderRadius: '4px 4px 0 0',
+                      marginBottom: '8px'
+                    }}
+                  ></div>
+                  <div style={{ fontSize: '12px', fontWeight: '500' }}>{item.mes}</div>
+                  <div style={{ fontSize: '11px', color: theme.textMuted }}>
+                    {item.resultado.toLocaleString('es-BO', {style: 'currency', currency: 'BOB'})}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <button
+            onClick={() => exportPDF('Comparativos Mensuales')}
+            style={{ padding: '12px 24px', background: theme.primary, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Exportar Comparativos PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+        <BarChart3 size={32} style={{ color: theme.primary, marginRight: '12px' }} />
+        <h1 style={{ color: theme.primary, margin: 0 }}>Reportes Financieros</h1>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', fontSize: '14px', color: theme.textMuted, marginBottom: '8px' }}>
+          Seleccionar Período:
+        </label>
+        <select
+          value={period}
+          onChange={e => setPeriod(e.target.value)}
+          style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' }}
+        >
+          <option value="2025-10">Octubre 2025</option>
+          <option value="2025-11">Noviembre 2025</option>
+          <option value="2025-12">Diciembre 2025</option>
+          <option value="2026-01">Enero 2026</option>
+        </select>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
+        <button
+          onClick={() => setActiveReport('balance')}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeReport === 'balance' ? theme.primary : 'transparent',
+            color: activeReport === 'balance' ? 'white' : theme.text,
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          Balance General
+        </button>
+        <button
+          onClick={() => setActiveReport('comparativos')}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeReport === 'comparativos' ? theme.primary : 'transparent',
+            color: activeReport === 'comparativos' ? 'white' : theme.text,
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          Comparativos
+        </button>
+      </div>
+
+      {/* Content */}
+      <Card>
+        {activeReport === 'balance' && renderBalanceGeneral()}
+        {activeReport === 'comparativos' && renderComparativos()}
+      </Card>
+    </div>
+  );
+};
+
+// ----------------------
+// MOCKUPS: RRHH / PLANILLAS
+// ----------------------
+
+const RRHHDashboard = ({ theme, handleTabChange }) => (
+  <div style={{ padding:20 }}>
+    <h1 style={{ color: theme.primary }}>Dashboard RRHH / Planillas</h1>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:12 }}>
+      <Card><h4>Total empleados</h4><div style={{fontSize:22,fontWeight:800}}>128</div></Card>
+      <Card><h4>Costo mensual planilla</h4><div style={{fontSize:22,fontWeight:800}}>Bs 420,000</div></Card>
+      <Card><h4>Costo por CC</h4><div style={{fontSize:22,fontWeight:800}}>Ver detalle</div></Card>
+      <Card><h4>Alertas</h4><div>3 contratos vencidos</div></Card>
+    </div>
+    <div style={{ marginTop:16 }}>
+      <button onClick={() => handleTabChange('gestionEmpleados')} style={{ padding:8, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Gestión de Empleados</button>
+      <button onClick={() => handleTabChange('calculoPlanillas')} style={{ padding:8, marginLeft:8, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Cálculo de Planillas</button>
+    </div>
+  </div>
+);
+
+const GestionEmpleados = ({ theme }) => {
+  const [employees, setEmployees] = useState([...ERPStore.employees]);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: '', dni: '', cargo: '', estado: 'Activo', sueldo: 0 });
+
+  const refresh = () => setEmployees([...ERPStore.employees]);
+
+  const handleSave = () => {
+    if (editing) {
+      ERP.updateEmployee(editing.id, form);
+    } else {
+      ERP.addEmployee(form);
+    }
+    setForm({ name: '', dni: '', cargo: '', estado: 'Activo', sueldo: 0 });
+    setEditing(null);
+    setShowForm(false);
+    refresh();
+  };
+
+  const handleEdit = (emp) => {
+    setForm({ ...emp });
+    setEditing(emp);
+    setShowForm(true);
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Gestión de Empleados</h1>
+      <div style={{ marginBottom:12 }}>
+        <button onClick={() => setShowForm(true)} style={{ padding:8, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Agregar Empleado</button>
+      </div>
+      {showForm && (
+        <Card style={{ marginBottom:12 }}>
+          <h4>{editing ? 'Editar' : 'Nuevo'} Empleado</h4>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <input placeholder="Nombre" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
+            <input placeholder="DNI" value={form.dni} onChange={e=>setForm({...form, dni:e.target.value})} />
+            <input placeholder="Cargo" value={form.cargo} onChange={e=>setForm({...form, cargo:e.target.value})} />
+            <select value={form.estado} onChange={e=>setForm({...form, estado:e.target.value})}>
+              <option>Activo</option><option>Inactivo</option>
+            </select>
+            <input type="number" placeholder="Sueldo" value={form.sueldo} onChange={e=>setForm({...form, sueldo: Number(e.target.value)})} />
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={handleSave} style={{ padding:8, background:theme.primary, color:'white', border:'none' }}>Guardar</button>
+              <button onClick={() => { setShowForm(false); setEditing(null); }} style={{ padding:8, background:'#ef4444', color:'white', border:'none' }}>Cancelar</button>
+            </div>
+          </div>
+        </Card>
+      )}
+      <Card>
+        <table style={{ width:'100%' }}>
+          <thead><tr><th>Nombre</th><th>DNI</th><th>Cargo</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {employees.map(e => (
+              <tr key={e.id}>
+                <td>{e.name}</td><td>{e.dni}</td><td>{e.cargo}</td><td>{e.estado}</td>
+                <td><button onClick={() => handleEdit(e)} style={{ padding:4 }}>Editar</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+};
+
+const ContratosSalarios = ({ theme }) => {
+  const [selectedEmp, setSelectedEmp] = useState(null);
+  const employees = ERPStore.employees;
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Contratos y Salarios</h1>
+      <div style={{ display:'flex', gap:12 }}>
+        <Card style={{ flex:1 }}>
+          <h4>Empleados</h4>
+          <ul style={{ listStyle:'none', padding:0 }}>
+            {employees.map(e => (
+              <li key={e.id} style={{ padding:8, cursor:'pointer', background: selectedEmp?.id === e.id ? '#f1f5f9' : 'transparent' }} onClick={() => setSelectedEmp(e)}>
+                {e.name} - {e.cargo}
+              </li>
+            ))}
+          </ul>
+        </Card>
+        {selectedEmp && (
+          <Card style={{ flex:2 }}>
+            <h4>Contrato de {selectedEmp.name}</h4>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div>
+                <p><strong>Tipo:</strong> Indefinido</p>
+                <p><strong>Fecha Inicio:</strong> 2025-01-01</p>
+                <p><strong>Fecha Fin:</strong> -</p>
+              </div>
+              <div>
+                <p><strong>Sueldo Base:</strong> Bs {selectedEmp.sueldo}</p>
+                <p><strong>Bonos:</strong> Bs 200</p>
+                <p><strong>Beneficios:</strong> Seguro médico</p>
+              </div>
+            </div>
+            <h5>Historial de Cambios Salariales</h5>
+            <ul>
+              <li>2025-01-01: Contratación - Bs {selectedEmp.sueldo}</li>
+            </ul>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ControlAsistencia = ({ theme }) => {
+  const [month, setMonth] = useState(new Date().toISOString().slice(0,7));
+  const [selectedEmp, setSelectedEmp] = useState(ERPStore.employees[0]);
+  const employees = ERPStore.employees;
+
+  // Simple calendar days
+  const daysInMonth = new Date(month + '-01').getDate();
+  const days = Array.from({length: daysInMonth}, (_, i) => i+1);
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Control de Asistencia</h1>
+      <div style={{ marginBottom:12 }}>
+        <select value={month} onChange={e=>setMonth(e.target.value)}>
+          <option>2025-12</option>
+          <option>2026-01</option>
+        </select>
+        <select value={selectedEmp?.id} onChange={e=>setSelectedEmp(employees.find(emp=>emp.id==e.target.value))}>
+          {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+        </select>
+      </div>
+      <Card>
+        <h4>Asistencia de {selectedEmp?.name} - {month}</h4>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4 }}>
+          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => <div key={d} style={{ fontWeight:'bold', textAlign:'center' }}>{d}</div>)}
+          {days.map(d => (
+            <div key={d} style={{ padding:8, border:'1px solid #e2e8f0', textAlign:'center', cursor:'pointer' }} onClick={() => alert(`Marcar día ${d}`)}>
+              {d}
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop:12 }}>
+          <p><strong>Faltas:</strong> 2</p>
+          <p><strong>Atrasos:</strong> 1</p>
+          <p><strong>Horas Extra:</strong> 5</p>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const CalculoPlanillas = ({ theme }) => {
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0,7));
+  const [type, setType] = useState('mensual');
+  const [preview, setPreview] = useState([]);
+
+  const handleCalc = () => {
+    const res = ERP.calculatePayroll(period, type);
+    setPreview(res);
+  };
+
+  const generateAsientos = () => {
+    if (!preview.length) return alert('Calcule la planilla primero');
+    // create a summarized asiento per planilla
+    const lines = preview.map(p=>({ cuenta: '6.1', centro: '', debito: p.bruto, credito: 0 }));
+    const total = preview.reduce((s,p)=>s+p.bruto,0);
+    lines.push({ cuenta: '2.1', centro: '', debito: 0, credito: total });
+    const a = ERP.addAsiento({ fecha: new Date().toISOString().slice(0,10), tipo: 'Planilla', glosa: `Planilla ${period}`, lines, attachments: [], estado: 'borrador' });
+    alert('Asiento generado id: ' + a.id);
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Cálculo de Planillas</h1>
+      <Card>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:12, color: theme.textMuted }}>Período</div>
+            <input type="month" value={period} onChange={e=>setPeriod(e.target.value)} />
+          </div>
+          <div>
+            <div style={{ fontSize:12, color: theme.textMuted }}>Tipo</div>
+            <select value={type} onChange={e=>setType(e.target.value)}><option value="mensual">Mensual</option><option value="aguinaldo">Aguinaldo</option><option value="finiquito">Finiquito</option></select>
+          </div>
+          <div>
+            <button onClick={handleCalc} style={{ padding:8, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Calcular</button>
+          </div>
+        </div>
+
+        {preview.length > 0 && (
+          <div style={{ marginTop:12 }}>
+            <h4>Vista previa</h4>
+            <table style={{ width:'100%' }}>
+              <thead><tr><th>Empleado</th><th>Bruto</th><th>Descuentos</th><th>Aportes</th><th>Neto</th></tr></thead>
+              <tbody>
+                {preview.map(p=> (
+                  <tr key={p.employeeId}><td>{p.name}</td><td>{p.bruto}</td><td>{p.descuentos}</td><td>{p.aportes}</td><td>{p.neto}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop:8, display:'flex', gap:8, justifyContent:'flex-end' }}>
+              <button onClick={generateAsientos} style={{ padding:8, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Generar Asientos</button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+const BoletasPago = ({ theme }) => {
+  const [period, setPeriod] = useState('2025-12');
+  const payroll = ERP.calculatePayroll(period);
+
+  const downloadPDF = (emp) => {
+    // Simular descarga PDF
+    alert(`Descargando boleta de ${emp.name} para ${period}`);
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Boletas de Pago</h1>
+      <div style={{ marginBottom:12 }}>
+        <select value={period} onChange={e=>setPeriod(e.target.value)}>
+          <option>2025-12</option>
+          <option>2026-01</option>
+        </select>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12 }}>
+        {payroll.map(p => (
+          <Card key={p.employeeId}>
+            <h4>{p.name}</h4>
+            <p>Sueldo Bruto: Bs {p.bruto}</p>
+            <p>Descuentos: Bs {p.descuentos}</p>
+            <p>Aportes: Bs {p.aportes}</p>
+            <p><strong>Neto: Bs {p.neto}</strong></p>
+            <button onClick={() => downloadPDF(p)} style={{ padding:6, background:theme.primary, color:'white', border:'none' }}>Descargar PDF</button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AportesImpuestos = ({ theme }) => {
+  const [period, setPeriod] = useState('2025-12');
+  const payroll = ERP.calculatePayroll(period);
+
+  const totalAFP = payroll.reduce((s,p)=>s + p.aportes * 0.1271, 0);
+  const totalCajaSalud = payroll.reduce((s,p)=>s + p.aportes * 0.0171, 0);
+  const totalRCIVA = payroll.reduce((s,p)=>s + p.bruto * 0.13, 0); // Simulado
+
+  const exportReport = (type) => {
+    alert(`Exportando reporte ${type} para ${period} como PDF`);
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Aportes e Impuestos</h1>
+      <div style={{ marginBottom:12 }}>
+        <select value={period} onChange={e=>setPeriod(e.target.value)}>
+          <option>2025-12</option>
+          <option>2026-01</option>
+        </select>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+        <Card>
+          <h4>AFP (12.71%)</h4>
+          <p>Total: Bs {totalAFP.toFixed(2)}</p>
+          <button onClick={()=>exportReport('AFP')} style={{ padding:6, background:theme.primary, color:'white', border:'none' }}>Exportar Reporte</button>
+        </Card>
+        <Card>
+          <h4>Caja de Salud (1.71%)</h4>
+          <p>Total: Bs {totalCajaSalud.toFixed(2)}</p>
+          <button onClick={()=>exportReport('Caja Salud')} style={{ padding:6, background:theme.primary, color:'white', border:'none' }}>Exportar Reporte</button>
+        </Card>
+        <Card>
+          <h4>RC-IVA (13%)</h4>
+          <p>Total: Bs {totalRCIVA.toFixed(2)}</p>
+          <button onClick={()=>exportReport('RC-IVA')} style={{ padding:6, background:theme.primary, color:'white', border:'none' }}>Exportar Reporte</button>
+        </Card>
+      </div>
+      <Card style={{ marginTop:12 }}>
+        <h4>Detalle por Empleado</h4>
+        <table style={{ width:'100%' }}>
+          <thead><tr><th>Empleado</th><th>AFP</th><th>Caja Salud</th><th>RC-IVA</th></tr></thead>
+          <tbody>
+            {payroll.map(p=> (
+              <tr key={p.employeeId}>
+                <td>{p.name}</td>
+                <td>Bs {(p.aportes * 0.1271).toFixed(2)}</td>
+                <td>Bs {(p.aportes * 0.0171).toFixed(2)}</td>
+                <td>Bs {(p.bruto * 0.13).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+};
+
+// ----------------------
+// INTEGRACIÓN, TESORERÍA Y SEGURIDAD
+// ----------------------
+
+const AsientosAutomaticos = ({ theme }) => {
+  const [period, setPeriod] = useState('2025-12');
+  const payroll = ERP.calculatePayroll(period);
+  const asientos = ERPStore.asientos.filter(a => a.tipo === 'Planilla' && a.fecha.startsWith(period));
+
+  const totalDebito = payroll.reduce((s,p)=>s+p.bruto,0);
+  const totalCredito = totalDebito;
+
+  const confirmAsiento = (id) => {
+    ERP.approveAsiento(id);
+    alert('Asiento confirmado');
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Asientos Automáticos de Planillas</h1>
+      <div style={{ marginBottom:12 }}>
+        <select value={period} onChange={e=>setPeriod(e.target.value)}>
+          <option>2025-12</option>
+          <option>2026-01</option>
+        </select>
+      </div>
+      <Card>
+        <h4>Asientos Generados</h4>
+        {asientos.length === 0 ? (
+          <p>No hay asientos generados para este período.</p>
+        ) : (
+          asientos.map(a => (
+            <div key={a.id} style={{ border:'1px solid #e2e8f0', padding:12, marginBottom:8 }}>
+              <p><strong>ID:</strong> {a.id} | <strong>Fecha:</strong> {a.fecha} | <strong>Estado:</strong> {a.estado}</p>
+              <p><strong>Glosa:</strong> {a.glosa}</p>
+              <table style={{ width:'100%', marginTop:8 }}>
+                <thead><tr><th>Cuenta</th><th>Débito</th><th>Crédito</th></tr></thead>
+                <tbody>
+                  {a.lines.map((l,i)=> (
+                    <tr key={i}><td>{l.cuenta}</td><td>{l.debito}</td><td>{l.credito}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+              {a.estado === 'borrador' && (
+                <button onClick={()=>confirmAsiento(a.id)} style={{ padding:6, background:'#10b981', color:'white', border:'none', marginTop:8 }}>Confirmar Asiento</button>
+              )}
+            </div>
+          ))
+        )}
+        <div style={{ marginTop:12 }}>
+          <p><strong>Total Débito:</strong> Bs {totalDebito.toFixed(2)}</p>
+          <p><strong>Total Crédito:</strong> Bs {totalCredito.toFixed(2)}</p>
+          <p style={{ color: totalDebito === totalCredito ? '#10b981' : '#ef4444' }}>
+            {totalDebito === totalCredito ? 'Balanceado' : 'No balanceado'}
+          </p>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const PagosSueldos = ({ theme }) => {
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0,7));
+
+  const handleGenerate = () => {
+    const payroll = ERP.calculatePayroll(period,'mensual');
+    const csv = ERP.generateBankFile(payroll);
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `pago_sueldos_${period}.csv`; a.click(); URL.revokeObjectURL(url);
+    alert('Archivo bancario generado');
+  };
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Pagos de Sueldos</h1>
+      <Card>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:12, color: theme.textMuted }}>Período</div>
+            <input type="month" value={period} onChange={e=>setPeriod(e.target.value)} />
+          </div>
+          <div>
+            <button onClick={handleGenerate} style={{ padding:8, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Generar archivo bancario</button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const RolesPermisos = ({ theme }) => {
+  const roles = [
+    { name: 'Admin', permissions: { rrhh: 'full', contabilidad: 'full', finanzas: 'full', auditoria: 'full' } },
+    { name: 'Contador', permissions: { rrhh: 'read', contabilidad: 'full', finanzas: 'read', auditoria: 'none' } },
+    { name: 'RRHH', permissions: { rrhh: 'full', contabilidad: 'none', finanzas: 'none', auditoria: 'none' } },
+    { name: 'Auditor', permissions: { rrhh: 'read', contabilidad: 'read', finanzas: 'read', auditoria: 'full' } }
+  ];
+
+  const modules = ['rrhh', 'contabilidad', 'finanzas', 'auditoria'];
+
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Roles y Permisos</h1>
+      <Card>
+        <h4>Matriz de Permisos</h4>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead>
+            <tr style={{ background:'#f8fafc' }}>
+              <th style={{ padding:8, border:'1px solid #e2e8f0' }}>Rol</th>
+              {modules.map(m => <th key={m} style={{ padding:8, border:'1px solid #e2e8f0' }}>{m.charAt(0).toUpperCase() + m.slice(1)}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {roles.map(r => (
+              <tr key={r.name}>
+                <td style={{ padding:8, border:'1px solid #e2e8f0', fontWeight:'bold' }}>{r.name}</td>
+                {modules.map(m => (
+                  <td key={m} style={{ padding:8, border:'1px solid #e2e8f0', textAlign:'center' }}>
+                    {r.permissions[m] === 'full' ? '✓' : r.permissions[m] === 'read' ? 'R' : '✗'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ marginTop:12 }}>
+          <p><strong>Leyenda:</strong> ✓ = Acceso completo, R = Solo lectura, ✗ = Sin acceso</p>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const Bitacora = ({ theme }) => {
+  const [logs, setLogs] = useState([...ERPStore.bitacora]);
+  useEffect(()=>{ setLogs([...ERPStore.bitacora]); }, []);
+  return (
+    <div style={{ padding:20 }}>
+      <h1 style={{ color: theme.primary }}>Bitácora de Cambios</h1>
+      <Card>
+        <div style={{ maxHeight:360, overflow:'auto' }}>
+          {logs.length === 0 && <div style={{ color: '#64748b' }}>Sin registros</div>}
+          {logs.map((l,i)=> (
+            <div key={i} style={{ padding:'8px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ fontSize:12, color:'#64748b' }}>{l.when} · {l.who} · {l.action}</div>
+              <div style={{ fontWeight:600 }}>{l.after?.name || l.after?.id || ''}</div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );

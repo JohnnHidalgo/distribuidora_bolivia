@@ -1,0 +1,9 @@
+Applied changes summary:
+- Added Contabilidad and RRHH mockups in src/App.js
+- Implemented in-memory ERPStore and ERP helpers (accounts, asientos, employees, payroll)
+- Implemented Plan de Cuentas CRUD, Registro de Asientos (balance validation), Libro Diario export, Cálculo de Planillas, Pagos Sueldos CSV
+
+Next steps:
+- Implement Cierre Contable validations and period locking (pending)
+- Implement Reportes Financieros calculations (pending)
+- Implement Employee management CRUD and boletas PDF (pending)
