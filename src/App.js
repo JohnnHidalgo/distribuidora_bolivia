@@ -577,6 +577,30 @@ const App = () => {
     sidebarBg: '#0f172a'
   };
 
+  const menus = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'orders', label: 'Consolidación' },
+    { id: 'assignments', label: 'Asignaciones' },
+    { id: 'tracking', label: 'Seguimiento' },
+    { id: 'baskets', label: 'Canastos' },
+    { id: 'reports', label: 'Reportes' },
+    { id: 'driverApp', label: 'App Chofer' },
+    { id: 'clientApp', label: 'App Cliente' },
+    { id: 'contabilidad', label: 'Contabilidad' },
+    { id: 'rrhh', label: 'RRHH / Planillas' },
+    { id: 'settings', label: 'Configuración' },
+  ];
+
+  const [roles, setRoles] = useState([
+    { id: 'admin', name: 'Admin', allowedMenus: menus.map(m => m.id) },
+    { id: 'gerente', name: 'Gerente', allowedMenus: ['dashboard', 'orders', 'assignments', 'tracking', 'baskets', 'reports', 'settings'] },
+    { id: 'despachador 1', name: 'Despachador 1', allowedMenus: ['assignments', 'tracking'] },
+    { id: 'despachador 2', name: 'Despachador 2', allowedMenus: ['assignments', 'tracking'] },
+    { id: 'contador', name: 'Contador', allowedMenus: ['contabilidad', 'rrhh'] },
+    { id: 'encargado de ruta', name: 'Encargado de Ruta', allowedMenus: ['assignments', 'tracking', 'reports'] },
+    { id: 'preventista', name: 'Preventista', allowedMenus: ['orders', 'tracking'] },
+  ]);
+
   const styles = (isMobile, sidebarVisible, sidebarCollapsed) => ({
     container: {
       display: 'flex',
@@ -6217,15 +6241,32 @@ const UsersSettings = ({ theme }) => {
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ firstName: '', lastName: '', ci: '', role: '' });
 
-  const roles = [
-    { value: 'admin', label: 'Admin' },
-    { value: 'gerente', label: 'Gerente' },
-    { value: 'despachador 1', label: 'Despachador 1' },
-    { value: 'despachador 2', label: 'Despachador 2' },
-    { value: 'contador', label: 'Contador' },
-    { value: 'encargado de ruta', label: 'Encargado de Ruta' },
-    { value: 'preventista', label: 'Preventista' },
+  const menus = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'orders', label: 'Consolidación' },
+    { id: 'assignments', label: 'Asignaciones' },
+    { id: 'tracking', label: 'Seguimiento' },
+    { id: 'baskets', label: 'Canastos' },
+    { id: 'reports', label: 'Reportes' },
+    { id: 'driverApp', label: 'App Chofer' },
+    { id: 'clientApp', label: 'App Cliente' },
+    { id: 'contabilidad', label: 'Contabilidad' },
+    { id: 'rrhh', label: 'RRHH / Planillas' },
+    { id: 'settings', label: 'Configuración' },
   ];
+
+  const [roles, setRoles] = useState([
+    { id: 'admin', name: 'Admin', allowedMenus: menus.map(m => m.id) },
+    { id: 'gerente', name: 'Gerente', allowedMenus: ['dashboard', 'orders', 'assignments', 'tracking', 'baskets', 'reports', 'settings'] },
+    { id: 'despachador 1', name: 'Despachador 1', allowedMenus: ['assignments', 'tracking'] },
+    { id: 'despachador 2', name: 'Despachador 2', allowedMenus: ['assignments', 'tracking'] },
+    { id: 'contador', name: 'Contador', allowedMenus: ['contabilidad', 'rrhh'] },
+    { id: 'encargado de ruta', name: 'Encargado de Ruta', allowedMenus: ['assignments', 'tracking', 'reports'] },
+    { id: 'preventista', name: 'Preventista', allowedMenus: ['orders', 'tracking'] },
+  ]);
+
+  const [creatingRole, setCreatingRole] = useState(false);
+  const [roleForm, setRoleForm] = useState({ name: '', allowedMenus: [] });
 
   const handleSave = () => {
     if (editing) {
@@ -6242,12 +6283,20 @@ const UsersSettings = ({ theme }) => {
     <Card>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Usuarios</h3>
-        <button
-          onClick={() => setEditing('new')}
-          style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Plus size={16} /> Nuevo Usuario
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => setCreatingRole(true)}
+            style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={16} /> Crear Rol
+          </button>
+          <button
+            onClick={() => setEditing('new')}
+            style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={16} /> Nuevo Usuario
+          </button>
+        </div>
       </div>
       {(editing === 'new' || editing) && (
         <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
@@ -6288,7 +6337,7 @@ const UsersSettings = ({ theme }) => {
               >
                 <option value="">Seleccionar rol...</option>
                 {roles.map(r => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
+                  <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
               </select>
             </div>
@@ -6298,6 +6347,53 @@ const UsersSettings = ({ theme }) => {
               <Save size={14} /> Guardar
             </button>
             <button onClick={() => { setEditing(null); setFormData({ firstName: '', lastName: '', ci: '', role: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {creatingRole && (
+        <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>NOMBRE DEL ROL</label>
+            <input 
+              type="text" 
+              value={roleForm.name} 
+              onChange={(e) => setRoleForm({...roleForm, name: e.target.value})} 
+              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+            />
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PANTALLAS CON ACCESO</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
+              {menus.map(menu => (
+                <label key={menu.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={roleForm.allowedMenus.includes(menu.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setRoleForm({...roleForm, allowedMenus: [...roleForm.allowedMenus, menu.id]});
+                      } else {
+                        setRoleForm({...roleForm, allowedMenus: roleForm.allowedMenus.filter(id => id !== menu.id)});
+                      }
+                    }}
+                  />
+                  {menu.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => {
+              const newId = Math.max(...roles.map(r => r.id.length ? parseInt(r.id) : 0), 0) + 1;
+              setRoles([...roles, { id: newId.toString(), name: roleForm.name, allowedMenus: roleForm.allowedMenus }]);
+              setCreatingRole(false);
+              setRoleForm({ name: '', allowedMenus: [] });
+            }} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <Save size={14} /> Guardar Rol
+            </button>
+            <button onClick={() => { setCreatingRole(false); setRoleForm({ name: '', allowedMenus: [] }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
               Cancelar
             </button>
           </div>
@@ -6320,7 +6416,7 @@ const UsersSettings = ({ theme }) => {
               <td style={{ padding: '12px', fontWeight: '600' }}>{u.firstName}</td>
               <td style={{ padding: '12px' }}>{u.lastName}</td>
               <td style={{ padding: '12px' }}>{u.ci}</td>
-              <td style={{ padding: '12px' }}>{roles.find(r => r.value === u.role)?.label || u.role}</td>
+              <td style={{ padding: '12px' }}>{roles.find(r => r.id === u.role)?.name || u.role}</td>
               <td style={{ padding: '12px' }}>
                 <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: u.active ? '#dcfce7' : '#fee2e2', color: u.active ? '#166534' : '#991b1b' }}>
                   {u.active ? 'Activo' : 'Inactivo'}
