@@ -54,6 +54,79 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Iconos personalizados para marcadores
+const vehicleIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const clientIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Componentes auxiliares
+const Card = ({ children, style }) => (
+  <div style={{ 
+    backgroundColor: 'white', padding: '24px', borderRadius: '12px', 
+    border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', ...style 
+  }}>
+    {children}
+  </div>
+);
+
+const Login = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onLogin();
+  };
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f8fafc' }}>
+      <Card>
+        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Iniciar Sesión</h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>USUARIO</label>
+            <input 
+              type="text" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+            />
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CONTRASEÑA</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} 
+            />
+          </div>
+          <button 
+            type="submit" 
+            style={{ width: '100%', backgroundColor: '#e11d48', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Ingresar
+          </button>
+        </form>
+      </Card>
+    </div>
+  );
+};
+
 // Simple in-memory store to share data between mockup components
 const ERPStore = {
   accounts: [
@@ -473,6 +546,7 @@ const App = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Estados para el modal de nuevo cliente
   const [showNewClientModal, setShowNewClientModal] = useState(false);
@@ -583,7 +657,6 @@ const App = () => {
     { id: 'assignments', label: 'Asignaciones' },
     { id: 'tracking', label: 'Seguimiento' },
     { id: 'baskets', label: 'Canastos' },
-    { id: 'reports', label: 'Reportes' },
     { id: 'driverApp', label: 'App Chofer' },
     { id: 'clientApp', label: 'App Cliente' },
     { id: 'contabilidad', label: 'Contabilidad' },
@@ -760,7 +833,6 @@ const App = () => {
       case 'driverApp': return <DriverAppView theme={theme} />;
       case 'clientApp': return <ClientAppView theme={theme} />;
       case 'baskets': return <BasketView theme={theme} />;
-      case 'reports': return <ReportsView theme={theme} />;
       case 'settings': return <SettingsView 
         theme={theme} 
         showNewClientModal={showNewClientModal}
@@ -783,7 +855,7 @@ const App = () => {
 
   const currentStyles = styles(isMobile, sidebarVisible, sidebarCollapsed);
 
-  return (
+  return isLoggedIn ? (
     <div style={currentStyles.container}>
       {/* Sidebar Overlay for Mobile */}
       <div 
@@ -844,11 +916,10 @@ const App = () => {
         
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {allowedMenus.includes('dashboard') && <SidebarBtn id="dashboard" icon= {LayoutDashboard} label="Dashboard" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
-          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Consolidación" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
+          {allowedMenus.includes('orders') && <SidebarBtn id="orders" icon={ShoppingCart} label="Solicitudes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('assignments') && <SidebarBtn id="assignments" icon={Truck} label="Asignaciones" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('tracking') && <SidebarBtn id="tracking" icon={MapPin} label="Seguimiento" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('baskets') && <SidebarBtn id="baskets" icon={Archive} label="Canastos" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
-          {allowedMenus.includes('reports') && <SidebarBtn id="reports" icon={BarChart3} label="Reportes" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('driverApp') && <SidebarBtn id="driverApp" icon={Users} label="App Chofer" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('clientApp') && <SidebarBtn id="clientApp" icon={UserCircle} label="App Cliente" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
           {allowedMenus.includes('contabilidad') && <SidebarBtn id="contabilidad" icon={Scale} label="Contabilidad" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
@@ -857,7 +928,7 @@ const App = () => {
 
         <div style={{ paddingTop: '20px', borderTop: `1px solid #1e293b`, marginTop: '20px' }}>
           {allowedMenus.includes('settings') && <SidebarBtn id="settings" icon={Settings} label="Configuración" activeTab={activeTab} setActiveTab={handleTabChange} theme={theme} collapsed={sidebarCollapsed && !isMobile} />}
-          <button style={{ 
+          <button onClick={() => setIsLoggedIn(false)} style={{ 
             width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
             backgroundColor: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left'
           }}>
@@ -1080,7 +1151,7 @@ const App = () => {
         )}
       </div>
     </div>
-  );
+  ) : <Login onLogin={() => setIsLoggedIn(true)} />;
 };
 
 // Componentes Auxiliares
@@ -1103,15 +1174,6 @@ const SidebarBtn = ({ id, icon: Icon, label, activeTab, setActiveTab, theme, col
     </button>
   );
 };
-
-const Card = ({ children, style }) => (
-  <div style={{ 
-    backgroundColor: 'white', padding: '24px', borderRadius: '12px', 
-    border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', ...style 
-  }}>
-    {children}
-  </div>
-);
 
 // --- VISTAS ESPECÍFICAS ---
 
@@ -1172,37 +1234,6 @@ const DashboardView = ({ theme }) => {
           </div>
         </Card>
 
-        {/* Gasolina por Entrega */}
-        <Card>
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Fuel size={20} color={theme.primary} />
-            Gasolina por Entrega
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: '36px', fontWeight: '900', color: theme.primary, marginBottom: '8px' }}>8.5</div>
-              <div style={{ fontSize: '14px', color: theme.textMuted, fontWeight: '600' }}>Litros por Entrega</div>
-            </div>
-            <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: theme.textMuted }}>
-                <span>Total Entregas Hoy:</span>
-                <span style={{ fontWeight: 'bold', color: theme.textMain }}>42</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: theme.textMuted }}>
-                <span>Consumo Total:</span>
-                <span style={{ fontWeight: 'bold', color: theme.textMain }}>357 L</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: theme.textMuted }}>
-                <span>Costo Estimado:</span>
-                <span style={{ fontWeight: 'bold', color: theme.primary }}>Bs 2,142</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Cuarta fila con gráficos adicionales */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <Card>
           <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: 'bold' }}>Pedidos por Categoría (Hoy)</h3>
           {['104', '105', '106', '107', '108', '109', '110'].map((cat, i) => (
@@ -1217,6 +1248,10 @@ const DashboardView = ({ theme }) => {
             </div>
           ))}
         </Card>
+      </div>
+
+      {/* Cuarta fila con gráficos adicionales */}
+      <div style={{  gap: '24px' }}>
         <Card style={{ padding: 0, overflow: 'hidden', height: '400px' }}>
           <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1224,7 +1259,7 @@ const DashboardView = ({ theme }) => {
               Seguimiento de Vehículos en Tiempo Real
             </h3>
           </div>
-          <div style={{ height: 'calc(100% - 60px)', width: '100%', position: 'relative' }}>
+          <div style={{ height: '100%', width: '100%', position: 'relative' }}>
             <MapContainer 
               center={[-16.5000, -68.1500]} 
               zoom={12} 
@@ -1374,6 +1409,7 @@ const ConsolidationView = ({
       client: 'Pollería El Rey',
       date: '2025-12-25',
       status: 'emitido',
+      paid: false,
       products: {
         104: { boxes: 10, units: 0, hasOffal: false },
         107: { boxes: 5, units: 0, hasOffal: true },
@@ -1387,6 +1423,7 @@ const ConsolidationView = ({
       client: 'Doña Juana',
       date: '2025-12-24',
       status: 'enviado',
+      paid: true,
       products: {
         104: { boxes: 0, units: 2, hasOffal: true },
         109: { boxes: 0, units: 5, hasOffal: false }
@@ -1399,6 +1436,7 @@ const ConsolidationView = ({
       client: 'Pollería Central',
       date: '2025-12-25',
       status: 'emitido',
+      paid: false,
       products: {
         105: { boxes: 8, units: 0, hasOffal: false },
         106: { boxes: 3, units: 0, hasOffal: true }
@@ -1411,6 +1449,7 @@ const ConsolidationView = ({
       client: 'Carnicería Norte',
       date: '2025-12-23',
       status: 'enviado',
+      paid: true,
       products: {
         110: { boxes: 0, units: 10, hasOffal: false }
       }
@@ -1945,19 +1984,35 @@ const ConsolidationView = ({
                     <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>CLIENTE</div>
                     <div style={{ fontSize: '14px', fontWeight: '600' }}>{request.client}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
-                      color: request.status === 'emitido' ? '#92400e' : '#065f46',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      textTransform: 'capitalize'
-                    }}>
-                      {request.status}
-                    </span>
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        background: request.status === 'emitido' ? '#fef3c7' : '#d1fae5',
+                        color: request.status === 'emitido' ? '#92400e' : '#065f46',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        textTransform: 'capitalize'
+                      }}>
+                        {request.status}
+                      </span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>PAGADO</div>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        background: request.paid ? '#d1fae5' : '#fee2e2',
+                        color: request.paid ? '#065f46' : '#991b1b',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {request.paid ? 'SI' : 'NO'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -2121,6 +2176,7 @@ const AssignmentView = ({
   };
 
   const [selectedProvider, setSelectedProvider] = useState('SOFIA');
+  const [selectedGroup, setSelectedGroup] = useState('ALL');
   const [filterProvider, setFilterProvider] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
@@ -2249,6 +2305,26 @@ const AssignmentView = ({
                 >
                   <option value="SOFIA">Avícola Sofía</option>
                   <option value="PIO">PIO / IMBA</option>
+                </select>
+              </div>
+
+              {/* Selección de Grupo de Productos */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO DE PRODUCTOS</label>
+                <select 
+                  value={selectedGroup} 
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                >
+                  <option value="ALL">Todos</option>
+                  <option value="POLLO SOFIA">Pollo Sofía</option>
+                  <option value="POLLO AVC">Pollo AVC</option>
+                  <option value="OTROS SOFIA">Otros Sofía</option>
+                  <option value="OTROS AVC">Otros AVC</option>
+                  <option value="PROCESADOS">Procesados</option>
+                  <option value="HUEVO">Huevo</option>
+                  <option value="CERDO">Cerdo</option>
+                  <option value="POLLO CONGELADO">Pollo Congelado</option>
                 </select>
               </div>
 
@@ -4467,6 +4543,8 @@ const TrackingView = ({ theme }) => {
       baskets: 10,
       lat: -16.495,
       lng: -68.145,
+      status: 'ENTREGADO',
+      payment: 'SI',
     },
     {
       time: '09:55',
@@ -4478,6 +4556,34 @@ const TrackingView = ({ theme }) => {
       baskets: 8,
       lat: -16.505,
       lng: -68.155,
+      status: 'ENVIADO',
+      payment: 'NO',
+    },
+    {
+      time: '10:10',
+      client: 'Supermercado Norte',
+      route: 'El Alto Norte',
+      vehicleId: 'VH-01',
+      driver: 'Juan Pérez',
+      orders: 1,
+      baskets: 5,
+      lat: -16.510,
+      lng: -68.150,
+      status: 'ENTREGADO',
+      payment: 'SI',
+    },
+    {
+      time: '10:25',
+      client: 'Restaurante Los Andes',
+      route: 'El Alto Norte',
+      vehicleId: 'VH-01',
+      driver: 'Juan Pérez',
+      orders: 4,
+      baskets: 12,
+      lat: -16.520,
+      lng: -68.140,
+      status: 'ENVIADO',
+      payment: 'NO',
     },
     {
       time: '10:05',
@@ -4489,6 +4595,21 @@ const TrackingView = ({ theme }) => {
       baskets: 6,
       lat: -16.515,
       lng: -68.135,
+      status: 'ENTREGADO',
+      payment: 'SI',
+    },
+    {
+      time: '10:20',
+      client: 'Tienda La Paz',
+      route: 'El Alto Sur',
+      vehicleId: 'VH-02',
+      driver: 'María González',
+      orders: 3,
+      baskets: 9,
+      lat: -16.525,
+      lng: -68.130,
+      status: 'ENVIADO',
+      payment: 'NO',
     },
     {
       time: '09:30',
@@ -4500,6 +4621,34 @@ const TrackingView = ({ theme }) => {
       baskets: 15,
       lat: -16.485,
       lng: -68.165,
+      status: 'ENTREGADO',
+      payment: 'SI',
+    },
+    {
+      time: '09:50',
+      client: 'Café Paradiso',
+      route: 'La Paz Centro',
+      vehicleId: 'VH-03',
+      driver: 'Carlos Ramírez',
+      orders: 2,
+      baskets: 7,
+      lat: -16.490,
+      lng: -68.170,
+      status: 'ENTREGADO',
+      payment: 'SI',
+    },
+    {
+      time: '10:10',
+      client: 'Hotel Bolivia',
+      route: 'La Paz Centro',
+      vehicleId: 'VH-03',
+      driver: 'Carlos Ramírez',
+      orders: 4,
+      baskets: 18,
+      lat: -16.495,
+      lng: -68.175,
+      status: 'ENVIADO',
+      payment: 'NO',
     },
   ];
 
@@ -4521,38 +4670,9 @@ const TrackingView = ({ theme }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Resumen rápido */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
-        <StatCard
-          title="Vehículos en ruta"
-          value={vehicles.length}
-          change="+2"
-          icon={Truck}
-          color={theme.primary}
-        />
-        <StatCard
-          title="Órdenes entregadas (hoy)"
-          value={deliveries.reduce((s, d) => s + d.orders, 0)}
-          change="+12"
-          icon={CheckCircle2}
-          color="#10b981"
-        />
-        <StatCard
-          title="Canastos entregados (hoy)"
-          value={totalBasketsDelivered}
-          change="+18"
-          icon={Archive}
-          color="#f59e0b"
-        />
-        <StatCard
-          title="Vehículo seleccionado"
-          value={selectedVehicle.id}
-          icon={MapPin}
-          color="#3b82f6"
-        />
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '24px', alignItems: 'stretch' }}>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '24px', alignItems: 'stretch' }}>
         {/* Mapa y detalle de vehículo */}
         <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div
@@ -4564,38 +4684,8 @@ const TrackingView = ({ theme }) => {
               alignItems: 'center',
             }}
           >
-            <div>
-              <div style={{ fontWeight: 'bold' }}>Mapa de Vehículos en Ruta</div>
-              <div style={{ fontSize: '12px', color: theme.textMuted }}>
-                Visualiza la ubicación actual y el estado de cada unidad
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textMuted }}>RUTA</label>
-              <select
-                value={routeFilter}
-                onChange={(e) => {
-                  setRouteFilter(e.target.value);
-                  const first = vehicles.find(v => e.target.value === 'ALL' || v.route === e.target.value);
-                  if (first) setSelectedVehicleId(first.id);
-                }}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '12px',
-                  outline: 'none',
-                }}
-              >
-                {routes.map(r => (
-                  <option key={r} value={r}>
-                    {r === 'ALL' ? 'Todas las rutas' : r}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
-          <div style={{ height: '360px' }}>
+          <div style={{ height: '500px' }}>
             <MapContainer
               center={[selectedVehicle.lat, selectedVehicle.lng]}
               zoom={13}
@@ -4612,6 +4702,7 @@ const TrackingView = ({ theme }) => {
                 <Marker
                   key={v.id}
                   position={[v.lat, v.lng]}
+                  icon={vehicleIcon}
                   eventHandlers={{
                     click: () => setSelectedVehicleId(v.id),
                   }}
@@ -4638,6 +4729,7 @@ const TrackingView = ({ theme }) => {
                 <Marker
                   key={`cli-${idx}-${d.client}`}
                   position={[d.lat, d.lng]}
+                  icon={clientIcon}
                 >
                   <Popup>
                     <div style={{ fontSize: '12px' }}>
@@ -4647,8 +4739,26 @@ const TrackingView = ({ theme }) => {
                       <div>Ruta: {d.route}</div>
                       <div>Vehículo: {d.vehicleId}</div>
                       <div>Chofer: {d.driver}</div>
-                      <div>Órdenes entregadas: {d.orders}</div>
-                      <div>Canastos entregados: {d.baskets}</div>
+                      <div>Órdenes: {d.orders}</div>
+                      <div>Canastos: {d.baskets}</div>
+                      <div style={{ marginTop: '4px' }}>
+                        <span style={{ fontWeight: 'bold' }}>Estado: </span>
+                        <span style={{ 
+                          color: d.status === 'ENTREGADO' ? '#10b981' : '#f59e0b',
+                          fontWeight: 'bold'
+                        }}>
+                          {d.status}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 'bold' }}>Pago: </span>
+                        <span style={{ 
+                          color: d.payment === 'SI' ? '#10b981' : '#ef4444',
+                          fontWeight: 'bold'
+                        }}>
+                          {d.payment === 'SI' ? 'SI' : 'NO'}
+                        </span>
+                      </div>
                       <div style={{ marginTop: '4px', color: theme.textMuted }}>Hora: {d.time}</div>
                     </div>
                   </Popup>
@@ -4687,14 +4797,82 @@ const TrackingView = ({ theme }) => {
               </div>
             </div>
           </div>
+          <div style={{ padding: '12px 18px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>
+              Detalle de la ruta
+            </div>
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              {selectedVehicleDeliveries.map((d, idx) => (
+                <div key={idx} style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  padding: '8px 0', 
+                  borderBottom: idx < selectedVehicleDeliveries.length - 1 ? '1px solid #f1f5f9' : 'none' 
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{d.client}</div>
+                    <div style={{ fontSize: '11px', color: theme.textMuted }}>{d.time} · {d.orders} órdenes · {d.baskets} canastos</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ 
+                      fontSize: '10px', 
+                      padding: '2px 6px', 
+                      borderRadius: '4px', 
+                      backgroundColor: d.status === 'ENTREGADO' ? '#10b981' : '#f59e0b',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}>
+                      {d.status}
+                    </div>
+                    <div style={{ 
+                      fontSize: '10px', 
+                      padding: '2px 6px', 
+                      borderRadius: '4px', 
+                      backgroundColor: d.payment === 'SI' ? '#10b981' : '#ef4444',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}>
+                      {d.payment === 'SI' ? 'PAGADO' : 'PENDIENTE'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Lista de vehículos y resumen de canastos/órdenes */}
         <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ fontWeight: 'bold' }}>Vehículos en ruta</div>
-            <div style={{ fontSize: '12px', color: theme.textMuted }}>Selecciona una unidad para centrar el mapa</div>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Vehículos en ruta</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Selecciona una unidad para centrar el mapa</div>
+            </div>
+            <select
+              value={routeFilter}
+              onChange={(e) => {
+                setRouteFilter(e.target.value);
+                const first = vehicles.find(v => e.target.value === 'ALL' || v.route === e.target.value);
+                if (first) setSelectedVehicleId(first.id);
+              }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            >
+              {routes.map(r => (
+                <option key={r} value={r}>
+                  {r === 'ALL' ? 'Todas las rutas' : r}
+                </option>
+              ))}
+            </select>
           </div>
+
+
           <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
             {filteredVehicles.map(v => {
               const isActive = v.id === selectedVehicleId;
@@ -4752,87 +4930,8 @@ const TrackingView = ({ theme }) => {
             })}
           </div>
 
-          <div style={{ padding: '14px 18px', borderTop: '1px solid #f1f5f9' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '13px' }}>
-              Entregas del vehículo seleccionado
-            </div>
-            {selectedVehicleDeliveries.length === 0 ? (
-              <div style={{ fontSize: '12px', color: theme.textMuted }}>
-                No hay entregas registradas para esta unidad.
-              </div>
-            ) : (
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '12px', maxHeight: '140px', overflowY: 'auto' }}>
-                {selectedVehicleDeliveries.map((d, idx) => (
-                  <li key={idx} style={{ padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: '600' }}>{d.client}</span>
-                      <span style={{ color: theme.textMuted }}>{d.time}</span>
-                    </div>
-                    <div style={{ color: theme.textMuted }}>
-                      {d.orders} ord. · {d.baskets} canastos
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </Card>
       </div>
-
-      {/* Detalle general de solicitudes entregadas */}
-      <Card style={{ padding: 0 }}>
-        <div
-          style={{
-            padding: '14px 18px',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 'bold' }}>Detalle de Solicitudes Entregadas</div>
-            <div style={{ fontSize: '12px', color: theme.textMuted }}>
-              Resumen de entregas por cliente, vehículo y canastos
-            </div>
-          </div>
-        </div>
-        <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
-                <th style={{ padding: '8px 14px' }}>Hora</th>
-                <th style={{ padding: '8px 14px' }}>Cliente</th>
-                <th style={{ padding: '8px 14px' }}>Ruta</th>
-                <th style={{ padding: '8px 14px' }}>Vehículo</th>
-                <th style={{ padding: '8px 14px' }}>Chofer</th>
-                <th style={{ padding: '8px 14px' }}>Órdenes</th>
-                <th style={{ padding: '8px 14px' }}>Canastos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDeliveries.map((d, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '8px 14px', fontSize: '12px', color: theme.textMuted }}>{d.time}</td>
-                  <td style={{ padding: '8px 14px', fontWeight: '600' }}>{d.client}</td>
-                  <td style={{ padding: '8px 14px' }}>{d.route}</td>
-                  <td style={{ padding: '8px 14px' }}>{d.vehicleId}</td>
-                  <td style={{ padding: '8px 14px' }}>{d.driver}</td>
-                  <td style={{ padding: '8px 14px' }}>{d.orders}</td>
-                  <td style={{ padding: '8px 14px', fontWeight: '800', color: theme.primary }}>{d.baskets}</td>
-                </tr>
-              ))}
-              {filteredDeliveries.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: theme.textMuted }}>
-                    No hay entregas registradas para el filtro actual.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   );
 };
@@ -4852,6 +4951,16 @@ const BasketView = ({ theme }) => {
     { client: 'Mercado Central - Puesto 4', route: 'La Paz Centro', baskets: 45, lastMovement: '2025-12-20', status: 'Al día' },
     { client: 'Distribuidor Sucre', route: 'Sucre Centro', baskets: 160, lastMovement: '2025-12-18', status: 'Mora 7 días' },
     { client: 'Feria 16 de Julio - Sector A', route: 'El Alto Norte', baskets: 95, lastMovement: '2025-12-23', status: 'Al día' },
+    { client: 'Restaurante La Cumbre', route: 'La Paz Centro', baskets: 95, lastMovement: '2025-12-15', status: 'Mora 10 días' },
+    { client: 'Tienda El Valle', route: 'El Alto Sur', baskets: 65, lastMovement: '2025-12-19', status: 'Mora 5 días' },
+    { client: 'Supermercado Andino', route: 'La Paz Centro', baskets: 110, lastMovement: '2025-12-14', status: 'Mora 12 días' },
+    { client: 'Café Paradiso', route: 'La Paz Centro', baskets: 40, lastMovement: '2025-12-17', status: 'Mora 8 días' },
+    { client: 'Panadería San Miguel', route: 'El Alto Norte', baskets: 75, lastMovement: '2025-12-16', status: 'Mora 9 días' },
+    { client: 'Carnicería Los Andes', route: 'El Alto Sur', baskets: 85, lastMovement: '2025-12-13', status: 'Mora 14 días' },
+    { client: 'Verdulería El Sol', route: 'La Paz Centro', baskets: 55, lastMovement: '2025-12-18', status: 'Mora 6 días' },
+    { client: 'Minimarket Plaza', route: 'Sucre Centro', baskets: 90, lastMovement: '2025-12-12', status: 'Mora 15 días' },
+    { client: 'Hotel Continental', route: 'La Paz Centro', baskets: 130, lastMovement: '2025-12-11', status: 'Mora 16 días' },
+    { client: 'Farmacia Central', route: 'El Alto Norte', baskets: 50, lastMovement: '2025-12-20', status: 'Mora 4 días' },
   ];
 
   const warehouseLocations = [
@@ -4870,14 +4979,39 @@ const BasketView = ({ theme }) => {
 
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [showExtractModal, setShowExtractModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
-  const filteredClients = clientBaskets.filter(c => {
-    const s = search.toLowerCase();
-    return (
-      c.client.toLowerCase().includes(s) ||
-      c.route.toLowerCase().includes(s)
-    );
-  });
+  const openExtractModal = (client) => {
+    setSelectedClient(client);
+    setShowExtractModal(true);
+  };
+
+  const closeExtractModal = () => {
+    setShowExtractModal(false);
+    setSelectedClient(null);
+  };
+
+  const filteredClients = clientBaskets
+    .filter(c => {
+      const s = search.toLowerCase();
+      return (
+        c.status.includes('Mora') &&
+        (c.client.toLowerCase().includes(s) ||
+         c.route.toLowerCase().includes(s))
+      );
+    })
+    .sort((a, b) => b.baskets - a.baskets);
+
+  const routeTotals = clientBaskets.reduce((acc, c) => {
+    if (!acc[c.route]) acc[c.route] = 0;
+    acc[c.route] += c.baskets;
+    return acc;
+  }, {});
+
+  const routeList = Object.entries(routeTotals)
+    .map(([route, baskets]) => ({ route, baskets }))
+    .sort((a, b) => b.baskets - a.baskets);
 
   const filteredMovements = movements.filter(m => {
     if (!selectedDate) return true;
@@ -4936,8 +5070,8 @@ const BasketView = ({ theme }) => {
         <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: 'bold' }}>Canastos en Clientes</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Detalle por cliente y ruta</div>
+              <div style={{ fontWeight: 'bold' }}>Clientes en Mora</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Canastos pendientes - Ordenado por cantidad (mayor a menor)</div>
             </div>
             <input
               type="text"
@@ -4963,6 +5097,7 @@ const BasketView = ({ theme }) => {
                   <th style={{ padding: '10px 16px' }}>Canastos</th>
                   <th style={{ padding: '10px 16px' }}>Últ. movimiento</th>
                   <th style={{ padding: '10px 16px' }}>Estado</th>
+                  <th style={{ padding: '10px 16px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -4986,6 +5121,23 @@ const BasketView = ({ theme }) => {
                         {c.status}
                       </span>
                     </td>
+                    <td style={{ padding: '10px 16px' }}>
+                      <button
+                        onClick={() => openExtractModal(c)}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          border: '1px solid #e2e8f0',
+                          backgroundColor: 'white',
+                          color: theme.primary,
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Extracto
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filteredClients.length === 0 && (
@@ -5000,32 +5152,32 @@ const BasketView = ({ theme }) => {
           </div>
         </Card>
 
-        {/* Stock en almacenes */}
+        {/* Canastos por ruta */}
         <Card style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontWeight: 'bold' }}>Canastos en Almacén</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Distribución por depósito</div>
+              <div style={{ fontWeight: 'bold' }}>Canastos por Ruta</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Total de canastos en cada ruta</div>
             </div>
           </div>
           <div>
-            {warehouseLocations.map((w, idx) => (
+            {routeList.map((r, idx) => (
               <div
                 key={idx}
                 style={{
                   padding: '14px 20px',
-                  borderBottom: idx === warehouseLocations.length - 1 ? 'none' : '1px solid #f1f5f9',
+                  borderBottom: idx === routeList.length - 1 ? 'none' : '1px solid #f1f5f9',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: '600' }}>{w.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Sector: {w.section}</div>
+                  <div style={{ fontWeight: '600' }}>{r.route}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Ruta de distribución</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: '800', color: theme.frozen }}>{w.baskets} canastos</div>
+                  <div style={{ fontWeight: '800', color: theme.primary }}>{r.baskets} canastos</div>
                   <div
                     style={{
                       marginTop: '4px',
@@ -5038,9 +5190,9 @@ const BasketView = ({ theme }) => {
                   >
                     <div
                       style={{
-                        width: `${(w.baskets / summary.inWarehouse) * 100}%`,
+                        width: `${(r.baskets / summary.withClients) * 100}%`,
                         height: '100%',
-                        backgroundColor: theme.frozen,
+                        backgroundColor: theme.primary,
                       }}
                     />
                   </div>
@@ -5142,6 +5294,121 @@ const BasketView = ({ theme }) => {
           </table>
         </div>
       </Card>
+
+      {/* Modal para extracto del cliente */}
+      {showExtractModal && selectedClient && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={closeExtractModal}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '800px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Extracto de {selectedClient.client}</h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                  Histórico de movimientos de canastos
+                </p>
+              </div>
+              <button
+                onClick={closeExtractModal}
+                style={{
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: theme.primary }}>{selectedClient.baskets}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Canastos pendientes</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>{selectedClient.route}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Ruta asignada</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#b91c1c' }}>{selectedClient.status}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Estado actual</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                    <th style={{ padding: '10px 16px' }}>Fecha</th>
+                    <th style={{ padding: '10px 16px' }}>Tipo Movimiento</th>
+                    <th style={{ padding: '10px 16px' }}>Canastos (+/-)</th>
+                    <th style={{ padding: '10px 16px' }}>Almacén</th>
+                    <th style={{ padding: '10px 16px' }}>Saldo Cliente</th>
+                    <th style={{ padding: '10px 16px' }}>Saldo Almacén</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements
+                    .filter(m => m.client === selectedClient.client)
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map((m, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.date}</td>
+                        <td style={{ padding: '10px 16px' }}>{m.type}</td>
+                        <td
+                          style={{
+                            padding: '10px 16px',
+                            fontWeight: '800',
+                            color: m.baskets < 0 ? theme.primary : '#16a34a',
+                          }}
+                        >
+                          {m.baskets > 0 ? `+${m.baskets}` : m.baskets}
+                        </td>
+                        <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.warehouse}</td>
+                        <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceClient} can.</td>
+                        <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceWarehouse} can.</td>
+                      </tr>
+                    ))}
+                  {movements.filter(m => m.client === selectedClient.client).length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                        No se encontraron movimientos para este cliente.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -5364,11 +5631,12 @@ const SettingsView = ({
 };
 const ProvidersSettings = ({ theme, productCategories }) => {
   const [providers, setProviders] = useState([
-    { id: 1, name: 'Avícola Sofía', code: 'SOFIA', contact: 'contacto@sofia.com', phone: '+591 2 1234567', active: true },
-    { id: 2, name: 'PIO / IMBA', code: 'PIO', contact: 'contacto@pio.com', phone: '+591 2 7654321', active: true },
+    { id: 1, name: 'Avícola Sofía', code: 'SOFIA', contact: 'contacto@sofia.com', phone: '+591 2 1234567', active: true, groups: ['POLLO SOFIA'] },
+    { id: 2, name: 'PIO / IMBA', code: 'PIO', contact: 'contacto@pio.com', phone: '+591 2 7654321', active: true, groups: ['OTROS SOFIA', 'PROCESADOS'] },
   ]);
   const [editing, setEditing] = useState(null);
-  const [formData, setFormData] = useState({ name: '', group: '' });
+  const [formData, setFormData] = useState({ name: '', groups: [] });
+  const [selectedGroupToAdd, setSelectedGroupToAdd] = useState('');
 
   const handleSave = () => {
     if (editing) {
@@ -5377,7 +5645,19 @@ const ProvidersSettings = ({ theme, productCategories }) => {
       setProviders([...providers, { id: Date.now(), ...formData, active: true }]);
     }
     setEditing(null);
-    setFormData({ name: '', group: '' });
+    setFormData({ name: '', groups: [] });
+    setSelectedGroupToAdd('');
+  };
+
+  const addGroup = () => {
+    if (selectedGroupToAdd && !formData.groups.includes(selectedGroupToAdd)) {
+      setFormData({ ...formData, groups: [...formData.groups, selectedGroupToAdd] });
+      setSelectedGroupToAdd('');
+    }
+  };
+
+  const removeGroup = (groupToRemove) => {
+    setFormData({ ...formData, groups: formData.groups.filter(g => g !== groupToRemove) });
   };
 
   return (
@@ -5399,20 +5679,82 @@ const ProvidersSettings = ({ theme, productCategories }) => {
               <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }} />
             </div>
             <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO DE PRODUCTOS</label>
-              <select value={formData.group} onChange={(e) => setFormData({...formData, group: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }}>
-                <option value="">Seleccionar grupo...</option>
-                {productCategories.map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>AGREGAR GRUPO DE PRODUCTOS</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  value={selectedGroupToAdd} 
+                  onChange={(e) => setSelectedGroupToAdd(e.target.value)}
+                  style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none' }}
+                >
+                  <option value="">Seleccionar grupo...</option>
+                  {productCategories.filter(c => !formData.groups.includes(c.name)).map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                <button 
+                  type="button"
+                  onClick={addGroup}
+                  disabled={!selectedGroupToAdd}
+                  style={{ 
+                    padding: '8px 12px', 
+                    borderRadius: '6px', 
+                    border: 'none', 
+                    backgroundColor: selectedGroupToAdd ? theme.primary : '#cbd5e1', 
+                    color: 'white', 
+                    cursor: selectedGroupToAdd ? 'pointer' : 'not-allowed',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
             </div>
           </div>
+          
+          {/* Grupos seleccionados */}
+          {formData.groups.length > 0 && (
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' }}>
+                GRUPOS ASIGNADOS ({formData.groups.length})
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {formData.groups.map(group => (
+                  <div key={group} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    padding: '4px 8px',
+                    backgroundColor: theme.primary + '20',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '500'
+                  }}>
+                    {group}
+                    <button 
+                      type="button"
+                      onClick={() => removeGroup(group)}
+                      style={{ 
+                        border: 'none', 
+                        backgroundColor: 'transparent', 
+                        color: '#dc2626', 
+                        cursor: 'pointer',
+                        padding: '0',
+                        fontSize: '14px',
+                        lineHeight: 1
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={handleSave} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
               <Save size={14} /> Guardar
             </button>
-            <button onClick={() => { setEditing(null); setFormData({ name: '', group: '' }); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+            <button onClick={() => { setEditing(null); setFormData({ name: '', groups: [] }); setSelectedGroupToAdd(''); }} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
               Cancelar
             </button>
           </div>
@@ -5422,7 +5764,7 @@ const ProvidersSettings = ({ theme, productCategories }) => {
         <thead>
           <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '12px' }}>
             <th style={{ padding: '12px', textAlign: 'left' }}>Nombre</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Grupo de Productos</th>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Grupos de Productos</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
             <th style={{ padding: '12px', textAlign: 'left' }}>Acciones</th>
           </tr>
@@ -5431,14 +5773,32 @@ const ProvidersSettings = ({ theme, productCategories }) => {
           {providers.map(p => (
             <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
               <td style={{ padding: '12px', fontWeight: '600' }}>{p.name}</td>
-              <td style={{ padding: '12px' }}>{p.group || 'No especificado'}</td>
+              <td style={{ padding: '12px' }}>
+                {p.groups && p.groups.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {p.groups.map((group, idx) => (
+                      <span key={idx} style={{ 
+                        padding: '2px 6px', 
+                        backgroundColor: theme.primary + '20', 
+                        borderRadius: '3px', 
+                        fontSize: '11px',
+                        fontWeight: '500'
+                      }}>
+                        {group}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  'No especificado'
+                )}
+              </td>
               <td style={{ padding: '12px' }}>
                 <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', backgroundColor: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#166534' : '#991b1b' }}>
                   {p.active ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
               <td style={{ padding: '12px' }}>
-                <button onClick={() => { setEditing(p.id); setFormData({ name: p.name, group: p.group || '' }); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
+                <button onClick={() => { setEditing(p.id); setFormData({ name: p.name, groups: p.groups || [] }); setSelectedGroupToAdd(''); }} style={{ marginRight: '8px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer' }}>
                   <Edit size={14} />
                 </button>
                 <button onClick={() => setProviders(providers.filter(pr => pr.id !== p.id))} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}>
@@ -6247,7 +6607,6 @@ const UsersSettings = ({ theme }) => {
     { id: 'assignments', label: 'Asignaciones' },
     { id: 'tracking', label: 'Seguimiento' },
     { id: 'baskets', label: 'Canastos' },
-    { id: 'reports', label: 'Reportes' },
     { id: 'driverApp', label: 'App Chofer' },
     { id: 'clientApp', label: 'App Cliente' },
     { id: 'contabilidad', label: 'Contabilidad' },
@@ -6585,9 +6944,6 @@ const DriverAppView = ({ theme }) => {
                                 <option value="">Método...</option>
                                 <option value="Efectivo">💵 Efectivo</option>
                                 <option value="QR">📱 QR</option>
-                                <option value="Transferencia">🏦 Transf</option>
-                                <option value="Cheque">📄 Cheque</option>
-                                <option value="Tarjeta">💳 Tarjeta</option>
                               </select>
                               <button 
                                 onClick={() => c.selectedPaymentMethod && registerPayment(c.id, c.selectedPaymentMethod)} 
@@ -6804,9 +7160,6 @@ const DriverAppView = ({ theme }) => {
                         <option value="">Seleccionar método...</option>
                         <option value="Efectivo">💵 Efectivo</option>
                         <option value="QR">📱 QR</option>
-                        <option value="Transferencia">🏦 Transferencia</option>
-                        <option value="Cheque">📄 Cheque</option>
-                        <option value="Tarjeta">💳 Tarjeta</option>
                       </select>
                       <button 
                         onClick={() => c.selectedPaymentMethod && registerPayment(c.id, c.selectedPaymentMethod)} 
@@ -6894,6 +7247,30 @@ const DriverAppView = ({ theme }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Entregados</span><strong>{clients.filter(c=>c.delivered).length}</strong></div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Pagados</span><strong>{clients.filter(c=>c.paid).length}</strong></div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Total a Cobrar</span><strong>Bs {totalToCharge.toFixed(2)}</strong></div>
+            
+            {/* Resumen por tipo de pago */}
+            <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>Resumen de Cobranza</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span>Total QR</span>
+                <strong style={{ color: '#059669' }}>
+                  Bs {clients.filter(c => c.paid && c.paymentMethod === 'QR').reduce((sum, c) => sum + c.paidAmount, 0).toFixed(2)}
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span>Total Efectivo</span>
+                <strong style={{ color: '#059669' }}>
+                  Bs {clients.filter(c => c.paid && c.paymentMethod === 'Efectivo').reduce((sum, c) => sum + c.paidAmount, 0).toFixed(2)}
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid #e2e8f0', marginTop: '6px', paddingTop: '6px', fontWeight: 'bold', color: theme.primary }}>
+                <span>Total Cobrado</span>
+                <strong>
+                  Bs {clients.filter(c => c.paid).reduce((sum, c) => sum + c.paidAmount, 0).toFixed(2)}
+                </strong>
+              </div>
+            </div>
+            
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
               <button onClick={() => alert('Ruta marcada como completada (simulado)')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: theme.primary, color: 'white', fontWeight: 'bold' }}>Marcar Ruta Completada</button>
               <button onClick={() => alert('Enviando resumen por WhatsApp (simulado)')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'white', color: theme.textMain, fontWeight: 'bold' }}>Enviar Resumen</button>
@@ -7147,18 +7524,6 @@ const ClientAppView = ({ theme }) => {
   );
 };
 
-const ReportsView = ({ theme }) => {
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ marginBottom: '20px', color: theme.primary }}>Reportes</h1>
-      <Card>
-        <p style={{ textAlign: 'center', color: theme.textMuted }}>
-          Módulo de reportes en desarrollo...
-        </p>
-      </Card>
-    </div>
-  );
-};
 
 // ----------------------
 // MOCKUPS: Contabilidad
