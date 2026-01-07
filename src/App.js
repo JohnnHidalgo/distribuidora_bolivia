@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { 
   LayoutDashboard, 
   Package, 
@@ -2187,6 +2188,8 @@ const AssignmentView = ({
   const [selectedPlanningAssignment, setSelectedPlanningAssignment] = useState(null);
   const [receiveMode, setReceiveMode] = useState(false);
   const [selectedReceiveAssignment, setSelectedReceiveAssignment] = useState(null);
+  const [weighingMode, setWeighingMode] = useState(false);
+  const [selectedWeighingGroup, setSelectedWeighingGroup] = useState(null);
   const [currentPlanning, setCurrentPlanning] = useState({});
 
   const [selectedProducts, setSelectedProducts] = useState(() => {
@@ -2273,12 +2276,21 @@ const AssignmentView = ({
     setSelectedReceiveAssignment(null);
   };
 
+  const handleBackToDistribution = () => {
+    setWeighingMode(false);
+    setSelectedWeighingGroup(null);
+  };
+
   if (receiveMode && selectedReceiveAssignment) {
     return <ReceiveView theme={theme} assignment={selectedReceiveAssignment} onBack={handleBackToHistoryFromReceive} />;
   }
 
+  if (weighingMode && selectedWeighingGroup && selectedAssignment) {
+    return <DistributionWeighingView theme={theme} assignment={selectedAssignment} groupName={selectedWeighingGroup} onBack={handleBackToDistribution} setWeighingMode={setWeighingMode} setSelectedWeighingGroup={setSelectedWeighingGroup} />;
+  }
+
   if (distributionMode && selectedAssignment) {
-    return <DistributionView theme={theme} assignment={selectedAssignment} planning={currentPlanning} onBack={handleBackToHistory} />;
+    return <DistributionView theme={theme} assignment={selectedAssignment} planning={currentPlanning} onBack={handleBackToHistory} setWeighingMode={setWeighingMode} setSelectedWeighingGroup={setSelectedWeighingGroup} />;
   }
 
   if (planningMode && selectedPlanningAssignment) {
@@ -2506,7 +2518,7 @@ const AssignmentView = ({
   );
 };
 
-const DistributionView = ({ theme, assignment, planning, onBack }) => {
+const DistributionView = ({ theme, assignment, planning, onBack, setWeighingMode, setSelectedWeighingGroup }) => {
   // Clientes de ejemplo con sus solicitudes
   const clients = [
     { id: 1, name: 'Pollería El Rey', group: 'El Alto Norte', orders: {104: 10, 107: 5} },
@@ -2586,9 +2598,9 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
 
   // Vehículos y choferes de ejemplo por grupo de clientes
   const availableVehicles = [
-    { id: 'VH-01', plate: '1234-ABC', capacity: '3.5 Ton', description: 'Camión frigorífico pequeño' },
-    { id: 'VH-02', plate: '5678-DEF', capacity: '5 Ton', description: 'Camión frigorífico mediano' },
-    { id: 'VH-03', plate: '9999-XYZ', capacity: '1.5 Ton', description: 'Camioneta refrigerada' },
+    { id: 'VH-01', plate: '1234-ABC', capacity: '', description: 'Camión frigorífico pequeño' },
+    { id: 'VH-02', plate: '5678-DEF', capacity: '', description: 'Camión frigorífico mediano' },
+    { id: 'VH-03', plate: '9999-XYZ', capacity: '', description: 'Camioneta refrigerada' },
   ];
 
   const availableDrivers = [
@@ -2915,10 +2927,9 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
       <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
         <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Repartir Asignación del {assignment.date}</h2>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Repartir Asignación </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
-              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CLIENTE ORIGEN:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.client}</span></div>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>COSTO POR KG:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Bs {assignment.costPerKg?.toFixed(2) || 'N/A'}</span></div>
               <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PRECIO DIFERIDO:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.deferredPricing ? 'Sí' : 'No'}</span></div>
             </div>
@@ -3141,6 +3152,24 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setWeighingMode(true);
+                        setSelectedWeighingGroup(groupName);
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        backgroundColor: theme.primary,
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '11px'
+                      }}
+                    >
+                      Empezar
+                    </button>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
                       {groupClients.length} cliente{groupClients.length !== 1 ? 's' : ''}
                     </div>
@@ -3431,6 +3460,782 @@ const DistributionView = ({ theme, assignment, planning, onBack }) => {
           </button>
         </div>
       </Card>
+    </div>
+  );
+};
+
+const DistributionWeighingView = ({ theme, assignment, groupName, onBack, setWeighingMode, setSelectedWeighingGroup }) => {
+  // All clients for the assignment
+  const clients = [
+    { id: 1, name: 'Pollería El Rey', group: 'El Alto Norte', orders: {104: 10, 107: 5} },
+    { id: 2, name: 'Feria Sector A', group: 'El Alto Norte', orders: {104: 8, 109: 12} },
+    { id: 3, name: 'Doña Juana', group: 'El Alto Sur', orders: {104: 5, 107: 3} },
+    { id: 4, name: 'Supermercado Central', group: 'La Paz Centro', orders: {105: 15, 108: 7} }
+  ];
+
+  // Filter clients for the group if groupName is provided, else all
+  const filteredClients = groupName ? clients.filter(client => client.group === groupName) : clients;
+
+  // Create clientRequests from clients for compatibility with the card
+  const clientRequests = filteredClients.map(client => ({
+    id: client.id,
+    clientName: client.name,
+    group: client.group,
+    requested: client.orders,
+    status: 'PENDIENTE'
+  }));
+
+  // State for weighings per client
+  const [clientWeighings, setClientWeighings] = useState(() => {
+    const init = {};
+    clients.forEach(client => {
+      init[client.id] = {};
+      [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+        init[client.id][code] = [];
+      });
+    });
+    return init;
+  });
+
+  const [deliveries, setDeliveries] = useState(clientWeighings);
+
+  useEffect(() => {
+    setDeliveries(clientWeighings);
+  }, [clientWeighings]);
+
+  // Planning states
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const [plannedDistributions, setPlannedDistributions] = useState({});
+  const [savedGroups, setSavedGroups] = useState(new Set());
+
+  // Additional states for the assignment card
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedDriver, setSelectedDriver] = useState('');
+  const [groupAssignments, setGroupAssignments] = useState({});
+  const [savedClients, setSavedClients] = useState(new Set());
+  const [sellingPrices, setSellingPrices] = useState({});
+  const [deferredPricing, setDeferredPricing] = useState({});
+  const [deferredPrices, setDeferredPrices] = useState({});
+  const [hasOffal, setHasOffal] = useState({});
+
+  // Dummy data for vehicles and drivers
+  const availableVehicles = [
+    { id: 1, plate: 'ABC-123', capacity: '5 tons' },
+    { id: 2, plate: 'DEF-456', capacity: '3 tons' }
+  ];
+  const availableDrivers = [
+    { id: 1, name: 'Juan Perez' },
+    { id: 2, name: 'Maria Lopez' }
+  ];
+
+  // Selected group
+  const selectedGroup = groupName;
+
+  // Add weighing to a client and code
+  const addWeighing = (clientId, code) => {
+    setClientWeighings(prev => ({
+      ...prev,
+      [clientId]: {
+        ...prev[clientId],
+        [code]: [...(prev[clientId]?.[code] || []), { boxes: 0, units: 0, grossWeight: 0, netWeight: 0 }]
+      }
+    }));
+  };
+
+  // Update weighing
+  const updateWeighing = (clientId, code, index, field, value) => {
+    setClientWeighings(prev => ({
+      ...prev,
+      [clientId]: {
+        ...prev[clientId],
+        [code]: (prev[clientId]?.[code] || []).map((w, i) => 
+          i === index ? { ...w, [field]: parseFloat(value) || 0 } : w
+        )
+      }
+    }));
+  };
+
+  // Remove weighing
+  const removeWeighing = (clientId, code, index) => {
+    setClientWeighings(prev => ({
+      ...prev,
+      [clientId]: {
+        ...prev[clientId],
+        [code]: (prev[clientId]?.[code] || []).filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  // Planning functions
+  const toggleGroupExpansion = (groupName) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupName)) {
+        newSet.delete(groupName);
+      } else {
+        newSet.add(groupName);
+      }
+      return newSet;
+    });
+  };
+
+  const updatePlannedDistribution = (clientId, code, value) => {
+    setPlannedDistributions(prev => ({
+      ...prev,
+      [clientId]: {
+        ...prev[clientId],
+        [code]: parseInt(value) || 0
+      }
+    }));
+  };
+
+  const handleSaveGroup = (group) => {
+    setSavedGroups(prev => new Set([...prev, group]));
+    alert(`Grupo ${group} guardado`);
+  };
+
+  const getTotalPlannedByCode = (code) => {
+    return filteredClients.reduce((sum, client) => sum + (plannedDistributions[client.id]?.[code] || 0), 0);
+  };
+
+  const getGroupTotals = () => {
+    const groupTotals = {};
+    [...new Set(filteredClients.map(c => c.group))].forEach(group => {
+      groupTotals[group] = { boxes: 0, units: 0, byCode: {} };
+      [104, 105, 106, 107, 108, 109, 110].forEach(code => {
+        groupTotals[group].byCode[code] = filteredClients.filter(c => c.group === group).reduce((sum, client) => sum + (plannedDistributions[client.id]?.[code] || 0), 0);
+        groupTotals[group].boxes += groupTotals[group].byCode[code];
+        groupTotals[group].units += groupTotals[group].byCode[code]; // Assuming 1 box = 1 unit
+      });
+    });
+    return groupTotals;
+  };
+
+  const getGroupTotalBoxes = (groupName) => {
+    return filteredClients.filter(c => c.group === groupName).reduce((sum, client) => sum + Object.values(client.orders || {}).reduce((s, qty) => s + qty, 0), 0);
+  };
+
+  const getGroupTotalUnits = (groupName) => {
+    return getGroupTotalBoxes(groupName); // Assuming 1 box = 1 unit
+  };
+
+  const getGroupTotalByCode = (groupName, code, field) => {
+    return filteredClients.filter(c => c.group === groupName).reduce((sum, client) => sum + (client.orders?.[code] || 0), 0);
+  };
+
+  // Get total weight for a client and code
+  const getClientCodeWeight = (clientId, code) => {
+    const weighings = clientWeighings[clientId]?.[code] || [];
+    return weighings.reduce((sum, w) => sum + (w.netWeight || 0), 0);
+  };
+
+  // Get total weight for a client
+  const getClientTotalWeight = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientCodeWeight(clientId, code), 0);
+  };
+
+  // Get group totals
+  const getGroupTotalWeight = () => {
+    return clients.reduce((sum, client) => sum + getClientTotalWeight(client.id), 0);
+  };
+
+  // Get total boxes for a client
+  const getClientTotalBoxes = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'boxes'), 0);
+  };
+
+  // Get total units for a client
+  const getClientTotalUnits = (clientId) => {
+    return [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(clientId, code, 'units'), 0);
+  };
+
+  // Get selling total for a client
+  const getClientSellingTotal = (clientId) => {
+    const totalWeight = getClientTotalWeight(clientId);
+    const price = sellingPrices[clientId] || 0;
+    return totalWeight * price;
+  };
+
+  // Additional functions for the assignment card
+  const saveClient = (clientId) => {
+    setSavedClients(prev => new Set([...prev, clientId]));
+    alert(`Cliente ${clientId} guardado`);
+  };
+
+  const printClientDetails = (client) => {
+    const printWindow = window.open('', '_blank');
+    const totalGrossWeight = [104, 105, 106, 107, 108, 109, 110].reduce((sum, code) => sum + getClientTotal(client.id, code, 'grossWeight'), 0);
+    const totalNetWeight = getClientTotalWeight(client.id);
+    const totalBoxes = getClientTotalBoxes(client.id);
+    const totalUnits = getClientTotalUnits(client.id);
+    const sellingPrice = sellingPrices[client.id] || 0;
+    const totalSelling = getClientSellingTotal(client.id);
+
+    const html = `
+      <html>
+        <head>
+          <title>Detalle de Venta - ${client.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #e11d48; }
+            h2 { color: #1f2937; margin-top: 30px; }
+            .details { margin: 20px 0; }
+            .codes-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .codes-table th, .codes-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            .codes-table th { background-color: #f3f4f6; font-weight: bold; }
+            .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>Detalle de Venta</h1>
+          <div class="details">
+            <p><strong>Cliente:</strong> ${client.name}</p>
+            <p><strong>Grupo:</strong> ${client.group}</p>
+            <p><strong>Encargado:</strong> Juan Perez</p>
+          </div>
+          <h2>Productos Entregados</h2>
+          <table class="codes-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cajas</th>
+                <th>Unidades</th>
+                <th>Peso Bruto (kg)</th>
+                <th>Peso Neto (kg)</th>
+                <th>Total BS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[104, 105, 106, 107, 108, 109, 110].map(code => {
+                const netWeight = getClientTotal(client.id, code, 'netWeight');
+                const codePrice = deferredPrices[client.id]?.[code] || sellingPrice;
+                const codeTotal = netWeight * codePrice;
+                return `
+                  <tr>
+                    <td><strong>${code}</strong></td>
+                    <td>${getClientTotal(client.id, code, 'boxes')}</td>
+                    <td>${getClientTotal(client.id, code, 'units')}</td>
+                    <td>${getClientTotal(client.id, code, 'grossWeight').toFixed(2)}</td>
+                    <td>${netWeight.toFixed(2)}</td>
+                    <td>Bs ${codeTotal.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+              <tr style="font-weight: bold; background-color: #f3f4f6;">
+                <td><strong>TOTAL</strong></td>
+                <td>${totalBoxes}</td>
+                <td>${totalUnits}</td>
+                <td>${totalGrossWeight.toFixed(2)}</td>
+                <td>${totalNetWeight.toFixed(2)}</td>
+                <td>Bs ${totalSelling.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-weight: bold; color: #495057;">Total cajas deuda:</span>
+              <span style="font-weight: bold; color: #dc3545;">${totalBoxes}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+              <span style="font-weight: bold; color: #495057;">Total deuda:</span>
+              <span style="font-weight: bold; color: #dc3545;">Bs ${totalSelling.toFixed(2)}</span>
+            </div>
+            <div style="text-align: center;">
+              <p style="margin: 10px 0; font-size: 14px; color: #6c757d;">Puedes pagar por este medio:</p>
+              <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=puedes+pagar+por+este+medio" alt="Código QR para pago" style="border: 2px solid #dee2e6; border-radius: 8px;" />
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const updateSellingPrice = (clientId, value) => {
+    setSellingPrices(prev => ({ ...prev, [clientId]: value }));
+  };
+
+  const updateDeferredPricing = (clientId, checked) => {
+    setDeferredPricing(prev => ({ ...prev, [clientId]: checked }));
+  };
+
+  const updateDeferredPrice = (clientId, code, value) => {
+    setDeferredPrices(prev => ({
+      ...prev,
+      [clientId]: { ...prev[clientId], [code]: value }
+    }));
+  };
+
+  const updateHasOffal = (clientId, code, checked) => {
+    setHasOffal(prev => ({
+      ...prev,
+      [clientId]: { ...prev[clientId], [code]: checked }
+    }));
+  };
+
+  const getClientTotal = (clientId, code, field) => {
+    const weighings = clientWeighings[clientId]?.[code] || [];
+    if (field === 'boxes') return weighings.reduce((sum, w) => sum + (w.boxes || 0), 0);
+    if (field === 'units') return weighings.reduce((sum, w) => sum + (w.units || 0), 0);
+    if (field === 'netWeight') return weighings.reduce((sum, w) => sum + (w.netWeight || 0), 0);
+    if (field === 'grossWeight') return weighings.reduce((sum, w) => sum + (w.grossWeight || 0), 0);
+    return 0;
+  };
+
+  const printRoute = () => {
+    const printWindow = window.open('', '_blank');
+    const html = `
+      <html>
+        <head>
+          <title>Ruta de Distribución - ${groupName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #3b82f6; }
+            .details { margin: 20px 0; }
+            .route-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .route-table th, .route-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            .route-table th { background-color: #f3f4f6; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Ruta de Distribución</h1>
+          <div class="details">
+            <p><strong>Grupo:</strong> ${groupName}</p>
+            <p><strong>Vehículo:</strong> ${selectedVehicle ? availableVehicles.find(v => v.id == selectedVehicle)?.plate : 'No asignado'}</p>
+            <p><strong>Chofer:</strong> ${selectedDriver ? availableDrivers.find(d => d.id == selectedDriver)?.name : 'No asignado'}</p>
+          </div>
+          <table class="route-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Monto a Cobrar (Bs)</th>
+                <th>Deuda Cajas</th>
+                <th>Deuda Dinero</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredClients.map(client => {
+                const totalWeight = getClientTotalWeight(client.id);
+                const sellingPrice = sellingPrices[client.id] || 0;
+                const amount = totalWeight * sellingPrice;
+                const boxDebt = client.orders ? Object.values(client.orders).reduce((sum, qty) => sum + qty, 0) - getClientTotal(client.id, null, 'boxes') : 0;
+                const moneyDebt = deferredPricing[client.id] ? amount.toFixed(2) : '0.00';
+                return `
+                  <tr>
+                    <td>${client.name}</td>
+                    <td>${amount.toFixed(2)}</td>
+                    <td>${boxDebt}</td>
+                    <td>${moneyDebt}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <Card style={{ position: 'sticky', top: 0, zIndex: 10, padding: '8px' }}>
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Pesaje - {groupName}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>PROVEEDOR:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{assignment.provider}</span></div>
+              <div><span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>GRUPO:</span> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{groupName}</span></div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>VEHÍCULO</label>
+                  <select 
+                    value={selectedVehicle} 
+                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '12px' }}
+                  >
+                    {availableVehicles.map(vehicle => (
+                      <option key={vehicle.id} value={vehicle.id}>{vehicle.plate} - {vehicle.capacity}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>CHOFER</label>
+                  <select 
+                    value={selectedDriver} 
+                    onChange={(e) => setSelectedDriver(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '12px' }}
+                  >
+                    {availableDrivers.map(driver => (
+                      <option key={driver.id} value={driver.id}>{driver.name}</option>
+                    ))}
+                  </select>
+                </div>
+            </div>
+            
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Volver</button>
+              <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Pesaje</button>
+              <button onClick={printRoute} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Imprimir Ruta</button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1 }}>
+
+<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                        const boxes = getGroupTotalByCode(groupName, code, 'boxes');
+                        const units = getGroupTotalByCode(groupName, code, 'units');
+                        return (
+                          <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #cbd5e1', minWidth: '70px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ position: 'relative' }}>
+                                <div style={{ width: '50px', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>
+                                  {boxes}
+                                </div>
+                                <span style={{ position: 'absolute', top: '-12px', left: '8px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                              </div>
+                              <div style={{ position: 'relative' }}>
+                                <div style={{ width: '50px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                                  {units}
+                                </div>
+                                <span style={{ position: 'absolute', top: '-12px', left: '10px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px', backgroundColor: theme.primary, borderRadius: '6px', border: '1px solid #7c3aed', minWidth: '80px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: 'white' }}>TOTAL</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <div style={{ position: 'relative' }}>
+                            <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #7c3aed', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                              {getGroupTotalBoxes(groupName)}
+                            </div>
+                            <span style={{ position: 'absolute', top: '-12px', left: '10px', fontSize: '7px', backgroundColor: theme.primary, padding: '0 2px', fontWeight: 'bold', color: 'white' }}>CAJAS</span>
+                          </div>
+                          <div style={{ position: 'relative' }}>
+                            <div style={{ width: '60px', padding: '6px', borderRadius: '4px', border: '1px solid #7c3aed', backgroundColor: 'white', textAlign: 'center', fontSize: '13px', fontWeight: '600' }}>
+                              {getGroupTotalUnits(groupName)}
+                            </div>
+                            <span style={{ position: 'absolute', top: '-12px', left: '12px', fontSize: '7px', backgroundColor: theme.primary, padding: '0 2px', fontWeight: 'bold', color: 'white' }}>UNID.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {Object.entries(
+            filteredClients.reduce((groups, client) => {
+              if (!groups[client.group]) {
+                groups[client.group] = [];
+              }
+              groups[client.group].push(client);
+              return groups;
+            }, {})
+          ).map(([groupName, groupClients]) => {
+            const isExpanded = expandedGroups.has(groupName);
+            return (
+              <div key={groupName} style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+
+                
+                  <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {groupClients.map(client => (
+                          <div key={client.id} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {/* Header con nombre y botones */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: theme.primary }}>{client.name}</h4>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <button
+                                    onClick={() => saveClient(client.id)}
+                                    disabled={savedClients[client.id]}
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      backgroundColor: savedClients[client.id] ? '#10b981' : theme.primary,
+                                      color: 'white',
+                                      cursor: savedClients[client.id] ? 'not-allowed' : 'pointer',
+                                      fontWeight: 'bold',
+                                      fontSize: '11px'
+                                    }}
+                                  >
+                                    {savedClients[client.id] ? 'Guardado' : 'Guardar'}
+                                  </button>
+                                  <button
+                                    onClick={() => printClientDetails(client)}
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '6px',
+                                      border: '1px solid #e2e8f0',
+                                      backgroundColor: 'white',
+                                      color: theme.primary,
+                                      cursor: 'pointer',
+                                      fontWeight: 'bold',
+                                      fontSize: '11px'
+                                    }}
+                                  >
+                                    🖨️ Imprimir
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Controles de precio */}
+                              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>PRECIO VENTA (Bs/Kg)</div>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={sellingPrices[client.id] || ''}
+                                    onChange={(e) => updateSellingPrice(client.id, e.target.value)}
+                                    disabled={deferredPricing[client.id]}
+                                    style={{
+                                      width: '100px',
+                                      padding: '4px',
+                                      borderRadius: '4px',
+                                      border: '1px solid #cbd5e1',
+                                      outline: 'none',
+                                      fontSize: '11px',
+                                      textAlign: 'center',
+                                      opacity: deferredPricing[client.id] ? 0.5 : 1
+                                    }}
+                                  />
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <label htmlFor={`deferred-pricing-${client.id}`} style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
+                                    Precio diferido
+                                  </label>
+                                  <input
+                                    type="checkbox"
+                                    id={`deferred-pricing-${client.id}`}
+                                    checked={deferredPricing[client.id] || false}
+                                    onChange={(e) => updateDeferredPricing(client.id, e.target.checked)}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Códigos */}
+                              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-start' }}>
+                                {[104, 105, 106, 107, 108, 109, 110].map((code) => {
+                                  const hasWeighings = (deliveries[client.id]?.[code] || []).length > 0;
+                                  return (
+                                    <div key={code} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', minWidth: 'fit-content' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>Código {code}</span>
+                                      </div>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                                            {getClientTotal(client.id, code, 'boxes')}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                          <div style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
+                                            {getClientTotal(client.id, code, 'units')}
+                                          </div>
+                                          <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', fontSize: '10px', color: '#64748b' }}>
+                                          <div style={{ fontWeight: '600' }}>{(assignment.details[code]?.grossWeight || 0).toFixed(2)} kg Bruto</div>
+                                          <div style={{ fontWeight: '600' }}>{getClientTotal(client.id, code, 'netWeight').toFixed(2)} kg Neto</div>
+                                        </div>
+                                      </div>
+                                      {deferredPricing[client.id] && (
+                                        <div style={{ position: 'relative', marginTop: '4px' }}>
+                                          <input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Bs/Kg"
+                                            value={(deferredPrices[client.id]?.[code] || '')}
+                                            onChange={(e) => updateDeferredPrice(client.id, code, e.target.value)}
+                                            style={{
+                                              width: '60px',
+                                              padding: '3px',
+                                              borderRadius: '3px',
+                                              border: '1px solid #d97706',
+                                              outline: 'none',
+                                              fontSize: '9px',
+                                              textAlign: 'center',
+                                              backgroundColor: 'white'
+                                            }}
+                                          />
+                                          <span style={{ position: 'absolute', top: '-6px', left: '2px', fontSize: '7px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#92400e' }}>PRECIO</span>
+                                        </div>
+                                      )}
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                        <input
+                                          type="checkbox"
+                                          id={`offal-${client.id}-${code}`}
+                                          checked={hasOffal[client.id]?.[code] || true}
+                                          onChange={(e) => updateHasOffal(client.id, code, e.target.checked)}
+                                          style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                        />
+                                        <label
+                                          htmlFor={`offal-${client.id}-${code}`}
+                                          style={{ fontSize: '8px', fontWeight: 'bold', color: '#94a3b8', cursor: 'pointer', userSelect: 'none' }}
+                                        >
+                                          MENUDENCIA
+                                        </label>
+                                      </div>
+                                      <button onClick={() => addWeighing(client.id, code)} style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', fontWeight: 'bold', color: theme.primary, fontSize: '10px' }}>
+                                        Agregar Pesaje
+                                      </button>
+                                      {hasWeighings && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                                          {(deliveries[client.id][code] || []).map((weighing, index) => (
+                                            <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Pesaje {index + 1}:</span>
+                                                <button onClick={() => removeWeighing(client.id, code, index)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontSize: '10px' }}>×</button>
+                                              </div>
+                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <div style={{ position: 'relative' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={weighing.boxes || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'boxes', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>CAJAS</span>
+                                                
+                                                    <input
+                                                      type="checkbox"
+                                                      id={`offal-${client.id}-${code}`}
+                                                      checked={hasOffal[client.id]?.[code] || false}
+                                                      onChange={(e) => updateHasOffal(client.id, code, e.target.checked)}
+                                                      style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                    />
+                                                </div>
+
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={weighing.units || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'units', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>UNID.</span>
+                                                  
+                                                  <button 
+                                                    onClick={() => {/* función para seleccionar contenedor */}}
+                                                      style={{ 
+                                                        padding: '6px', 
+                                                        borderRadius: '4px', 
+                                                        border: '1px solid #cbd5e1', 
+                                                        backgroundColor: 'white', 
+                                                        cursor: 'pointer', 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        justifyContent: 'center'
+                                                      }}
+                                                  >
+                                                    <Package size={14} color={theme.primary} />
+                                                  </button>
+                                                </div>
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                  <input 
+                                                    type="number" 
+                                                    step="0.01"
+                                                    placeholder="0.00" 
+                                                    value={weighing.weight || ''} 
+                                                    onChange={(e) => updateWeighing(client.id, code, index, 'weight', e.target.value)}
+                                                    style={{ 
+                                                      width: '60px', 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      outline: 'none',
+                                                      fontSize: '12px',
+                                                      textAlign: 'center'
+                                                    }}
+                                                  />
+                                                  <button 
+                                                    onClick={() => {/* función para conectar */}}
+                                                    style={{ 
+                                                      padding: '6px', 
+                                                      borderRadius: '4px', 
+                                                      border: '1px solid #cbd5e1', 
+                                                      backgroundColor: 'white', 
+                                                      cursor: 'pointer', 
+                                                      display: 'flex', 
+                                                      alignItems: 'center', 
+                                                      justifyContent: 'center'
+                                                    }}
+                                                  >
+                                                    <Scale size={14} color={theme.primary} />
+                                                  </button>
+                                                  <span style={{ position: 'absolute', top: '-8px', left: '4px', fontSize: '8px', backgroundColor: 'white', padding: '0 2px', fontWeight: 'bold', color: '#94a3b8' }}>KG</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                  </div>
+
+
+              </div>
+            );
+          })}
+        </div>
+
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+          <button style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Save size={16} /> Guardar Distribución
+          </button>
+        </div>
+      </Card>
+
     </div>
   );
 };
