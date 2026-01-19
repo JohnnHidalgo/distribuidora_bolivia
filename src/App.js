@@ -8599,14 +8599,6 @@ const RegistroAsientos = ({ theme }) => {
               />
             </div>
             
-            <div>
-              <input
-                value={glosa}
-                onChange={e=>setGlosa(e.target.value)}
-                placeholder="Descripción del asiento contable"
-                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-              />
-            </div>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
