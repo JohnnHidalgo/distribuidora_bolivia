@@ -333,7 +333,9 @@ const ERPStore = {
     }
   ],
   employees: [
-    { id: 1, name: 'Juan Pérez', dni: '1234567', cargo: 'Vendedor', estado: 'Activo', sueldo: 3500 }
+    { id: 1, name: 'Juan Pérez', dni: '1234567', cargo: 'Vendedor', estado: 'Activo', sueldo: 3500 },
+    { id: 2, name: 'María López', dni: '7654321', cargo: 'Gerente', estado: 'Activo', sueldo: 5000 },
+    { id: 3, name: 'Carlos Ramírez', dni: '1122334', cargo: 'Contador', estado: 'Activo', sueldo: 4000 }
   ],
   bitacora: [],
   closedPeriods: ['2025-11', '2025-12'],
@@ -555,6 +557,8 @@ const App = () => {
   const [newClientGroup, setNewClientGroup] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientLocation, setNewClientLocation] = useState({ lat: -16.5000, lng: -68.1500 }); // Coordenadas de La Paz por defecto
+  const [gastos, setGastos] = useState([]);
+  const totalGastos = gastos.reduce((s, g) => s + Number(g.monto || 0), 0);
 
   // Datos de clientes por grupo
   const [clientsByGroup, setClientsByGroup] = useState({
@@ -4216,6 +4220,7 @@ const PlanningView = ({ theme, assignment, onBack, onSavePlanning }) => {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={onBack} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer', fontWeight: 'bold', color: theme.textMain }}>Cancelar</button>
+              <button onClick={() => { }} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#f11852', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Planificación Automática</button>
               <button onClick={() => { onSavePlanning(plannedDistributions); alert('Planificación guardada'); }} style={{ flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Planificación</button>
             </div>
           </div>
@@ -7509,6 +7514,24 @@ const DriverAppView = ({ theme }) => {
 
   const totalToCharge = clients.reduce((s, c) => s + (c.total || 0), 0);
 
+  const [gastos, setGastos] = useState([]);
+  const [showGastoForm, setShowGastoForm] = useState(false);
+  const [gastoForm, setGastoForm] = useState({ monto: 0, detalle: '' });
+
+  const openGastoForm = () => {
+    setGastoForm({ monto: 0, detalle: '' });
+    setShowGastoForm(true);
+  };
+
+  const saveGasto = () => {
+    if (!gastoForm.monto || Number(gastoForm.monto) <= 0) return alert('Ingrese un monto válido');
+    const nuevo = { ...gastoForm, fecha: new Date().toISOString().slice(0,10), id: Date.now() };
+    setGastos(prev => [nuevo, ...prev]);
+    setShowGastoForm(false);
+    setGastoForm({ monto: 0, detalle: '' });
+    alert('Gasto registrado');
+  };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '20px' }}>
       <div>
@@ -7521,8 +7544,25 @@ const DriverAppView = ({ theme }) => {
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '12px', color: theme.textMuted }}>Total a Cobrar</div>
               <div style={{ fontSize: '18px', fontWeight: '900', color: theme.primary }}>Bs {totalToCharge.toFixed(2)}</div>
+              <div style={{ marginTop:8 }}>
+                <button onClick={openGastoForm} style={{ padding:8, background:'#ef4444', color:'white', border:'none', borderRadius:6 }}>Registrar Gastos</button>
+              </div>
             </div>
           </div>
+
+          {showGastoForm && (
+            <Card style={{ marginBottom:12 }}>
+              <h4>Registrar Gasto</h4>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <input type="number" placeholder="Monto" value={gastoForm.monto} onChange={e=>setGastoForm({...gastoForm, monto: Number(e.target.value)})} />
+                <input placeholder="Detalle" value={gastoForm.detalle} onChange={e=>setGastoForm({...gastoForm, detalle: e.target.value})} />
+                <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                  <button onClick={saveGasto} style={{ padding:8, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Guardar</button>
+                  <button onClick={() => setShowGastoForm(false)} style={{ padding:8, background:'#6b7280', color:'white', border:'none', borderRadius:6 }}>Cancelar</button>
+                </div>
+              </div>
+            </Card>
+          )}
 
           <div style={{ height: '360px' }}>
             <MapContainer center={route.center} zoom={12} style={{ height: '100%', width: '100%' }}>
@@ -7711,6 +7751,24 @@ const DriverAppView = ({ theme }) => {
                 </Marker>
               ))}
             </MapContainer>
+          {gastos.length > 0 && (
+            <div style={{ marginTop:12 }}>
+              <h4>Gastos registrados</h4>
+              <ul style={{ listStyle:'none', padding:0 }}>
+                {gastos.map(g => (
+                  <li key={g.id} style={{ padding:8, border:'1px solid #e2e8f0', borderRadius:6, marginBottom:8 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight:700 }}>{g.detalle}</div>
+                        <div style={{ fontSize:12, color: theme.textMuted }}>{g.fecha}</div>
+                      </div>
+                      <div style={{ fontWeight:800 }}>Bs {g.monto}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           </div>
         </Card>
 
@@ -7956,6 +8014,21 @@ const DriverAppView = ({ theme }) => {
                 <span>Total Cobrado</span>
                 <strong>
                   Bs {clients.filter(c => c.paid).reduce((sum, c) => sum + c.paidAmount, 0).toFixed(2)}
+                </strong>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '8px', paddingTop: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span>Total Gastos</span>
+                <strong style={{ color: '#059669' }}>
+                  Bs 150
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid #e2e8f0', marginTop: '6px', paddingTop: '6px', fontWeight: 'bold', color: theme.primary }}>
+                <span>Total rendir</span>
+                <strong>
+                  Bs -150
                 </strong>
               </div>
             </div>
@@ -8286,11 +8359,11 @@ const ContabilidadDashboard = ({ theme, handleTabChange }) => {
         <Card>
           <h3>Accesos rápidos</h3>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <button onClick={() => handleTabChange('planCuentas')} style={{ padding:10, background:'#8b5cf6', color:'white', border:'none', borderRadius:6 }}>Plan de Cuentas</button>
             <button onClick={() => handleTabChange('registroAsientos')} style={{ padding:10, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Nuevo asiento</button>
             <button onClick={() => handleTabChange('cierre')} style={{ padding:10, background:'#f97316', color:'white', border:'none', borderRadius:6 }}>Cierre de período</button>
             <button onClick={() => handleTabChange('reportesFinancieros')} style={{ padding:10, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Reportes financieros</button>
-            <button onClick={() => handleTabChange('planCuentas')} style={{ padding:10, background:'#8b5cf6', color:'white', border:'none', borderRadius:6 }}>Plan de Cuentas</button>
-            <button onClick={() => handleTabChange('libro')} style={{ padding:10, background:'#06b6d4', color:'white', border:'none', borderRadius:6 }}>Libro Diario / Mayor</button>
+            {/* <button onClick={() => handleTabChange('libro')} style={{ padding:10, background:'#06b6d4', color:'white', border:'none', borderRadius:6 }}>Libro Diario / Mayor</button> */}
           </div>
         </Card>
       </div>
@@ -8409,8 +8482,8 @@ const RegistroAsientos = ({ theme }) => {
   const [tipo, setTipo] = useState('Factura');
   const [glosa, setGlosa] = useState('');
   const [lines, setLines] = useState([
-    { cuenta: '1.1', centro: 'Ventas', debito: 1000, credito: 0 },
-    { cuenta: '4.1', centro: '', debito: 0, credito: 1000 }
+    { fecha: new Date().toISOString().slice(0,10), cuenta: '1.1', centro: 'Ventas', glosa: '', debito: 1000, credito: 0, editing: false },
+    { fecha: new Date().toISOString().slice(0,10), cuenta: '4.1', centro: '', glosa: '', debito: 0, credito: 1000, editing: false }
   ]);
   const [attachments, setAttachments] = useState([]);
 
@@ -8418,7 +8491,7 @@ const RegistroAsientos = ({ theme }) => {
   const totalCredito = lines.reduce((s,l)=>s+Number(l.credito||0),0);
   const isBalanced = totalDebito === totalCredito && totalDebito > 0;
 
-  const addLine = () => setLines(prev=>[...prev,{ cuenta:'', centro:'', debito:0, credito:0 }]);
+  const addLine = () => setLines(prev=>[...prev,{ fecha: new Date().toISOString().slice(0,10), cuenta:'', centro:'', glosa: '', debito:0, credito:0, editing: true }]);
   const updateLine = (idx, patch) => setLines(prev=>prev.map((l,i)=>i===idx?{...l,...patch}:l));
   const removeLine = (idx) => setLines(prev=>prev.filter((_,i)=>i!==idx));
 
@@ -8430,7 +8503,7 @@ const RegistroAsientos = ({ theme }) => {
     const saved = ERP.addAsiento(asiento);
     alert('Asiento guardado id: ' + saved.id);
     // reset
-    setGlosa(''); setLines([{ cuenta: '', centro: '', debito: 0, credito: 0 }]); setAttachments([]);
+    setGlosa(''); setLines([{ fecha: new Date().toISOString().slice(0,10), cuenta: '', centro: '', glosa: '', debito: 0, credito: 0, editing: false }]); setAttachments([]);
   };
 
   const handleApprove = () => {
@@ -8438,7 +8511,7 @@ const RegistroAsientos = ({ theme }) => {
     const asiento = ERP.addAsiento({ fecha, tipo, glosa, lines, attachments: attachments.map(f=>f.name), estado: 'aprobado' });
     ERP.approveAsiento(asiento.id);
     alert('Asiento aprobado id: ' + asiento.id);
-    setGlosa(''); setLines([{ cuenta: '', centro: '', debito: 0, credito: 0 }]); setAttachments([]);
+    setGlosa(''); setLines([{ fecha: new Date().toISOString().slice(0,10), cuenta: '', centro: '', glosa: '', debito: 0, credito: 0, editing: false }]); setAttachments([]);
   };
 
   const approveDraft = (id) => {
@@ -8446,11 +8519,34 @@ const RegistroAsientos = ({ theme }) => {
     alert('Asiento aprobado');
   };
 
+  const generateDailyReport = () => {
+    const today = new Date().toISOString().slice(0,10);
+    const todays = (ERPStore.asientos || []).filter(a => (a.fecha || '').slice(0,10) === today);
+    if (!todays.length) return alert('No hay asientos registrados para hoy');
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`Reporte Diario de Asientos - ${today}`, 14, 20);
+    let y = 30;
+    todays.forEach((a, idx) => {
+      const totalDeb = (a.lines||[]).reduce((s,l)=>s + Number(l.debito||0), 0);
+      const totalCred = (a.lines||[]).reduce((s,l)=>s + Number(l.credito||0), 0);
+      doc.setFontSize(12);
+      doc.text(`${idx+1}. ID: ${a.id}  Tipo: ${a.tipo}`, 14, y); y += 6;
+      if (a.glosa) { doc.text(`Glosa: ${a.glosa}`, 14, y); y += 6; }
+      doc.text(`Débito: Bs ${totalDeb}   Crédito: Bs ${totalCred}`, 14, y); y += 10;
+      if (y > 270) { doc.addPage(); y = 20; }
+    });
+    doc.save(`Reporte_Diario_Asientos_${today}.pdf`);
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
         <FileText size={32} style={{ color: theme.primary, marginRight: '12px' }} />
         <h1 style={{ color: theme.primary, margin: 0 }}>Registro de Asientos</h1>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button onClick={generateDailyReport} style={{ padding: '8px 12px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: 6 }}>Reporte Diario</button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -8502,27 +8598,8 @@ const RegistroAsientos = ({ theme }) => {
                 style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
               />
             </div>
+            
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
-                <FileText size={14} style={{ marginRight: '4px' }} />
-                Tipo de comprobante
-              </label>
-              <select
-                value={tipo}
-                onChange={e=>setTipo(e.target.value)}
-                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-              >
-                <option>Factura</option>
-                <option>Recibo</option>
-                <option>Nota de Crédito</option>
-                <option>Nota de Débito</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
-                <MessageSquare size={14} style={{ marginRight: '4px' }} />
-                Glosa / Descripción
-              </label>
               <input
                 value={glosa}
                 onChange={e=>setGlosa(e.target.value)}
@@ -8558,8 +8635,10 @@ const RegistroAsientos = ({ theme }) => {
               <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <thead style={{ background: '#f8fafc' }}>
                   <tr>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Fecha</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Cuenta</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Centro Costo</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Glosa</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Débito (BOB)</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Crédito (BOB)</th>
                     <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: theme.text }}>Acciones</th>
@@ -8569,56 +8648,89 @@ const RegistroAsientos = ({ theme }) => {
                   {lines.map((l, idx) => (
                     <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '12px' }}>
-                        <input
-                          list="accounts"
-                          value={l.cuenta}
-                          onChange={e=>updateLine(idx,{cuenta:e.target.value})}
-                          placeholder="Código cuenta"
-                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-                        />
+                        {l.editing ? (
+                          <input type="date" value={l.fecha} onChange={e=>updateLine(idx,{fecha:e.target.value})} style={{ padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }} />
+                        ) : (
+                          <div>{l.fecha}</div>
+                        )}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        <input
-                          value={l.centro}
-                          onChange={e=>updateLine(idx,{centro:e.target.value})}
-                          placeholder="Centro de costo"
-                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-                        />
+                        {l.editing ? (
+                          <input
+                            list="accounts"
+                            value={l.cuenta}
+                            onChange={e=>updateLine(idx,{cuenta:e.target.value})}
+                            placeholder="Código cuenta"
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div>{l.cuenta}</div>
+                        )}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        <input
-                          type="number"
-                          value={l.debito}
-                          onChange={e=>updateLine(idx,{debito: Number(e.target.value)})}
-                          min="0"
-                          step="0.01"
-                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
-                        />
+                        {l.editing ? (
+                          <input
+                            value={l.centro}
+                            onChange={e=>updateLine(idx,{centro:e.target.value})}
+                            placeholder="Centro de costo"
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div>{l.centro}</div>
+                        )}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        <input
-                          type="number"
-                          value={l.credito}
-                          onChange={e=>updateLine(idx,{credito: Number(e.target.value)})}
-                          min="0"
-                          step="0.01"
-                          style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
-                        />
+                        {l.editing ? (
+                          <input
+                            value={l.glosa}
+                            onChange={e=>updateLine(idx,{glosa:e.target.value})}
+                            placeholder="Glosa"
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div>{l.glosa}</div>
+                        )}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <button
-                          onClick={()=>removeLine(idx)}
-                          style={{
-                            padding: '6px',
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <td style={{ padding: '12px' }}>
+                        {l.editing ? (
+                          <input
+                            type="number"
+                            value={l.debito}
+                            onChange={e=>updateLine(idx,{debito: Number(e.target.value)})}
+                            min="0"
+                            step="0.01"
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
+                          />
+                        ) : (
+                          <div style={{ textAlign: 'right' }}>{Number(l.debito || 0).toFixed(2)}</div>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {l.editing ? (
+                          <input
+                            type="number"
+                            value={l.credito}
+                            onChange={e=>updateLine(idx,{credito: Number(e.target.value)})}
+                            min="0"
+                            step="0.01"
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', textAlign: 'right' }}
+                          />
+                        ) : (
+                          <div style={{ textAlign: 'right' }}>{Number(l.credito || 0).toFixed(2)}</div>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center', display: 'flex', gap: 8, justifyContent: 'center' }}>
+                        {l.editing ? (
+                          <>
+                            <button onClick={() => setLines(prev=>prev.map((it,i)=>i===idx?{...it, editing:false}:it))} style={{ padding: '6px 8px', background:'#10b981', color:'white', border:'none', borderRadius:4 }}>Guardar</button>
+                            <button onClick={()=>removeLine(idx)} style={{ padding: '6px 8px', background: '#ef4444', color:'white', border:'none', borderRadius:4 }}>Eliminar</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => setLines(prev=>prev.map((it,i)=>i===idx?{...it, editing:true}:it))} style={{ padding: '6px 8px', background:'#8b5cf6', color:'white', border:'none', borderRadius:4 }}>Editar</button>
+                            <button onClick={()=>removeLine(idx)} style={{ padding: '6px 8px', background: '#ef4444', color:'white', border:'none', borderRadius:4 }}>Eliminar</button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -8634,21 +8746,7 @@ const RegistroAsientos = ({ theme }) => {
           </datalist>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>
-                <Paperclip size={14} style={{ marginRight: '4px' }} />
-                Adjuntos
-              </label>
-              <input
-                type="file"
-                multiple
-                onChange={handleFiles}
-                style={{ padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-              />
-              <div style={{ fontSize: '12px', color: theme.textMuted, marginTop: '4px' }}>
-                {attachments.length} archivo(s) adjunto(s)
-              </div>
-            </div>
+
 
             <div style={{
               padding: '16px',
@@ -9494,6 +9592,10 @@ const GestionEmpleados = ({ theme }) => {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', dni: '', cargo: '', estado: 'Activo', sueldo: 0 });
+  const [showAjuste, setShowAjuste] = useState(false);
+  const [ajusteType, setAjusteType] = useState(null);
+  const [selectedEmpAjuste, setSelectedEmpAjuste] = useState(null);
+  const [ajusteForm, setAjusteForm] = useState({ monto: 0, detalle: '' });
 
   const refresh = () => setEmployees([...ERPStore.employees]);
 
@@ -9513,6 +9615,26 @@ const GestionEmpleados = ({ theme }) => {
     setForm({ ...emp });
     setEditing(emp);
     setShowForm(true);
+  };
+
+  const handleAjuste = (emp, type) => {
+    setSelectedEmpAjuste(emp);
+    setAjusteType(type);
+    setAjusteForm({ monto: 0, detalle: '' });
+    setShowAjuste(true);
+  };
+
+  const handleSaveAjuste = () => {
+    if (ajusteForm.monto <= 0) {
+      alert('Ingrese un monto válido');
+      return;
+    }
+    const signo = ajusteType === 'favor' ? '+' : '-';
+    alert(`${ajusteType === 'favor' ? 'A favor' : 'En contra'} ${signo} Bs ${ajusteForm.monto}\nDetalle: ${ajusteForm.detalle}\nEmpleado: ${selectedEmpAjuste.name}`);
+    setShowAjuste(false);
+    setAjusteForm({ monto: 0, detalle: '' });
+    setSelectedEmpAjuste(null);
+    setAjusteType(null);
   };
 
   return (
@@ -9539,6 +9661,19 @@ const GestionEmpleados = ({ theme }) => {
           </div>
         </Card>
       )}
+      {showAjuste && selectedEmpAjuste && (
+        <Card style={{ marginBottom:12 }}>
+          <h4>{ajusteType === 'favor' ? 'Ajuste a Favor' : 'Ajuste en Contra'} - {selectedEmpAjuste.name}</h4>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <input type="number" placeholder="Monto" value={ajusteForm.monto} onChange={e=>setAjusteForm({...ajusteForm, monto: Number(e.target.value)})} />
+            <textarea placeholder="Detalle del ajuste" value={ajusteForm.detalle} onChange={e=>setAjusteForm({...ajusteForm, detalle: e.target.value})} style={{ padding:8, borderRadius:4, border:'1px solid #ccc', fontFamily:'Arial', minHeight:80 }} />
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={handleSaveAjuste} style={{ padding:8, background: ajusteType === 'favor' ? '#10b981' : '#ef4444', color:'white', border:'none', borderRadius:4 }}>Guardar Ajuste</button>
+              <button onClick={() => { setShowAjuste(false); setAjusteForm({ monto: 0, detalle: '' }); setSelectedEmpAjuste(null); setAjusteType(null); }} style={{ padding:8, background:'#6b7280', color:'white', border:'none', borderRadius:4 }}>Cancelar</button>
+            </div>
+          </div>
+        </Card>
+      )}
       <Card>
         <table style={{ width:'100%' }}>
           <thead><tr><th>Nombre</th><th>DNI</th><th>Cargo</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -9546,7 +9681,11 @@ const GestionEmpleados = ({ theme }) => {
             {employees.map(e => (
               <tr key={e.id}>
                 <td>{e.name}</td><td>{e.dni}</td><td>{e.cargo}</td><td>{e.estado}</td>
-                <td><button onClick={() => handleEdit(e)} style={{ padding:4 }}>Editar</button></td>
+                <td style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  <button onClick={() => handleEdit(e)} style={{ padding:4 }}>Editar</button>
+                  <button onClick={() => handleAjuste(e, 'favor')} style={{ padding:4, background:'#10b981', color:'white', border:'none', borderRadius:4 }}>A favor</button>
+                  <button onClick={() => handleAjuste(e, 'contra')} style={{ padding:4, background:'#ef4444', color:'white', border:'none', borderRadius:4 }}>Descuentos</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -9645,6 +9784,8 @@ const CalculoPlanillas = ({ theme }) => {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0,7));
   const [type, setType] = useState('mensual');
   const [preview, setPreview] = useState([]);
+  const [showExtracto, setShowExtracto] = useState(false);
+  const [selectedPayroll, setSelectedPayroll] = useState(null);
 
   const handleCalc = () => {
     const res = ERP.calculatePayroll(period, type);
@@ -9661,6 +9802,40 @@ const CalculoPlanillas = ({ theme }) => {
     alert('Asiento generado id: ' + a.id);
   };
 
+  const handleExtracto = (payroll) => {
+    // Asegurar que existan los arrays de detalle y un historial de movimientos
+    setSelectedPayroll({
+      ...payroll,
+      detalleDescuentos: payroll.detalleDescuentos || [
+        'Descuento por llegar tarde: Bs 50 (10/01/2026)'
+      ],
+      detalleAFavor: payroll.detalleAFavor || [
+        'Bono de antigüedad: Bs 200 (05/01/2026)'
+      ],
+      movimientos: payroll.movimientos || [
+        { tipo: 'descuento', descripcion: 'Descuento por llegar tarde', monto: 50, fecha: '2026-01-10' },
+        { tipo: 'bono', descripcion: 'Bono de antigüedad', monto: 200, fecha: '2026-01-05' },
+        { tipo: 'adelanto', descripcion: 'Adelanto', monto: 300, fecha: '2026-01-02' }
+      ]
+    });
+    setShowExtracto(true);
+  };
+
+  const handleImprimir = (payroll) => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Extracto de Planilla', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Empleado: ${payroll.name}`, 20, 35);
+    doc.text(`Período: ${period}`, 20, 45);
+    doc.text(`Sueldo Bruto: Bs ${payroll.bruto}`, 20, 60);
+    doc.text(`Descuentos: Bs ${payroll.descuentos}`, 20, 70);
+    doc.text(`A Favor: Bs ${payroll.aportes}`, 20, 80);
+    doc.text(`Neto a Pagar: Bs ${payroll.neto}`, 20, 90);
+    doc.save(`Extracto_${payroll.name}_${period}.pdf`);
+    alert(`Imprimiendo extracto de ${payroll.name}`);
+  };
+
   return (
     <div style={{ padding:20 }}>
       <h1 style={{ color: theme.primary }}>Cálculo de Planillas</h1>
@@ -9671,10 +9846,6 @@ const CalculoPlanillas = ({ theme }) => {
             <input type="month" value={period} onChange={e=>setPeriod(e.target.value)} />
           </div>
           <div>
-            <div style={{ fontSize:12, color: theme.textMuted }}>Tipo</div>
-            <select value={type} onChange={e=>setType(e.target.value)}><option value="mensual">Mensual</option><option value="aguinaldo">Aguinaldo</option><option value="finiquito">Finiquito</option></select>
-          </div>
-          <div>
             <button onClick={handleCalc} style={{ padding:8, background:theme.primary, color:'white', border:'none', borderRadius:6 }}>Calcular</button>
           </div>
         </div>
@@ -9683,19 +9854,92 @@ const CalculoPlanillas = ({ theme }) => {
           <div style={{ marginTop:12 }}>
             <h4>Vista previa</h4>
             <table style={{ width:'100%' }}>
-              <thead><tr><th>Empleado</th><th>Bruto</th><th>Descuentos</th><th>Aportes</th><th>Neto</th></tr></thead>
+              <thead><tr><th>Empleado</th><th>Bruto</th><th>Descuentos</th><th>A favor</th><th>Neto</th><th>Acciones</th></tr></thead>
               <tbody>
                 {preview.map(p=> (
-                  <tr key={p.employeeId}><td>{p.name}</td><td>{p.bruto}</td><td>{p.descuentos}</td><td>{p.aportes}</td><td>{p.neto}</td></tr>
+                  <tr key={p.employeeId}>
+                    <td>{p.name}</td>
+                    <td>{p.bruto}</td>
+                    <td>{p.descuentos}</td>
+                    <td>{p.aportes}</td>
+                    <td>{p.neto}</td>
+                    <td style={{ display:'flex', gap:6 }}>
+                      <button onClick={() => handleExtracto(p)} style={{ padding:6, background:'#3b82f6', color:'white', border:'none', borderRadius:4, fontSize:12 }}>Extracto</button>
+                      <button onClick={() => handleImprimir(p)} style={{ padding:6, background:'#8b5cf6', color:'white', border:'none', borderRadius:4, fontSize:12 }}>Imprimir</button>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
+            
             <div style={{ marginTop:8, display:'flex', gap:8, justifyContent:'flex-end' }}>
-              <button onClick={generateAsientos} style={{ padding:8, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Generar Asientos</button>
+              <button onClick={generateAsientos} style={{ padding:8, background:'#10b981', color:'white', border:'none', borderRadius:6 }}>Guardar</button>
             </div>
           </div>
         )}
       </Card>
+
+      {showExtracto && selectedPayroll && (
+        <Card style={{ marginTop:20 }}>
+          <h4>Extracto de Planilla - {selectedPayroll.name}</h4>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+            <div>
+              <h5 style={{ borderBottom:`2px solid ${theme.primary}`, paddingBottom:8 }}>Información del Empleado</h5>
+              <p><strong>Nombre:</strong> {selectedPayroll.name}</p>
+              <p><strong>Período:</strong> {period}</p>
+              <p><strong>ID Empleado:</strong> {selectedPayroll.employeeId || '—'}</p>
+            </div>
+            <div>
+              <h5 style={{ borderBottom:`2px solid ${theme.primary}`, paddingBottom:8 }}>Resumen de Planilla</h5>
+              <p><strong>Sueldo Bruto:</strong> Bs {selectedPayroll.bruto}</p>
+              <p style={{ color:'#ef4444' }}><strong>Descuentos Totales:</strong> -Bs {selectedPayroll.descuentos}</p>
+              <ul style={{ color:'#ef4444', marginLeft:18 }}>
+                {selectedPayroll.detalleDescuentos && selectedPayroll.detalleDescuentos.map((d,i) => (
+                  <li key={i}>{d}</li>
+                ))}
+              </ul>
+              <p style={{ color:'#10b981' }}><strong>A Favor Totales:</strong> +Bs {selectedPayroll.aportes}</p>
+              <ul style={{ color:'#10b981', marginLeft:18 }}>
+                {selectedPayroll.detalleAFavor && selectedPayroll.detalleAFavor.map((a,i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ marginTop:20, padding:12, background:'#f3f4f6', borderRadius:6 }}>
+            <h5 style={{ marginTop:0 }}>Historial de Movimientos</h5>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead>
+                <tr style={{ textAlign:'left' }}>
+                  <th style={{ padding:'6px 8px' }}>Fecha</th>
+                  <th style={{ padding:'6px 8px' }}>Tipo</th>
+                  <th style={{ padding:'6px 8px' }}>Descripción</th>
+                  <th style={{ padding:'6px 8px' }}>Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedPayroll.movimientos && selectedPayroll.movimientos.map((m, idx) => (
+                  <tr key={idx} style={{ borderTop:'1px solid #e5e7eb' }}>
+                    <td style={{ padding:'6px 8px' }}>{m.fecha || '—'}</td>
+                    <td style={{ padding:'6px 8px' }}>{m.tipo}</td>
+                    <td style={{ padding:'6px 8px' }}>{m.descripcion}</td>
+                    <td style={{ padding:'6px 8px' }}>{m.monto ? `Bs ${m.monto}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ marginTop:20, padding:12, background:'#f3f4f6', borderRadius:6 }}>
+            <h5 style={{ marginTop:0 }}>Total Neto a Pagar: Bs {selectedPayroll.neto}</h5>
+          </div>
+          <div style={{ display:'flex', gap:8, justifyContent:'flex-end', marginTop:12 }}>
+            <button onClick={() => setShowExtracto(false)} style={{ padding:8, background:'#6b7280', color:'white', border:'none', borderRadius:4 }}>Cerrar</button>
+            <button onClick={() => handleImprimir(selectedPayroll)} style={{ padding:8, background:'#8b5cf6', color:'white', border:'none', borderRadius:4 }}>Imprimir Extracto</button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
