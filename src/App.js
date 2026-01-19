@@ -8637,7 +8637,6 @@ const RegistroAsientos = ({ theme }) => {
                   <tr>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Fecha</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Cuenta</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Centro Costo</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: theme.text }}>Glosa</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Débito (BOB)</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: theme.text }}>Crédito (BOB)</th>
@@ -8665,18 +8664,6 @@ const RegistroAsientos = ({ theme }) => {
                           />
                         ) : (
                           <div>{l.cuenta}</div>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        {l.editing ? (
-                          <input
-                            value={l.centro}
-                            onChange={e=>updateLine(idx,{centro:e.target.value})}
-                            placeholder="Centro de costo"
-                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-                          />
-                        ) : (
-                          <div>{l.centro}</div>
                         )}
                       </td>
                       <td style={{ padding: '12px' }}>
