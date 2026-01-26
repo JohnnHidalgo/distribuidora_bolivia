@@ -423,8 +423,8 @@ INSERT INTO Account (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $code,
     $CenterCost_id,
     $Elements_id
@@ -450,8 +450,8 @@ VALUES (
     $container,
     $payment,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Provider_id
 );
 
@@ -468,8 +468,8 @@ VALUES (
     $idCar,
     $license,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Category (
@@ -481,8 +481,8 @@ INSERT INTO Category (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO CategoryProvider (
@@ -494,8 +494,8 @@ INSERT INTO CategoryProvider (
 )
 VALUES (
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Provider_id,
     $Category_id
 );
@@ -509,8 +509,8 @@ INSERT INTO CenterCost (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO ClientGroup (
@@ -524,8 +524,8 @@ VALUES (
     $name,
     $idCerca,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Client (
@@ -538,8 +538,8 @@ INSERT INTO Client (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $ClientGroup_id
 );
 
@@ -554,8 +554,8 @@ VALUES (
     $name,
     $destare,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO ContainerMovements (
@@ -570,8 +570,8 @@ INSERT INTO ContainerMovements (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Container_id,
     $Assignment_id,
     $Request_id
@@ -586,8 +586,8 @@ INSERT INTO Elements (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Employee (
@@ -602,8 +602,8 @@ VALUES (
     $name,
     $document,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Position_id
 );
 
@@ -616,8 +616,8 @@ INSERT INTO PaymentType (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Position (
@@ -629,8 +629,8 @@ INSERT INTO Position (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Product (
@@ -643,8 +643,8 @@ INSERT INTO Product (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Category_id
 );
 
@@ -667,8 +667,8 @@ VALUES (
     $weight,
     $payment,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Product_id,
     $Tickets_id
 );
@@ -692,8 +692,8 @@ VALUES (
     $weight,
     $payment,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Request_id,
     $Product_id
 );
@@ -707,8 +707,8 @@ INSERT INTO Provider (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO Request (
@@ -734,8 +734,8 @@ VALUES (
     $container,
     $payment,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Provider_id,
     $Client_id,
     $Car_id,
@@ -751,8 +751,8 @@ INSERT INTO RequestPaymentType (
 )
 VALUES (
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $PaymentType_id,
     $Request_id
 );
@@ -766,8 +766,8 @@ INSERT INTO RequestRequestState (
 )
 VALUES (
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $RequestState_id,
     $Request_id
 );
@@ -781,8 +781,8 @@ INSERT INTO RequestState (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO RequestWeighing (
@@ -795,8 +795,8 @@ INSERT INTO RequestWeighing (
 VALUES (
     $weight,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $ProductRequest_id
 );
 
@@ -809,8 +809,8 @@ INSERT INTO Role (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO RoleTransaction (
@@ -824,8 +824,8 @@ INSERT INTO RoleTransaction (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Transaction_id,
     $Role_id
 );
@@ -840,8 +840,8 @@ INSERT INTO Salary (
 VALUES (
     $amount,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Employee_id
 );
 
@@ -859,8 +859,8 @@ VALUES (
     $deferred_payment,
     $payment,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Assignment_id
 );
 
@@ -874,12 +874,12 @@ INSERT INTO TicketsWeighing (
 VALUES (
     $weight,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Tickets_id
 );
 
-INSERT INTO "Transaction" (
+INSERT INTO Transaction (
     name,
     active,
     created_at,
@@ -888,8 +888,8 @@ INSERT INTO "Transaction" (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO User (
@@ -906,8 +906,8 @@ VALUES (
     $username,
     $password,
     $active,
-    $created_at,
-    $updated_at,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
     $Role_id,
     $Client_id,
     $Employee_id
@@ -922,8 +922,8 @@ INSERT INTO "default" (
 VALUES (
     $name,
     $active,
-    $created_at,
-    $updated_at
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );
 
 
@@ -1154,7 +1154,7 @@ SELECT * FROM TicketsWeighing
     AND Tickets_id=$Tickets_id;
 
 -- Transaction
-SELECT * FROM "Transaction"
+SELECT * FROM Transaction
     WHERE  name=$name
     AND active=$active
     AND created_at=$created_at;

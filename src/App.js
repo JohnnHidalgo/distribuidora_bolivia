@@ -2423,11 +2423,7 @@ const AssignmentView = ({
               <option value="SOFIA">SOFIA</option>
               <option value="PIO">PIO / IMBA</option>
             </select>
-            <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <option value="ALL">Todos los Estados</option>
-              <option value="COMPLETO">Completo</option>
-              <option value="PENDIENTE">Pendiente</option>
-            </select>
+            
             <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
             <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
           </div>
@@ -2457,20 +2453,7 @@ const AssignmentView = ({
                       </span>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>ESTADO</div>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      background: entry.status === 'COMPLETO' ? '#d1fae5' : '#fee2e2',
-                      color: entry.status === 'COMPLETO' ? '#065f46' : '#991b1b',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      textTransform: 'uppercase'
-                    }}>
-                      {entry.status}
-                    </span>
-                  </div>
+                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                     <button onClick={() => handleDistribute(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: theme.primary, color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Repartir</button>
                     <button onClick={() => handlePlan(entry)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}>Planificar</button>
