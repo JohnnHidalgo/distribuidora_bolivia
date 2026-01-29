@@ -5526,27 +5526,7 @@ const TrackingView = ({ theme }) => {
               <div style={{ fontWeight: 'bold' }}>Vehículos en ruta</div>
               <div style={{ fontSize: '12px', color: '#64748b' }}>Selecciona una unidad para centrar el mapa</div>
             </div>
-            <select
-              value={routeFilter}
-              onChange={(e) => {
-                setRouteFilter(e.target.value);
-                const first = vehicles.find(v => e.target.value === 'ALL' || v.route === e.target.value);
-                if (first) setSelectedVehicleId(first.id);
-              }}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                fontSize: '12px',
-                outline: 'none',
-              }}
-            >
-              {routes.map(r => (
-                <option key={r} value={r}>
-                  {r === 'ALL' ? 'Todas las rutas' : r}
-                </option>
-              ))}
-            </select>
+            
           </div>
 
 
