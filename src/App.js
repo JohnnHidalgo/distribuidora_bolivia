@@ -5634,10 +5634,52 @@ const BasketView = ({ theme }) => {
     { date: '2025-12-20', client: 'Mercado Central - Puesto 4', type: 'Devolución parcial', baskets: +10, warehouse: 'Almacén Central La Paz', balanceWarehouse: 620, balanceClient: 45 },
   ];
 
+  // Datos mockup para Histórico de Movimientos por Cliente
+  const containerMovementsData = [
+    { ContainerMovements_id: 9, ContainerMovements_quantity: -1000, ContainerMovements_created_at: '2026-01-29 16:17:23', Container_id: 1, Container_name: 'Canastilla Roja', Client_id: 3, Client_name: 'cliente ceja 1', ClientGroup_id: 1, ClientGroup_name: 'operation', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 10, ContainerMovements_quantity: 500, ContainerMovements_created_at: '2026-01-28 10:30:15', Container_id: 1, Container_name: 'Canastilla Roja', Client_id: 1, Client_name: 'Pollería El Rey', ClientGroup_id: 1, ClientGroup_name: 'operation', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 11, ContainerMovements_quantity: -800, ContainerMovements_created_at: '2026-01-27 14:45:22', Container_id: 2, Container_name: 'Canastilla Azul', Client_id: 2, Client_name: 'Doña Juana', ClientGroup_id: 2, ClientGroup_name: 'retail', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 12, ContainerMovements_quantity: 300, ContainerMovements_created_at: '2026-01-26 09:15:33', Container_id: 3, Container_name: 'Canastilla Verde', Client_id: 3, Client_name: 'cliente ceja 1', ClientGroup_id: 1, ClientGroup_name: 'operation', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 13, ContainerMovements_quantity: -600, ContainerMovements_created_at: '2026-01-25 11:22:44', Container_id: 1, Container_name: 'Canastilla Roja', Client_id: 4, Client_name: 'Distribuidor Sucre', ClientGroup_id: 2, ClientGroup_name: 'retail', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 14, ContainerMovements_quantity: 400, ContainerMovements_created_at: '2026-01-24 15:30:12', Container_id: 2, Container_name: 'Canastilla Azul', Client_id: 1, Client_name: 'Pollería El Rey', ClientGroup_id: 1, ClientGroup_name: 'operation', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 15, ContainerMovements_quantity: -450, ContainerMovements_created_at: '2026-01-23 13:18:56', Container_id: 3, Container_name: 'Canastilla Verde', Client_id: 2, Client_name: 'Doña Juana', ClientGroup_id: 2, ClientGroup_name: 'retail', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 16, ContainerMovements_quantity: -700, ContainerMovements_created_at: '2026-01-22 08:45:22', Container_id: 1, Container_name: 'Canastilla Roja', Client_id: 5, Client_name: 'Mercado Central', ClientGroup_id: 3, ClientGroup_name: 'wholesale', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 17, ContainerMovements_quantity: 250, ContainerMovements_created_at: '2026-01-21 12:00:00', Container_id: 2, Container_name: 'Canastilla Azul', Client_id: 3, Client_name: 'cliente ceja 1', ClientGroup_id: 1, ClientGroup_name: 'operation', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+    { ContainerMovements_id: 18, ContainerMovements_quantity: -550, ContainerMovements_created_at: '2026-01-20 16:30:00', Container_id: 3, Container_name: 'Canastilla Verde', Client_id: 4, Client_name: 'Distribuidor Sucre', ClientGroup_id: 2, ClientGroup_name: 'retail', RequestStage_in_container: 0, RequestStage_out_container: 0 },
+  ];
+
+  // Obtener lista única de clientes y grupos
+  const uniqueClients = [...new Set(containerMovementsData.map(m => ({ id: m.Client_id, name: m.Client_name })))];
+  const uniqueClientGroups = [...new Set(containerMovementsData.map(m => ({ id: m.ClientGroup_id, name: m.ClientGroup_name })))];
+
+  // Datos mockup para Histórico de Movimientos por Proveedor
+  const providerMovementsData = [
+    { ContainerMovements_id: 1, ContainerMovements_quantity: 15, ContainerMovements_created_at: '2026-01-28 20:26:40', Container_id: 1, Container_name: 'Canastilla Roja', Provider_name: 'SOFIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 2, ContainerMovements_quantity: 20, ContainerMovements_created_at: '2026-01-27 18:15:22', Container_id: 2, Container_name: 'Canastilla Azul', Provider_name: 'TRANSPORTES BOLIVIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 3, ContainerMovements_quantity: 10, ContainerMovements_created_at: '2026-01-26 14:30:00', Container_id: 3, Container_name: 'Canastilla Verde', Provider_name: 'SOFIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 4, ContainerMovements_quantity: 25, ContainerMovements_created_at: '2026-01-25 10:45:33', Container_id: 1, Container_name: 'Canastilla Roja', Provider_name: 'LOGISTICA ANDINA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 5, ContainerMovements_quantity: 18, ContainerMovements_created_at: '2026-01-24 16:20:15', Container_id: 2, Container_name: 'Canastilla Azul', Provider_name: 'SOFIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 6, ContainerMovements_quantity: 12, ContainerMovements_created_at: '2026-01-23 12:00:00', Container_id: 3, Container_name: 'Canastilla Verde', Provider_name: 'TRANSPORTES BOLIVIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 7, ContainerMovements_quantity: 22, ContainerMovements_created_at: '2026-01-22 09:30:45', Container_id: 1, Container_name: 'Canastilla Roja', Provider_name: 'LOGISTICA ANDINA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 8, ContainerMovements_quantity: 16, ContainerMovements_created_at: '2026-01-21 15:15:30', Container_id: 2, Container_name: 'Canastilla Azul', Provider_name: 'SOFIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 9, ContainerMovements_quantity: 14, ContainerMovements_created_at: '2026-01-20 11:45:00', Container_id: 3, Container_name: 'Canastilla Verde', Provider_name: 'TRANSPORTES BOLIVIA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+    { ContainerMovements_id: 10, ContainerMovements_quantity: 19, ContainerMovements_created_at: '2026-01-19 08:30:22', Container_id: 1, Container_name: 'Canastilla Roja', Provider_name: 'LOGISTICA ANDINA', AssigmentStage_in_container: 0, AssignmentStage_out_container: 0 },
+  ];
+
+  // Obtener lista única de proveedores
+  const uniqueProviders = [...new Set(providerMovementsData.map(m => m.Provider_name))];
+
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [showExtractModal, setShowExtractModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterClient, setFilterClient] = useState('');
+  const [filterClientGroup, setFilterClientGroup] = useState('');
+  const [filterProviderStartDate, setFilterProviderStartDate] = useState('');
+  const [filterProviderEndDate, setFilterProviderEndDate] = useState('');
+  const [filterProvider, setFilterProvider] = useState('');
 
   const openExtractModal = (client) => {
     setSelectedClient(client);
@@ -5673,7 +5715,42 @@ const BasketView = ({ theme }) => {
   const filteredMovements = movements.filter(m => {
     if (!selectedDate) return true;
     return m.date === selectedDate;
-    });
+  });
+
+  // Lógica de filtrado para movimientos por cliente
+  const filteredContainerMovements = containerMovementsData.filter(m => {
+    const movementDate = m.ContainerMovements_created_at.split(' ')[0]; // Obtener solo la fecha
+    
+    // Filtro de fecha inicio
+    if (filterStartDate && movementDate < filterStartDate) return false;
+    
+    // Filtro de fecha fin
+    if (filterEndDate && movementDate > filterEndDate) return false;
+    
+    // Filtro de cliente
+    if (filterClient && m.Client_id !== parseInt(filterClient)) return false;
+    
+    // Filtro de grupo de cliente
+    if (filterClientGroup && m.ClientGroup_id !== parseInt(filterClientGroup)) return false;
+    
+    return true;
+  }).sort((a, b) => new Date(b.ContainerMovements_created_at) - new Date(a.ContainerMovements_created_at));
+
+  // Lógica de filtrado para movimientos por proveedor
+  const filteredProviderMovements = providerMovementsData.filter(m => {
+    const movementDate = m.ContainerMovements_created_at.split(' ')[0]; // Obtener solo la fecha
+    
+    // Filtro de fecha inicio
+    if (filterProviderStartDate && movementDate < filterProviderStartDate) return false;
+    
+    // Filtro de fecha fin
+    if (filterProviderEndDate && movementDate > filterProviderEndDate) return false;
+    
+    // Filtro de proveedor
+    if (filterProvider && m.Provider_name !== filterProvider) return false;
+    
+    return true;
+  }).sort((a, b) => new Date(b.ContainerMovements_created_at) - new Date(a.ContainerMovements_created_at));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -5860,98 +5937,6 @@ const BasketView = ({ theme }) => {
         </Card>
       </div>
 
-      {/* Histórico de movimientos por día */}
-      <Card style={{ padding: 0 }}>
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 'bold' }}>Histórico de Movimientos por Día</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Entradas y salidas de canastos por fecha</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Fecha</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              style={{
-                padding: '8px 10px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                fontSize: '12px',
-                outline: 'none',
-              }}
-            />
-            {selectedDate && (
-              <button
-                type="button"
-                onClick={() => setSelectedDate('')}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: theme.primary,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
-                <th style={{ padding: '10px 16px' }}>Fecha</th>
-                <th style={{ padding: '10px 16px' }}>Cliente</th>
-                <th style={{ padding: '10px 16px' }}>Tipo Movimiento</th>
-                <th style={{ padding: '10px 16px' }}>Canastos (+/-)</th>
-                <th style={{ padding: '10px 16px' }}>Almacén</th>
-                <th style={{ padding: '10px 16px' }}>Saldo Cliente</th>
-                <th style={{ padding: '10px 16px' }}>Saldo Almacén</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMovements.map((m, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.date}</td>
-                  <td style={{ padding: '10px 16px', fontWeight: '600' }}>{m.client}</td>
-                  <td style={{ padding: '10px 16px' }}>{m.type}</td>
-                  <td
-                    style={{
-                      padding: '10px 16px',
-                      fontWeight: '800',
-                      color: m.baskets < 0 ? theme.primary : '#16a34a',
-                    }}
-                  >
-                    {m.baskets > 0 ? `+${m.baskets}` : m.baskets}
-                  </td>
-                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.warehouse}</td>
-                  <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceClient} can.</td>
-                  <td style={{ padding: '10px 16px', fontSize: '12px' }}>{m.balanceWarehouse} can.</td>
-                </tr>
-              ))}
-              {filteredMovements.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
-                    No se encontraron movimientos para la fecha seleccionada.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
       {/* Modal para extracto del cliente */}
       {showExtractModal && selectedClient && (
         <div
@@ -6066,6 +6051,324 @@ const BasketView = ({ theme }) => {
           </div>
         </div>
       )}
+
+      {/* Histórico de Movimientos por Cliente */}
+      <Card style={{ padding: 0 }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 'bold' }}>Histórico de Movimientos por Cliente</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Movimientos de canastillas por cliente</div>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px',
+            backgroundColor: '#fafbfc',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Fecha Inicio</label>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Fecha Fin</label>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Cliente</label>
+            <select
+              value={filterClient}
+              onChange={(e) => setFilterClient(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+                backgroundColor: 'white',
+              }}
+            >
+              <option value="">Todos los clientes</option>
+              {uniqueClients.map(client => (
+                <option key={client.id} value={client.id}>{client.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Grupo de Cliente</label>
+            <select
+              value={filterClientGroup}
+              onChange={(e) => setFilterClientGroup(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+                backgroundColor: 'white',
+              }}
+            >
+              <option value="">Todos los grupos</option>
+              {uniqueClientGroups.map(group => (
+                <option key={group.id} value={group.id}>{group.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterClient('');
+                setFilterClientGroup('');
+              }}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: 'white',
+                color: theme.primary,
+                fontSize: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                <th style={{ padding: '10px 16px' }}>Fecha / Hora</th>
+                <th style={{ padding: '10px 16px' }}>Canastilla</th>
+                <th style={{ padding: '10px 16px' }}>Cliente</th>
+                <th style={{ padding: '10px 16px' }}>Grupo</th>
+                <th style={{ padding: '10px 16px' }}>Cantidad (+/-)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContainerMovements.map((m, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.ContainerMovements_created_at}</td>
+                  <td style={{ padding: '10px 16px', fontWeight: '600' }}>{m.Container_name}</td>
+                  <td style={{ padding: '10px 16px' }}>{m.Client_name}</td>
+                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.ClientGroup_name}</td>
+                  <td
+                    style={{
+                      padding: '10px 16px',
+                      fontWeight: '800',
+                      color: m.ContainerMovements_quantity < 0 ? theme.primary : '#16a34a',
+                    }}
+                  >
+                    {m.ContainerMovements_quantity > 0 ? `+${m.ContainerMovements_quantity}` : m.ContainerMovements_quantity}
+                  </td>
+                </tr>
+              ))}
+              {filteredContainerMovements.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                    No se encontraron movimientos con los filtros seleccionados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Histórico de Movimientos por Proveedor */}
+      <Card style={{ padding: 0 }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 'bold' }}>Histórico de Movimientos por Proveedor</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Movimientos de canastillas recibidas de proveedores</div>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px',
+            backgroundColor: '#fafbfc',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Fecha Inicio</label>
+            <input
+              type="date"
+              value={filterProviderStartDate}
+              onChange={(e) => setFilterProviderStartDate(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Fecha Fin</label>
+            <input
+              type="date"
+              value={filterProviderEndDate}
+              onChange={(e) => setFilterProviderEndDate(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b' }}>Proveedor</label>
+            <select
+              value={filterProvider}
+              onChange={(e) => setFilterProvider(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '12px',
+                outline: 'none',
+                backgroundColor: 'white',
+              }}
+            >
+              <option value="">Todos los proveedores</option>
+              {uniqueProviders.map((provider, idx) => (
+                <option key={idx} value={provider}>{provider}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              onClick={() => {
+                setFilterProviderStartDate('');
+                setFilterProviderEndDate('');
+                setFilterProvider('');
+              }}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: 'white',
+                color: theme.primary,
+                fontSize: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
+                <th style={{ padding: '10px 16px' }}>Fecha / Hora</th>
+                <th style={{ padding: '10px 16px' }}>Canastilla</th>
+                <th style={{ padding: '10px 16px' }}>Proveedor</th>
+                <th style={{ padding: '10px 16px' }}>Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProviderMovements.map((m, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{m.ContainerMovements_created_at}</td>
+                  <td style={{ padding: '10px 16px', fontWeight: '600' }}>{m.Container_name}</td>
+                  <td style={{ padding: '10px 16px' }}>{m.Provider_name}</td>
+                  <td
+                    style={{
+                      padding: '10px 16px',
+                      fontWeight: '800',
+                      color: '#16a34a',
+                    }}
+                  >
+                    +{m.ContainerMovements_quantity}
+                  </td>
+                </tr>
+              ))}
+              {filteredProviderMovements.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                    No se encontraron movimientos con los filtros seleccionados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };

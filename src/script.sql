@@ -559,7 +559,7 @@ VALUES (
 );
 
 INSERT INTO ContainerMovements (
-    name,
+    container,
     active,
     created_at,
     updated_at,
@@ -568,7 +568,7 @@ INSERT INTO ContainerMovements (
     Request_id
 )
 VALUES (
-    $name,
+    $container,
     $active,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,
