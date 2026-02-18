@@ -5807,20 +5807,6 @@ const BasketView = ({ theme }) => {
               <div style={{ fontWeight: 'bold' }}>Clientes en Mora</div>
               <div style={{ fontSize: '12px', color: '#64748b' }}>Canastos pendientes - Ordenado por cantidad (mayor a menor)</div>
             </div>
-            <input
-              type="text"
-              placeholder="Buscar cliente o ruta..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                padding: '8px 10px',
-                borderRadius: '999px',
-                border: '1px solid #e2e8f0',
-                fontSize: '12px',
-                minWidth: '220px',
-                outline: 'none',
-              }}
-            />
           </div>
           <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -5829,8 +5815,6 @@ const BasketView = ({ theme }) => {
                   <th style={{ padding: '10px 16px' }}>Cliente</th>
                   <th style={{ padding: '10px 16px' }}>Ruta</th>
                   <th style={{ padding: '10px 16px' }}>Canastos</th>
-                  <th style={{ padding: '10px 16px' }}>Últ. movimiento</th>
-                  <th style={{ padding: '10px 16px' }}>Estado</th>
                   <th style={{ padding: '10px 16px' }}>Acciones</th>
                 </tr>
               </thead>
@@ -5840,21 +5824,6 @@ const BasketView = ({ theme }) => {
                     <td style={{ padding: '10px 16px', fontWeight: '600' }}>{c.client}</td>
                     <td style={{ padding: '10px 16px' }}>{c.route}</td>
                     <td style={{ padding: '10px 16px', fontWeight: '800', color: theme.primary }}>{c.baskets}</td>
-                    <td style={{ padding: '10px 16px', fontSize: '12px', color: '#64748b' }}>{c.lastMovement}</td>
-                    <td style={{ padding: '10px 16px' }}>
-                      <span
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '999px',
-                          fontSize: '11px',
-                          fontWeight: 'bold',
-                          backgroundColor: c.status.includes('Mora') ? '#fef2f2' : '#ecfdf3',
-                          color: c.status.includes('Mora') ? '#b91c1c' : '#166534',
-                        }}
-                      >
-                        {c.status}
-                      </span>
-                    </td>
                     <td style={{ padding: '10px 16px' }}>
                       <button
                         onClick={() => openExtractModal(c)}
