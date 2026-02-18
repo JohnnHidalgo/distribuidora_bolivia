@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/distribuidora_bolivia/static/css/main.83be3aa1.css",
-    "main.js": "/distribuidora_bolivia/static/js/main.a0b24a53.js",
+    "main.js": "/distribuidora_bolivia/static/js/main.d023af54.js",
     "static/js/239.3e8f5d32.chunk.js": "/distribuidora_bolivia/static/js/239.3e8f5d32.chunk.js",
     "static/js/977.4d24013f.chunk.js": "/distribuidora_bolivia/static/js/977.4d24013f.chunk.js",
     "static/js/455.40c5339c.chunk.js": "/distribuidora_bolivia/static/js/455.40c5339c.chunk.js",
     "static/js/453.6b3c45b0.chunk.js": "/distribuidora_bolivia/static/js/453.6b3c45b0.chunk.js",
     "index.html": "/distribuidora_bolivia/index.html",
     "main.83be3aa1.css.map": "/distribuidora_bolivia/static/css/main.83be3aa1.css.map",
-    "main.a0b24a53.js.map": "/distribuidora_bolivia/static/js/main.a0b24a53.js.map",
+    "main.d023af54.js.map": "/distribuidora_bolivia/static/js/main.d023af54.js.map",
     "239.3e8f5d32.chunk.js.map": "/distribuidora_bolivia/static/js/239.3e8f5d32.chunk.js.map",
     "977.4d24013f.chunk.js.map": "/distribuidora_bolivia/static/js/977.4d24013f.chunk.js.map",
     "455.40c5339c.chunk.js.map": "/distribuidora_bolivia/static/js/455.40c5339c.chunk.js.map",
@@ -16,6 +16,6 @@
   },
   "entrypoints": [
     "static/css/main.83be3aa1.css",
-    "static/js/main.a0b24a53.js"
+    "static/js/main.d023af54.js"
   ]
 }
