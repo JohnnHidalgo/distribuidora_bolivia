@@ -5602,6 +5602,16 @@ const BasketView = ({ theme }) => {
     lostOrDamaged: 30,
   };
 
+  const [availableContainers, setAvailableContainers] = useState([
+    { id: 1, name: 'Canasto Rojo' },
+    { id: 2, name: 'Bolsa' },
+    { id: 3, name: 'Canasto Rosa' }
+  ]);
+  const [selectedContainer, setSelectedContainer] = useState(availableContainers[0].id);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addDialogContainer, setAddDialogContainer] = useState(availableContainers[0].id);
+  const [addDialogQuantity, setAddDialogQuantity] = useState(1);
+
   const clientBaskets = [
     { client: 'Pollería El Rey', route: 'El Alto Norte', baskets: 120, lastMovement: '2025-12-22', status: 'Al día' },
     { client: 'Doña Juana', route: 'El Alto Sur', baskets: 80, lastMovement: '2025-12-21', status: 'Mora 3 días' },
@@ -5787,14 +5797,24 @@ const BasketView = ({ theme }) => {
           </div>
         </Card>
         <Card>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Perdidos / Dañados</span>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
-            <div>
-              <div style={{ fontSize: '28px', fontWeight: '900', color: '#b91c1c' }}>{summary.lostOrDamaged}</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>Pendiente regularización</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>Filtrar por contenedor</label>
+              <select
+                value={selectedContainer}
+                onChange={(e) => setSelectedContainer(parseInt(e.target.value, 10))}
+                style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', outline: 'none', minWidth: '160px' }}
+              >
+                {availableContainers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => { setAddDialogContainer(selectedContainer); setAddDialogQuantity(1); setShowAddDialog(true); }}
+                style={{ marginTop: '6px', backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: '700', cursor: 'pointer' }}
+              >
+                Agregar canastos
+              </button>
             </div>
-            <AlertCircle size={28} color="#b91c1c" />
-          </div>
         </Card>
       </div>
 
@@ -5905,6 +5925,30 @@ const BasketView = ({ theme }) => {
           </div>
         </Card>
       </div>
+
+      {showAddDialog && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ width: 420, backgroundColor: 'white', borderRadius: 10, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+            <h3 style={{ margin: 0, marginBottom: 12 }}>Agregar Canastos</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Contenedor</label>
+                <select value={addDialogContainer} onChange={(e) => setAddDialogContainer(parseInt(e.target.value, 10))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 6 }}>
+                  {availableContainers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Cantidad</label>
+                <input type="number" min={1} value={addDialogQuantity} onChange={(e) => setAddDialogQuantity(parseInt(e.target.value, 10) || 1)} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 6 }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+              <button onClick={() => setShowAddDialog(false)} style={{ backgroundColor: '#f1f5f9', color: theme.textMain, border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => { console.log('Agregar canastos', { containerId: addDialogContainer, quantity: addDialogQuantity }); setShowAddDialog(false); }} style={{ backgroundColor: theme.primary, color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para extracto del cliente */}
       {showExtractModal && selectedClient && (
