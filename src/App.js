@@ -5966,10 +5966,6 @@ const BasketView = ({ theme }) => {
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>{selectedClient.route}</div>
                   <div style={{ fontSize: '12px', color: '#64748b' }}>Ruta asignada</div>
                 </div>
-                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#b91c1c' }}>{selectedClient.status}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Estado actual</div>
-                </div>
               </div>
             </div>
 
