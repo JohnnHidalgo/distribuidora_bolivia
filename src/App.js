@@ -5956,19 +5956,6 @@ const BasketView = ({ theme }) => {
               </button>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: theme.primary }}>{selectedClient.baskets}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Canastos pendientes</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>{selectedClient.route}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Ruta asignada</div>
-                </div>
-              </div>
-            </div>
-
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
